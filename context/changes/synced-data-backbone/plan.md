@@ -346,15 +346,15 @@ This is greenfield — no existing data to migrate. The forward-looking migratio
 
 #### Automated
 
-- [ ] 1.1 Local stack starts: `supabase start`
-- [ ] 1.2 Migrations apply cleanly from scratch: `supabase db reset`
-- [ ] 1.3 Schema lint/diff shows no drift: `supabase db lint` (or empty `db diff` after reset)
+- [x] 1.1 Local stack starts: `supabase start` — adapted: cloud project `hkelauazmbqnyohjbjtw` ACTIVE_HEALTHY (no local Docker; provisioned via Supabase MCP)
+- [x] 1.2 Migrations apply cleanly from scratch: `supabase db reset` — adapted: 3 migrations applied via MCP `apply_migration` (core_log_schema, rls, storage_meal_photos)
+- [x] 1.3 Schema lint/diff shows no drift: `supabase db lint` — adapted: `get_advisors(security)` returned 0 lints
 
 #### Manual
 
-- [ ] 1.4 Both tables exist with expected columns, enums, indexes, and the `updated_at` trigger
-- [ ] 1.5 RLS enabled on both tables; storage bucket is private with owner-only policy
-- [ ] 1.6 SQL check confirms non-owner cannot select rows and owner can
+- [x] 1.4 Both tables exist with expected columns, enums, indexes, and the `updated_at` trigger
+- [x] 1.5 RLS enabled on both tables; storage bucket is private with owner-only policy
+- [ ] 1.6 SQL check confirms non-owner cannot select rows and owner can — deferred to Phase 4 (4.2): needs live data + two identities; exercised by the smoke script
 
 ### Phase 2: Client Supabase integration + session bootstrap
 

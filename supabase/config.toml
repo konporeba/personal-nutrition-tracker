@@ -1,0 +1,10 @@
+# Minimal Supabase project config.
+#
+# Migrations under supabase/migrations/ are the source of truth and were applied to the
+# cloud project via the Supabase MCP (no local Docker stack in this environment).
+#
+# When you want a local dev stack later, run `supabase init` to regenerate the full,
+# canonical config.toml (it will offer to merge/overwrite this file) and `supabase link`
+# to connect this directory to the cloud project. See OWNER_SETUP.md.
+
+project_id = "personal-nutrition-tracker"
