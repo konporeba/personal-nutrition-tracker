@@ -44,3 +44,17 @@ There is **no test runner configured** — the scaffold ships without Jest. Add 
 **`context/`** is a `10x`-workflow project-management tree (`foundation/` docs + `changes/`), not application code. Treat it as the product spec / planning source, and note the many `/10x-*` skills available for that workflow.
 
 TypeScript is `strict` — see `@tsconfig.json`.
+
+## Data layer (Supabase backbone, F-01)
+
+The app reads/writes a single-owner Supabase Postgres store. How to use and extend it:
+
+- **Never touch `supabase` directly from UI.** Go through the repository seam in `src/data/*.repo.ts` (e.g. `meal-entries.repo.ts`). That's the one place query logic lives — screens, scripts, and later slices all reuse it.
+- **The client** is platform-split: `src/lib/supabase.ts` (native, AsyncStorage + `AppState` auto-refresh) / `src/lib/supabase.web.ts` (browser storage). Always import as `@/lib/supabase`.
+- **Every table carries** `owner_id` + sync fields (`created_at`, `updated_at`, `deleted_at`) and has RLS scoping all rows to `owner_id = auth.uid()`. `updated_at` is set by a server `BEFORE UPDATE` trigger (last-write-wins), never by the client.
+- **Always filter `deleted_at IS NULL` on reads.** Deletes are soft (set `deleted_at`), never hard — this is what lets a delete propagate across clients without resurrecting from stale cache.
+- **Day bucketing:** `logged_at` is an absolute `timestamptz`; "the day" is computed client-side in the owner's local tz (`listMealEntriesForDay` converts a local date to a `[start, end)` UTC range). The DB stays tz-agnostic.
+- **Client-generated ids:** use `@/lib/new-id` (`newId()`), platform-split so native uses `expo-crypto` and web/Node use the global `crypto.randomUUID()`.
+- **Reads use TanStack Query** with AsyncStorage persistence + fetch-on-focus (`src/data/query-client.ts`, `query-runtime[.web].ts`), wired in `src/app/_layout.tsx`. Cross-client freshness is fetch-on-focus (no Realtime).
+- **Add a new table** via a new `supabase/migrations/*.sql` file (schema + RLS + the sync fields + trigger), then a matching `src/data/<name>.repo.ts`. The owner session is bootstrapped once via `src/lib/session.ts` + `src/components/owner-sign-in.tsx`.
+- **Verify** the store with `npm run smoke` (see `context/changes/synced-data-backbone/verification.md`). Owner credentials for the script live in git-ignored `.env.local`; public `EXPO_PUBLIC_*` values live in `.env`.

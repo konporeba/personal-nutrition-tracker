@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "baseUrl": "..",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "esnext",
+    "strict": true,
+    "paths": {
+      "@/lib/supabase": ["src/lib/supabase.web"],
+      "@/lib/new-id": ["src/lib/new-id.web"],
+      "@/*": ["src/*"]
+    }
+  }
+}

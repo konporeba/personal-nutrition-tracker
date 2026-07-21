@@ -1,8 +1,7 @@
 // The single reusable data seam over `supabase` for the core log. All query
 // logic for meal entries lives here — screens, the smoke script, and later
 // slices go through these functions and never touch the client directly.
-import * as Crypto from 'expo-crypto';
-
+import { newId } from '@/lib/new-id';
 import { supabase } from '@/lib/supabase';
 import type { MealEntry, MealEntryPatch, NewMealEntry } from '@/data/types';
 
@@ -22,7 +21,7 @@ async function requireOwnerId(): Promise<string> {
 export async function createMealEntry(input: NewMealEntry): Promise<MealEntry> {
   const owner_id = await requireOwnerId();
   const row = {
-    id: input.id ?? Crypto.randomUUID(),
+    id: input.id ?? newId(),
     owner_id,
     logged_at: input.logged_at,
     section: input.section,

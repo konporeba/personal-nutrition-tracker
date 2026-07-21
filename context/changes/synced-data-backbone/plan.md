@@ -354,7 +354,7 @@ This is greenfield — no existing data to migrate. The forward-looking migratio
 
 - [x] 1.4 Both tables exist with expected columns, enums, indexes, and the `updated_at` trigger — a204979
 - [x] 1.5 RLS enabled on both tables; storage bucket is private with owner-only policy — a204979
-- [ ] 1.6 SQL check confirms non-owner cannot select rows and owner can — deferred to Phase 4 (4.2): needs live data + two identities; exercised by the smoke script
+- [x] 1.6 SQL check confirms non-owner cannot select rows and owner can — verified by the Phase 4 smoke script (anon client sees 0 rows; owner CRUD succeeds)
 
 ### Phase 2: Client Supabase integration + session bootstrap
 
@@ -374,25 +374,25 @@ This is greenfield — no existing data to migrate. The forward-looking migratio
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `tsc --noEmit`
-- [x] 3.2 Linting passes: `npm run lint`
-- [ ] 3.3 Repo round-trips against the local stack (create/list/update/soft-delete observed) — deferred to Phase 4 (4.1): folded into the smoke script per plan, which imports the repo and round-trips against the real store
+- [x] 3.1 Type checking passes: `tsc --noEmit` — 5f790c4
+- [x] 3.2 Linting passes: `npm run lint` — 5f790c4
+- [x] 3.3 Repo round-trips against the local stack (create/list/update/soft-delete observed) — verified by the Phase 4 smoke script (imports the repo, round-trips against the real store)
 
 #### Manual
 
-- [ ] 3.4 Create/update/soft-delete behave correctly (update advances `updated_at`; soft-delete drops from list, row retained with `deleted_at`) — exercised by the Phase 4 smoke script (4.1)
+- [x] 3.4 Create/update/soft-delete behave correctly (update advances `updated_at`; soft-delete drops from list, row retained with `deleted_at`) — asserted by the Phase 4 smoke script (all conditions pass)
 - [ ] 3.5 Persisted cache renders the last-seen day after a cold restart with backend briefly unreachable — exercised in the Phase 4 running-app walkthrough
 
 ### Phase 4: Cross-client parity verification (US-07)
 
 #### Automated
 
-- [ ] 4.1 Smoke script passes end-to-end: `npx tsx scripts/smoke-store.ts` exits 0
-- [ ] 4.2 RLS assertion passes (non-owner read returns nothing)
-- [ ] 4.3 Type checking and lint still pass
+- [x] 4.1 Smoke script passes end-to-end: `npm run smoke` exits 0 — adapted: run via esbuild bundler (`scripts/run-smoke.mjs`), not `npx tsx`, because the repo's platform-split client + expo-crypto don't load under plain tsx; the script still imports and drives the real repo
+- [x] 4.2 RLS assertion passes (non-owner read returns nothing)
+- [x] 4.3 Type checking and lint still pass
 
 #### Manual
 
 - [ ] 4.4 US-07 walkthrough passes: web-created entry appears on native after focus; native edit appears on web after focus
 - [ ] 4.5 Observed cross-client latency within eventual-sync tolerance (on focus, no manual reconciliation)
-- [ ] 4.6 `verification.md` records the run and result
+- [x] 4.6 `verification.md` records the run and result — smoke run recorded; two-client walkthrough template ready for the manual run
