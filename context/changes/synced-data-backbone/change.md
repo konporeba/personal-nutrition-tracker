@@ -4,7 +4,7 @@ roadmap_id: F-01
 title: Synced single-owner data backbone (Supabase)
 status: implementing
 created: 2026-07-20
-updated: 2026-07-20
+updated: 2026-07-21
 
 prd_refs: [FR-043, FR-041, FR-007, FR-006, US-07]
 ---

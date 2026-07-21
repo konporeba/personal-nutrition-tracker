@@ -360,28 +360,28 @@ This is greenfield — no existing data to migrate. The forward-looking migratio
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `tsc --noEmit`
-- [x] 2.2 Linting passes: `npm run lint`
-- [x] 2.3 App bundles for web without error: `npx expo export --platform web`
+- [x] 2.1 Type checking passes: `tsc --noEmit` — 513719e
+- [x] 2.2 Linting passes: `npm run lint` — 513719e
+- [x] 2.3 App bundles for web without error: `npx expo export --platform web` — 513719e
 
 #### Manual
 
-- [x] 2.4 Native and web both reach an authenticated owner session (`getUser()` returns owner uid)
-- [x] 2.5 No owner password present in the exported web bundle
-- [x] 2.6 Session persists across a kill/relaunch without re-entering credentials
+- [x] 2.4 Native and web both reach an authenticated owner session (`getUser()` returns owner uid) — 513719e
+- [x] 2.5 No owner password present in the exported web bundle — 513719e
+- [x] 2.6 Session persists across a kill/relaunch without re-entering credentials — 513719e
 
 ### Phase 3: Repository + TanStack Query + cache persistence
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `tsc --noEmit`
-- [ ] 3.2 Linting passes: `npm run lint`
-- [ ] 3.3 Repo round-trips against the local stack (create/list/update/soft-delete observed)
+- [x] 3.1 Type checking passes: `tsc --noEmit`
+- [x] 3.2 Linting passes: `npm run lint`
+- [ ] 3.3 Repo round-trips against the local stack (create/list/update/soft-delete observed) — deferred to Phase 4 (4.1): folded into the smoke script per plan, which imports the repo and round-trips against the real store
 
 #### Manual
 
-- [ ] 3.4 Create/update/soft-delete behave correctly (update advances `updated_at`; soft-delete drops from list, row retained with `deleted_at`)
-- [ ] 3.5 Persisted cache renders the last-seen day after a cold restart with backend briefly unreachable
+- [ ] 3.4 Create/update/soft-delete behave correctly (update advances `updated_at`; soft-delete drops from list, row retained with `deleted_at`) — exercised by the Phase 4 smoke script (4.1)
+- [ ] 3.5 Persisted cache renders the last-seen day after a cold restart with backend briefly unreachable — exercised in the Phase 4 running-app walkthrough
 
 ### Phase 4: Cross-client parity verification (US-07)
 
