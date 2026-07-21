@@ -48,7 +48,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "smoke": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-smoke.mjs"
+    "smoke": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-smoke.mjs",
+    "parity": "node --env-file=.env --env-file-if-exists=.env.local scripts/parity-check.mjs"
   },
   "private": true
 }
