@@ -393,6 +393,6 @@ This is greenfield — no existing data to migrate. The forward-looking migratio
 
 #### Manual
 
-- [x] 4.4 US-07 walkthrough passes: web-created entry appears on native after focus; native edit appears on web after focus — verified at the data layer by `npm run parity` (two independent owner sessions; write on A visible to B and B→A, soft-delete propagates). Physical web+native focus-refetch UI deferred to a slice with feature UI + a device.
-- [x] 4.5 Observed cross-client latency within eventual-sync tolerance (on focus, no manual reconciliation) — ~134–309 ms fetch latency in the parity run, far inside the up-to-1h tolerance
+- [x] 4.4 US-07 walkthrough passes: web-created entry appears on native after focus; native edit appears on web after focus — verified at the data layer by `npm run parity` (two independent owner sessions; write on A visible to B and B→A, soft-delete propagates). Physical web+native focus-refetch UI deferred to a slice with feature UI + a device. — bf4c317
+- [x] 4.5 Observed cross-client latency within eventual-sync tolerance (on focus, no manual reconciliation) — ~134–309 ms fetch latency in the parity run, far inside the up-to-1h tolerance — bf4c317
 - [x] 4.6 `verification.md` records the run and result — smoke run recorded; two-client walkthrough template ready for the manual run — efc3dcf
