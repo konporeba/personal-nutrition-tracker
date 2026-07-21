@@ -64,6 +64,7 @@ export async function updateMealEntry(id: string, patch: MealEntryPatch): Promis
     .from('meal_entries')
     .update(patch)
     .eq('id', id)
+    .is('deleted_at', null)
     .select()
     .single();
   if (error) throw error;
@@ -79,6 +80,7 @@ export async function softDeleteMealEntry(id: string): Promise<void> {
   const { error } = await supabase
     .from('meal_entries')
     .update({ deleted_at: new Date().toISOString() })
-    .eq('id', id);
+    .eq('id', id)
+    .is('deleted_at', null);
   if (error) throw error;
 }

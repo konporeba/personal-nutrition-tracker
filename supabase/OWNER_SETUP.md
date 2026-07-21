@@ -41,6 +41,24 @@ OWNER_PASSWORD=...
 The app itself does not read these — it obtains a session from the one-time sign-in input
 and persists the token thereafter.
 
+## ⚠️ Disable public signups (required security assumption)
+
+The store's privacy model assumes **exactly one identity can authenticate** — the owner.
+The `meal-photos` storage policy (`supabase/migrations/*_storage.sql`) scopes access to
+`authenticated` users by `bucket_id` only, i.e. it treats "any authenticated user" as
+"the owner." That equivalence holds **only while no other user can sign up**.
+
+Supabase enables email signups by default. After creating the owner, turn signups **off**:
+
+- Dashboard → **Authentication → Sign In / Providers → Email → disable "Allow new users to sign up"**
+  (or Authentication → Settings → "Allow new signups" = off).
+
+If public signups are ever re-enabled, the storage policy must first be tightened to an
+owner-scoped predicate (e.g. object path prefixed with the owner uid,
+`meal-photos/<owner_id>/<meal_entry_id>.jpg`, gated by
+`(storage.foldername(name))[1] = (select auth.uid())::text`). Until then, keeping signups
+disabled is what makes the single-owner assumption true. (See review finding F1.)
+
 ## Note on tooling
 
 This project's migrations were authored and applied via the Supabase MCP (no local Docker).

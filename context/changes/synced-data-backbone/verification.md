@@ -42,7 +42,9 @@ from reads.
 ## Manual — two-client parity walkthrough (US-07)
 
 **Precondition:** owner is signed in on both the web build and a native build
-(same owner identity, uid `c46272e0…`).
+(same owner identity, uid `c46272e0…`). Owner provisioning + the required
+"disable public signups" step are documented in
+[`supabase/OWNER_SETUP.md`](../../../supabase/OWNER_SETUP.md).
 
 | # | Step | Expected |
 |---|------|----------|
