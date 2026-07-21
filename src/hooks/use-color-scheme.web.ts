@@ -8,6 +8,10 @@ export function useColorScheme() {
   const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
+    // Intentional: flip a one-time flag once the client has hydrated so static
+    // (SSR) render and client render agree. This is the canonical Expo web
+    // hydration pattern, not a cascading-render bug.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHasHydrated(true);
   }, []);
 

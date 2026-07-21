@@ -346,29 +346,29 @@ This is greenfield — no existing data to migrate. The forward-looking migratio
 
 #### Automated
 
-- [x] 1.1 Local stack starts: `supabase start` — adapted: cloud project `hkelauazmbqnyohjbjtw` ACTIVE_HEALTHY (no local Docker; provisioned via Supabase MCP)
-- [x] 1.2 Migrations apply cleanly from scratch: `supabase db reset` — adapted: 3 migrations applied via MCP `apply_migration` (core_log_schema, rls, storage_meal_photos)
-- [x] 1.3 Schema lint/diff shows no drift: `supabase db lint` — adapted: `get_advisors(security)` returned 0 lints
+- [x] 1.1 Local stack starts: `supabase start` — adapted: cloud project `hkelauazmbqnyohjbjtw` ACTIVE_HEALTHY (no local Docker; provisioned via Supabase MCP) — a204979
+- [x] 1.2 Migrations apply cleanly from scratch: `supabase db reset` — adapted: 3 migrations applied via MCP `apply_migration` (core_log_schema, rls, storage_meal_photos) — a204979
+- [x] 1.3 Schema lint/diff shows no drift: `supabase db lint` — adapted: `get_advisors(security)` returned 0 lints — a204979
 
 #### Manual
 
-- [x] 1.4 Both tables exist with expected columns, enums, indexes, and the `updated_at` trigger
-- [x] 1.5 RLS enabled on both tables; storage bucket is private with owner-only policy
+- [x] 1.4 Both tables exist with expected columns, enums, indexes, and the `updated_at` trigger — a204979
+- [x] 1.5 RLS enabled on both tables; storage bucket is private with owner-only policy — a204979
 - [ ] 1.6 SQL check confirms non-owner cannot select rows and owner can — deferred to Phase 4 (4.2): needs live data + two identities; exercised by the smoke script
 
 ### Phase 2: Client Supabase integration + session bootstrap
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `tsc --noEmit`
-- [ ] 2.2 Linting passes: `npm run lint`
-- [ ] 2.3 App bundles for web without error: `npx expo export --platform web`
+- [x] 2.1 Type checking passes: `tsc --noEmit`
+- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.3 App bundles for web without error: `npx expo export --platform web`
 
 #### Manual
 
-- [ ] 2.4 Native and web both reach an authenticated owner session (`getUser()` returns owner uid)
-- [ ] 2.5 No owner password present in the exported web bundle
-- [ ] 2.6 Session persists across a kill/relaunch without re-entering credentials
+- [x] 2.4 Native and web both reach an authenticated owner session (`getUser()` returns owner uid)
+- [x] 2.5 No owner password present in the exported web bundle
+- [x] 2.6 Session persists across a kill/relaunch without re-entering credentials
 
 ### Phase 3: Repository + TanStack Query + cache persistence
 
