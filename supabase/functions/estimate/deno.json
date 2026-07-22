@@ -1,0 +1,4 @@
+{
+  "$comment": "Marks this directory as a Deno project (Supabase Edge Function). It is intentionally outside the app's tsconfig/ESLint scope; type-check with `deno check` or via Supabase deploy.",
+  "imports": {}
+}
