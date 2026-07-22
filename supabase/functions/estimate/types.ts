@@ -9,6 +9,18 @@
 export type Confidence = 'low' | 'medium' | 'high';
 
 /**
+ * `entry_source` enum (FR-006 source marker). Deno-local mirror of the Postgres
+ * enum defined in the core-log migration; not every value is produced yet.
+ */
+export type EntrySource =
+  | 'label_scan'
+  | 'plate_photo'
+  | 'free_text'
+  | 'saved_meal'
+  | 'manual'
+  | 'exercise_estimate';
+
+/**
  * A single, aggregate estimate for one meal. Macro fields are `null` when the
  * input was not a recognizable food (`recognized: false`) — the proxy never
  * fabricates a number (FR-008).

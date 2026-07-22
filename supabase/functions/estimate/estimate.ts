@@ -67,6 +67,21 @@ const ESTIMATE_SCHEMA = {
 type AnthropicResponse = {
   content?: { type: string; text?: string }[];
   stop_reason?: string;
+  model?: string;
+  usage?: unknown;
+};
+
+/** What `estimateFromText` returns: the sanitized estimate plus an audit blob. */
+export type EstimateResult = {
+  estimate: Estimate;
+  /** Stored verbatim in `estimation_runs.raw_result` for auditability. */
+  raw: {
+    model?: string;
+    stop_reason?: string;
+    usage?: unknown;
+    /** The model's parsed output *before* `sanitize` clamped it. */
+    parsed: unknown;
+  };
 };
 
 /** Non-negative number or null. */
@@ -124,7 +139,7 @@ function extractJson(res: AnthropicResponse): string {
 }
 
 /** Estimate a meal from a free-text description. Throws on transport/model error. */
-export async function estimateFromText(text: string): Promise<Estimate> {
+export async function estimateFromText(text: string): Promise<EstimateResult> {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
 
@@ -155,5 +170,8 @@ export async function estimateFromText(text: string): Promise<Estimate> {
   if (data.stop_reason === 'max_tokens') throw new Error('model output was truncated');
 
   const parsed = JSON.parse(extractJson(data)) as Estimate;
-  return sanitize(parsed);
+  return {
+    estimate: sanitize(parsed),
+    raw: { model: data.model, stop_reason: data.stop_reason, usage: data.usage, parsed },
+  };
 }

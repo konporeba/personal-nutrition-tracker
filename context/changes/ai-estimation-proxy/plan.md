@@ -450,27 +450,27 @@ None — `estimation_runs` is reused unchanged from F-01.
 
 #### Automated
 
-- [x] 1.1 Function type-checks under Deno: `deno check supabase/functions/estimate/index.ts` — run via `npx deno@2 check` (Deno not installed locally); exit 0
-- [x] 1.2 App still type-checks and lints: `tsc --noEmit`, `npm run lint` — both exit 0; `supabase/functions` excluded from tsconfig + eslint
+- [x] 1.1 Function type-checks under Deno: `deno check supabase/functions/estimate/index.ts` — run via `npx deno@2 check` (Deno not installed locally); exit 0 — 861c0a0
+- [x] 1.2 App still type-checks and lints: `tsc --noEmit`, `npm run lint` — both exit 0; `supabase/functions` excluded from tsconfig + eslint — 861c0a0
 
 #### Manual
 
-- [x] 1.3 Sample text returns a well-formed estimate with non-null macros and ≥1 assumption — "2 scrambled eggs and toast" → 320 kcal, 3 assumptions
-- [x] 1.4 Gibberish input returns `recognized: false` with null macros — "asdfqwer" → recognized:false, null macros
-- [x] 1.5 Deployed function has `ANTHROPIC_API_KEY`; key absent from every committed file and the bundle — no `sk-ant` in tree; not in src/ or .env
+- [x] 1.3 Sample text returns a well-formed estimate with non-null macros and ≥1 assumption — "2 scrambled eggs and toast" → 320 kcal, 3 assumptions — 861c0a0
+- [x] 1.4 Gibberish input returns `recognized: false` with null macros — "asdfqwer" → recognized:false, null macros — 861c0a0
+- [x] 1.5 Deployed function has `ANTHROPIC_API_KEY`; key absent from every committed file and the bundle — no `sk-ant` in tree; not in src/ or .env — 861c0a0
 
 ### Phase 2: Owner-JWT auth + EstimationRun recording
 
 #### Automated
 
-- [ ] 2.1 Function type-checks under Deno: `deno check supabase/functions/estimate/index.ts`
+- [x] 2.1 Function type-checks under Deno: `deno check supabase/functions/estimate/index.ts` — via `npx deno@2 check` (incl. jsr `@supabase/supabase-js`); exit 0. App `tsc`/`lint` still exit 0.
 
 #### Manual
 
-- [ ] 2.2 Unauthenticated invocation rejected with `401`
-- [ ] 2.3 Authenticated text invocation writes exactly one owner-scoped `estimation_runs` row and returns its `runId`
-- [ ] 2.4 Non-owner cannot read the first owner's run (RLS holds)
-- [ ] 2.5 `recognized: false` path still records a run (null macros in the returned estimate)
+- [x] 2.2 Unauthenticated invocation rejected with `401` — no-auth → 401 (platform verify_jwt); anon-only → 401 (getUser gate)
+- [x] 2.3 Authenticated text invocation writes exactly one owner-scoped `estimation_runs` row and returns its `runId` — row has source=free_text, raw_result populated, owner_id=owner
+- [x] 2.4 Non-owner cannot read the first owner's run (RLS holds) — anon select estimation_runs → []
+- [x] 2.5 `recognized: false` path still records a run (null macros in the returned estimate) — gibberish → runId returned, run recorded, recognized:false
 
 ### Phase 3: Client invocation seam + shared contract types
 
