@@ -3,7 +3,7 @@ project: "Personal Nutrition Tracker"
 version: 1
 status: draft
 created: 2026-07-19
-updated: 2026-07-19
+updated: 2026-07-22
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -29,7 +29,7 @@ Existing diet trackers make logging so manual that the owner abandons it after a
 
 | ID   | Change ID                    | Outcome (user can …)                                              | Prerequisites   | PRD refs                              | Status   |
 | ---- | ---------------------------- | ---------------------------------------------------------------- | --------------- | ------------------------------------- | -------- |
-| F-01 | synced-data-backbone         | (foundation) log entries persist to a private synced store       | —               | FR-043, FR-041, FR-007, US-07         | ready    |
+| F-01 | synced-data-backbone         | (foundation) log entries persist to a private synced store       | —               | FR-043, FR-041, FR-007, US-07         | done     |
 | F-02 | ai-estimation-proxy          | (foundation) estimates come from an off-device serverless proxy  | —               | FR-080, FR-005, FR-006                | ready    |
 | S-01 | free-text-meal-logging       | log a meal by typing it and reviewing the AI estimate            | F-01, F-02      | US-11, US-12, US-08, FR-080/081/082/084, FR-005/006/008, FR-030 | proposed |
 | S-02 | profile-and-targets          | set body stats and see derived, overridable daily targets        | F-01            | US-05, FR-020/021/022/023             | proposed |
@@ -81,7 +81,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Offline capture behaviour (OQ-4) — Owner: user. Block: no (offline-first is a PRD Non-Goal; MVP defaults to online-only and revisits later).
 - **Risk:** the core entity shape and section model chosen here ripple into every later slice; keep entities minimal (Meal + EstimationRun + section) so per-component (OQ-6) can be added without a rewrite. Sequenced first because nothing can be logged or synced without it.
-- **Status:** ready
+- **Status:** done
 
 ### F-02: Server-side AI estimation proxy
 
@@ -287,4 +287,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog.
 
 ## Done
 
-(Empty on first generation. `/10x-archive` appends here — and flips the item's Status to `done` — when a change whose Change ID matches a roadmap item is archived.)
+- **F-01: (foundation) log entries persist to a private synced store** — Archived 2026-07-22 → `context/archive/2026-07-20-synced-data-backbone/`. Lesson: —.

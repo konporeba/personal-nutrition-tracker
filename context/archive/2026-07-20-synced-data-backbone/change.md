@@ -2,9 +2,10 @@
 change_id: synced-data-backbone
 roadmap_id: F-01
 title: Synced single-owner data backbone (Supabase)
-status: impl_reviewed
+status: archived
 created: 2026-07-20
-updated: 2026-07-21
+updated: 2026-07-22
+archived_at: 2026-07-22T16:27:15Z
 
 prd_refs: [FR-043, FR-041, FR-007, FR-006, US-07]
 ---
