@@ -476,15 +476,15 @@ None — `estimation_runs` is reused unchanged from F-01.
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `tsc --noEmit`
-- [ ] 3.2 Linting passes: `npm run lint`
-- [ ] 3.3 App bundles for web without error: `npx expo export --platform web`
+- [x] 3.1 Type checking passes: `tsc --noEmit` — exit 0 — a8f2201
+- [x] 3.2 Linting passes: `npm run lint` — exit 0 — a8f2201
+- [x] 3.3 App bundles for web without error: `npx expo export --platform web` — exit 0; 3 web bundles, 4 static routes — a8f2201
 
 #### Manual
 
-- [ ] 3.4 `estimateMeal` returns a typed estimate from both native and web against the deployed function
-- [ ] 3.5 No provider secret present in the exported web bundle
-- [ ] 3.6 A forced transport failure surfaces as `{ ok: false, error }`, not an unhandled rejection
+- [ ] 3.4 `estimateMeal` returns a typed estimate from both native and web against the deployed function — web/Node path verified against the deployed function ("a bowl of porridge with honey" → 290 kcal, 3 assumptions, runId 9d6937dd; gibberish → recognized:false, null macros; reserved image variant → ok:false/server). **Native context still pending an owner run on a device/simulator.**
+- [x] 3.5 No provider secret present in the exported web bundle — scanned 36 files / 4.0 MB: no `sk-ant`, no `ANTHROPIC_API_KEY`, no `anthropic` (any case); owner email/password from `.env.local` also absent (only `EXPO_PUBLIC_*` is inlined) — a8f2201
+- [x] 3.6 A forced transport failure surfaces as `{ ok: false, error }`, not an unhandled rejection — client pointed at an unroutable host → `{"ok":false,"error":"network"}`, no throw — a8f2201
 
 ### Phase 4: Verification smoke + docs
 
