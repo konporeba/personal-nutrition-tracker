@@ -523,35 +523,35 @@ remain valid and will render in the day list when their `logged_at` falls on the
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npx tsc --noEmit`
-- [x] 2.2 Linting passes: `npm run lint`
-- [x] 2.3 Web bundle builds: `npx expo export --platform web`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit` — efe3b74
+- [x] 2.2 Linting passes: `npm run lint` — efe3b74
+- [x] 2.3 Web bundle builds: `npx expo export --platform web` — efe3b74
 
 #### Manual
 
-- [x] 2.4 Typing a real meal and submitting reaches the review screen showing macros and ≥1 assumption
-- [x] 2.5 The spinner appears during the call and the input is disabled for its duration
-- [x] 2.6 With the network disabled, an error appears, the typed text is still there, and Retry issues one new call
-- [x] 2.7 Gibberish input reaches the review screen with no fabricated numbers
-- [x] 2.8 Navigating directly to `/review` without a valid `runId` degrades gracefully
+- [x] 2.4 Typing a real meal and submitting reaches the review screen showing macros and ≥1 assumption — efe3b74
+- [x] 2.5 The spinner appears during the call and the input is disabled for its duration — efe3b74
+- [x] 2.6 With the network disabled, an error appears, the typed text is still there, and Retry issues one new call — efe3b74
+- [x] 2.7 Gibberish input reaches the review screen with no fabricated numbers — efe3b74
+- [x] 2.8 Navigating directly to `/review` without a valid `runId` degrades gracefully — efe3b74
 
 ### Phase 3: Commit & delete
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 3.2 Linting passes: `npm run lint`
-- [ ] 3.3 Web bundle builds: `npx expo export --platform web`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit`
+- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.3 Web bundle builds: `npx expo export --platform web`
 
 #### Manual
 
-- [ ] 3.4 A typed meal commits and appears in the day list with the total updated, no manual refresh
-- [ ] 3.5 Editing a macro before saving persists the edited value, not the estimated one
-- [ ] 3.6 Clearing a macro field stores `null`, not `0`
-- [ ] 3.7 A gibberish input commits as a manual entry with the values typed in, `source = 'manual'`
-- [ ] 3.8 An entry logged at a mid-morning time lands in the expected section (checked in the DB)
-- [ ] 3.9 Long-press deletes an entry; the row disappears and the total drops accordingly
-- [ ] 3.10 The deleted row stays gone after a reload (soft delete persisted, not just cache)
+- [x] 3.4 A typed meal commits and appears in the day list with the total updated, no manual refresh
+- [x] 3.5 Editing a macro before saving persists the edited value, not the estimated one
+- [x] 3.6 Clearing a macro field stores `null`, not `0`
+- [x] 3.7 A gibberish input commits as a manual entry with the values typed in, `source = 'manual'`
+- [x] 3.8 An entry logged at a mid-morning time lands in the expected section (checked in the DB)
+- [x] 3.9 Long-press deletes an entry; the row disappears and the total drops accordingly
+- [x] 3.10 The deleted row stays gone after a reload (soft delete persisted, not just cache)
 
 ### Phase 4: Verification
 

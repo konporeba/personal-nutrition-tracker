@@ -17,13 +17,14 @@ import { MealEntryRow } from '@/components/meal-entry-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useDayEntries } from '@/data/use-meal-entries';
+import { useDayEntries, useDeleteMealEntry } from '@/data/use-meal-entries';
 
 export default function TodayScreen() {
   // One instant for the whole render, so the header label and the query key
   // cannot disagree if the render straddles midnight.
   const today = useMemo(() => new Date(), []);
   const { data, isPending, isError } = useDayEntries(today);
+  const deleteEntry = useDeleteMealEntry();
   const entries = data ?? [];
 
   return (
@@ -42,7 +43,9 @@ export default function TodayScreen() {
           <FlatList
             data={entries}
             keyExtractor={(entry) => entry.id}
-            renderItem={({ item }) => <MealEntryRow entry={item} />}
+            renderItem={({ item }) => (
+              <MealEntryRow entry={item} onLongPress={() => deleteEntry.mutate(item)} />
+            )}
             ListHeaderComponent={<DayTotal entries={entries} date={today} />}
             ListEmptyComponent={
               <EmptyState isPending={isPending} isError={isError} />
