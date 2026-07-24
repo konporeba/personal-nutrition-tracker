@@ -1,0 +1,62 @@
+// The React-facing seam over `meal-entries.repo.ts`. Screens import from here and
+// never from the repo directly, which keeps the "UI never touches supabase" rule
+// intact one layer up and puts every cache invalidation in a single file.
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import {
+  createMealEntry,
+  listMealEntriesForDay,
+  softDeleteMealEntry,
+} from '@/data/meal-entries.repo';
+import { queryKeys } from '@/data/query-keys';
+import type { MealEntry, NewMealEntry } from '@/data/types';
+
+/**
+ * The entries for one local calendar day, default today. Behind the shared
+ * 5-minute `staleTime` plus fetch-on-focus, so the list catches up with the
+ * other client without Realtime.
+ */
+export function useDayEntries(date: Date = new Date()) {
+  return useQuery({
+    queryKey: queryKeys.mealEntries.day(date),
+    queryFn: () => listMealEntriesForDay(date),
+  });
+}
+
+/**
+ * Commit a reviewed estimate. Invalidates the day the entry actually landed in
+ * (from `logged_at`), not "today", so the list and the total move together even
+ * if the write straddles midnight.
+ */
+export function useCreateMealEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: NewMealEntry) => createMealEntry(input),
+    onSuccess: (entry) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.mealEntries.day(new Date(entry.logged_at)),
+      });
+    },
+  });
+}
+
+/**
+ * Soft-delete an entry. Takes the whole entry rather than an id so the day key
+ * to invalidate is derivable without a second read.
+ */
+export function useDeleteMealEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (entry: Pick<MealEntry, 'id' | 'logged_at'>) => {
+      await softDeleteMealEntry(entry.id);
+      return entry;
+    },
+    onSuccess: (entry) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.mealEntries.day(new Date(entry.logged_at)),
+      });
+    },
+  });
+}

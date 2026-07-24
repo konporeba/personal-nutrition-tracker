@@ -15,17 +15,19 @@ import { ThemedView } from './themed-view';
 
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 
+// Web tab bar. Keep in sync with `app-tabs.tsx` — Metro picks one per platform,
+// so a tab added there and not here breaks native silently (and vice versa).
+// A single tab looks sparse; S-02 adds the second one.
 export default function AppTabs() {
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
       <TabList asChild>
         <CustomTabList>
-          <TabTrigger name="home" href="/" asChild>
-            <TabButton>Home</TabButton>
-          </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
+          {/* `(today)` is a group segment, so it contributes nothing to the URL
+              and the Today route still lives at `/`. */}
+          <TabTrigger name="today" href="/" asChild>
+            <TabButton>Today</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -55,7 +57,7 @@ export function CustomTabList(props: TabListProps) {
     <View {...props} style={styles.tabListContainer}>
       <ThemedView type="backgroundElement" style={styles.innerContainer}>
         <ThemedText type="smallBold" style={styles.brandText}>
-          Expo Starter
+          Nutrition Tracker
         </ThemedText>
 
         {props.children}
