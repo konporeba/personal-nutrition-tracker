@@ -31,7 +31,7 @@ Existing diet trackers make logging so manual that the owner abandons it after a
 | ---- | ---------------------------- | ---------------------------------------------------------------- | --------------- | ------------------------------------- | -------- |
 | F-01 | synced-data-backbone         | (foundation) log entries persist to a private synced store       | —               | FR-043, FR-041, FR-007, US-07         | done     |
 | F-02 | ai-estimation-proxy          | (foundation) estimates come from an off-device serverless proxy  | —               | FR-080, FR-005, FR-006                | done     |
-| S-01 | free-text-meal-logging       | log a meal by typing it and reviewing the AI estimate            | F-01, F-02      | US-11, US-12, US-08, FR-080/081/082/084, FR-005/006/008, FR-030 | ready    |
+| S-01 | free-text-meal-logging       | log a meal by typing it and reviewing the AI estimate            | F-01, F-02      | US-11, US-12, US-08, FR-080/081/082/084, FR-005/006/008, FR-030 | done     |
 | S-02 | profile-and-targets          | set body stats and see derived, overridable daily targets        | F-01            | US-05, FR-020/021/022/023             | proposed |
 | S-05 | food-icon-system             | see every entry carry a consistent category icon                 | F-02, S-01      | US-13, FR-050/051/052                 | proposed |
 | S-03 | label-scan-logging           | log a packaged product by photographing its nutrition label      | F-01, F-02, S-01| US-03, FR-001/002, FR-005/006/007/008, FR-040 | proposed |
@@ -110,7 +110,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - How vague is too vague before the system asks for a count/size (OQ-11) — Owner: user. Block: no (default to assume-and-surface per FR-082; review catches it).
 - **Risk:** this is the walking skeleton — it wires the proxy, the review-before-commit UI, and persistence into one vertical. Keep the day surface minimal (a flat "today" list with a running total); the sectioned view and budget target arrive in S-06/S-02. If this loop does not feel effortless, the whole product bet fails, which is why it is sequenced first.
-- **Status:** ready — both prerequisites shipped; consumes `estimateMeal` from `src/data/estimation.ts` and `createMealEntry` from `src/data/meal-entries.repo.ts`.
+- **Status:** done
 
 ### S-02: Set up profile and derived targets
 
@@ -289,3 +289,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog.
 
 - **F-01: (foundation) log entries persist to a private synced store** — Archived 2026-07-22 → `context/archive/2026-07-20-synced-data-backbone/`. Lesson: —.
 - **F-02: (foundation) estimates come from an off-device serverless proxy** — Archived 2026-07-24 → `context/archive/2026-07-22-ai-estimation-proxy/`. Lesson: the client seam should own the "unrecognized vs failed" distinction — `recognized: false` is a successful estimate with null macros (the manual-entry cue, FR-008), not an error; folding it into the error union would have pushed that judgement into every capture UI. Known gap carried forward: native-context invocation is unverified (web/Node path proven), and the `quota` error branch is unreachable while provider 429s surface as the function's own 502.
+- **S-01: log a meal by typing it and reviewing the AI estimate** — Archived 2026-07-24 → `context/archive/2026-07-24-free-text-meal-logging/`. Lesson: re-derive "now" per render and let the data hook own it — a day/instant frozen in `useMemo(…, [])` silently rots in a resumed app, so a session spanning midnight watches a stale query key and a meal logged after midnight never appears. Closed F-02's carried-forward gap: this slice's device run is the first proven native invocation of the estimate function.
