@@ -86,3 +86,94 @@ export type NewEstimationRun = {
   input_summary?: string | null;
   raw_result?: unknown;
 };
+
+// Profile & body-weight rows (S-02). String-literal unions mirror the Postgres
+// enums `activity_level` / `body_goal` / `body_sex`.
+
+/** `activity_level` enum (FR-020). Stored but NOT used in derivation (Model A). */
+export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
+
+/** `body_goal` enum (FR-021) — drives the goal factor in derivation. */
+export type BodyGoal = 'lose' | 'maintain' | 'gain';
+
+/** `body_sex` enum — the BMR term needs exactly these two. */
+export type Sex = 'male' | 'female';
+
+/**
+ * A row of `public.profile` — the single owner's stats, goal, and per-target
+ * overrides. No weight column: current weight comes from `body_weights`. Each
+ * `*_target_override` is non-null only when the owner has explicitly overridden
+ * that target; derived values are never stored.
+ */
+export type Profile = {
+  owner_id: string;
+  height_cm: number;
+  age: number;
+  sex: Sex;
+  activity_level: ActivityLevel;
+  goal: BodyGoal;
+  calorie_target_override: number | null;
+  protein_target_override: number | null;
+  carb_target_override: number | null;
+  fat_target_override: number | null;
+  created_at: string;
+  /** Server-clock, set by a BEFORE UPDATE trigger — the last-write-wins key. */
+  updated_at: string;
+  /** Non-null once soft-deleted; every read path filters `deleted_at IS NULL`. */
+  deleted_at: string | null;
+};
+
+/**
+ * Upsert input for the profile. `owner_id` is filled by the repo from the
+ * session; `created_at` / `updated_at` / `deleted_at` are server-managed. The
+ * five stats plus the four nullable overrides. Passing `null` for an override
+ * resets that target back to derived.
+ */
+export type NewProfile = {
+  height_cm: number;
+  age: number;
+  sex: Sex;
+  activity_level: ActivityLevel;
+  goal: BodyGoal;
+  calorie_target_override?: number | null;
+  protein_target_override?: number | null;
+  carb_target_override?: number | null;
+  fat_target_override?: number | null;
+};
+
+/** Mutable fields for updating the profile — the five stats + four overrides. */
+export type ProfilePatch = Partial<
+  Pick<
+    Profile,
+    | 'height_cm'
+    | 'age'
+    | 'sex'
+    | 'activity_level'
+    | 'goal'
+    | 'calorie_target_override'
+    | 'protein_target_override'
+    | 'carb_target_override'
+    | 'fat_target_override'
+  >
+>;
+
+/** A row of `public.body_weights` — one logged reading in the series. */
+export type BodyWeight = {
+  id: string;
+  owner_id: string;
+  weight_kg: number;
+  measured_at: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+};
+
+/**
+ * Insert input for a body-weight reading. `owner_id` filled by the repo; `id`
+ * may be client-supplied for optimistic insert; sync fields are server-managed.
+ */
+export type NewBodyWeight = {
+  id?: string;
+  weight_kg: number;
+  measured_at: string;
+};
