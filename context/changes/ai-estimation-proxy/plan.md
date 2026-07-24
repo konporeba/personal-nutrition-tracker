@@ -463,14 +463,14 @@ None — `estimation_runs` is reused unchanged from F-01.
 
 #### Automated
 
-- [x] 2.1 Function type-checks under Deno: `deno check supabase/functions/estimate/index.ts` — via `npx deno@2 check` (incl. jsr `@supabase/supabase-js`); exit 0. App `tsc`/`lint` still exit 0.
+- [x] 2.1 Function type-checks under Deno: `deno check supabase/functions/estimate/index.ts` — via `npx deno@2 check` (incl. jsr `@supabase/supabase-js`); exit 0. App `tsc`/`lint` still exit 0. — 94b8076
 
 #### Manual
 
-- [x] 2.2 Unauthenticated invocation rejected with `401` — no-auth → 401 (platform verify_jwt); anon-only → 401 (getUser gate)
-- [x] 2.3 Authenticated text invocation writes exactly one owner-scoped `estimation_runs` row and returns its `runId` — row has source=free_text, raw_result populated, owner_id=owner
-- [x] 2.4 Non-owner cannot read the first owner's run (RLS holds) — anon select estimation_runs → []
-- [x] 2.5 `recognized: false` path still records a run (null macros in the returned estimate) — gibberish → runId returned, run recorded, recognized:false
+- [x] 2.2 Unauthenticated invocation rejected with `401` — no-auth → 401 (platform verify_jwt); anon-only → 401 (getUser gate) — 94b8076
+- [x] 2.3 Authenticated text invocation writes exactly one owner-scoped `estimation_runs` row and returns its `runId` — row has source=free_text, raw_result populated, owner_id=owner — 94b8076
+- [x] 2.4 Non-owner cannot read the first owner's run (RLS holds) — anon select estimation_runs → [] — 94b8076
+- [x] 2.5 `recognized: false` path still records a run (null macros in the returned estimate) — gibberish → runId returned, run recorded, recognized:false — 94b8076
 
 ### Phase 3: Client invocation seam + shared contract types
 
