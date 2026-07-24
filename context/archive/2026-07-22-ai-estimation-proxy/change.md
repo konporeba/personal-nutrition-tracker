@@ -2,9 +2,10 @@
 change_id: ai-estimation-proxy
 roadmap_id: F-02
 title: Server-side AI estimation proxy (text-first)
-status: implementing
+status: archived
+archived_at: 2026-07-24T15:10:22Z
 created: 2026-07-22
-updated: 2026-07-22
+updated: 2026-07-24
 
 prd_refs: [FR-080, FR-081, FR-082, FR-084, FR-005, FR-006, FR-008, US-11, US-12, US-08]
 ---

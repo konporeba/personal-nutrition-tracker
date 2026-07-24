@@ -3,7 +3,7 @@ project: "Personal Nutrition Tracker"
 version: 1
 status: draft
 created: 2026-07-19
-updated: 2026-07-22
+updated: 2026-07-24
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -30,8 +30,8 @@ Existing diet trackers make logging so manual that the owner abandons it after a
 | ID   | Change ID                    | Outcome (user can …)                                              | Prerequisites   | PRD refs                              | Status   |
 | ---- | ---------------------------- | ---------------------------------------------------------------- | --------------- | ------------------------------------- | -------- |
 | F-01 | synced-data-backbone         | (foundation) log entries persist to a private synced store       | —               | FR-043, FR-041, FR-007, US-07         | done     |
-| F-02 | ai-estimation-proxy          | (foundation) estimates come from an off-device serverless proxy  | —               | FR-080, FR-005, FR-006                | ready    |
-| S-01 | free-text-meal-logging       | log a meal by typing it and reviewing the AI estimate            | F-01, F-02      | US-11, US-12, US-08, FR-080/081/082/084, FR-005/006/008, FR-030 | proposed |
+| F-02 | ai-estimation-proxy          | (foundation) estimates come from an off-device serverless proxy  | —               | FR-080, FR-005, FR-006                | done     |
+| S-01 | free-text-meal-logging       | log a meal by typing it and reviewing the AI estimate            | F-01, F-02      | US-11, US-12, US-08, FR-080/081/082/084, FR-005/006/008, FR-030 | ready    |
 | S-02 | profile-and-targets          | set body stats and see derived, overridable daily targets        | F-01            | US-05, FR-020/021/022/023             | proposed |
 | S-05 | food-icon-system             | see every entry carry a consistent category icon                 | F-02, S-01      | US-13, FR-050/051/052                 | proposed |
 | S-03 | label-scan-logging           | log a packaged product by photographing its nutrition label      | F-01, F-02, S-01| US-03, FR-001/002, FR-005/006/007/008, FR-040 | proposed |
@@ -95,7 +95,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Text ambiguity floor — push back for a count/size, or assume-and-show (OQ-11) — Owner: user. Block: no (FR-082 assume-and-surface is the default; the review step is the safety net).
 - **Risk:** the estimate request/response contract is reused by every AI capture path; designing it text-first but image-extensible now avoids a breaking change when S-03/S-04 land. Sequenced early because the north star cannot function without it.
-- **Status:** ready
+- **Status:** done
 
 ## Slices
 
@@ -110,7 +110,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - How vague is too vague before the system asks for a count/size (OQ-11) — Owner: user. Block: no (default to assume-and-surface per FR-082; review catches it).
 - **Risk:** this is the walking skeleton — it wires the proxy, the review-before-commit UI, and persistence into one vertical. Keep the day surface minimal (a flat "today" list with a running total); the sectioned view and budget target arrive in S-06/S-02. If this loop does not feel effortless, the whole product bet fails, which is why it is sequenced first.
-- **Status:** proposed
+- **Status:** ready — both prerequisites shipped; consumes `estimateMeal` from `src/data/estimation.ts` and `createMealEntry` from `src/data/meal-entries.repo.ts`.
 
 ### S-02: Set up profile and derived targets
 
@@ -243,9 +243,9 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 | Roadmap ID | Change ID                    | Suggested issue title                                  | Ready for `/10x-plan` | Notes |
 | ---------- | ---------------------------- | ------------------------------------------------------ | --------------------- | ----- |
-| F-01       | synced-data-backbone         | Synced single-owner data backbone (Supabase)           | yes                   | Run `/10x-plan synced-data-backbone` |
-| F-02       | ai-estimation-proxy          | Server-side AI estimation proxy (text-first)           | yes                   | Buildable in parallel with F-01 |
-| S-01       | free-text-meal-logging       | Free-text meal logging (north star)                    | no                    | Plan after F-01 + F-02 |
+| F-01       | synced-data-backbone         | Synced single-owner data backbone (Supabase)           | done                  | Shipped 2026-07-22; archived |
+| F-02       | ai-estimation-proxy          | Server-side AI estimation proxy (text-first)           | done                  | Shipped 2026-07-24; archived |
+| S-01       | free-text-meal-logging       | Free-text meal logging (north star)                    | yes                   | Unblocked — F-01 ✅ + F-02 ✅. Run `/10x-plan free-text-meal-logging` |
 | S-02       | profile-and-targets          | Profile, derived targets, and body-weight series       | no                    | Plan after F-01 |
 | S-05       | food-icon-system             | Bundled food-icon system with category mapping         | no                    | Plan after S-01; taxonomy (OQ-2) chosen in plan |
 | S-03       | label-scan-logging           | Label-scan logging + photo-capture pipeline            | no                    | Plan after S-01 |
@@ -288,3 +288,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog.
 ## Done
 
 - **F-01: (foundation) log entries persist to a private synced store** — Archived 2026-07-22 → `context/archive/2026-07-20-synced-data-backbone/`. Lesson: —.
+- **F-02: (foundation) estimates come from an off-device serverless proxy** — Archived 2026-07-24 → `context/archive/2026-07-22-ai-estimation-proxy/`. Lesson: the client seam should own the "unrecognized vs failed" distinction — `recognized: false` is a successful estimate with null macros (the manual-entry cue, FR-008), not an error; folding it into the error union would have pushed that judgement into every capture UI. Known gap carried forward: native-context invocation is unverified (web/Node path proven), and the `quota` error branch is unreachable while provider 429s surface as the function's own 502.
