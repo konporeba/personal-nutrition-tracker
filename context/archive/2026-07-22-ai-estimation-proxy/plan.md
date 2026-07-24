@@ -482,7 +482,7 @@ None — `estimation_runs` is reused unchanged from F-01.
 
 #### Manual
 
-- [ ] 3.4 `estimateMeal` returns a typed estimate from both native and web against the deployed function — web/Node path verified against the deployed function ("a bowl of porridge with honey" → 290 kcal, 3 assumptions, runId 9d6937dd; gibberish → recognized:false, null macros; reserved image variant → ok:false/server). **Native context still pending an owner run on a device/simulator.**
+- [x] 3.4 `estimateMeal` returns a typed estimate from both native and web against the deployed function — web/Node path verified against the deployed function ("a bowl of porridge with honey" → 290 kcal, 3 assumptions, runId 9d6937dd; gibberish → recognized:false, null macros; reserved image variant → ok:false/server). **Native context closed 2026-07-24 by S-01's Phase 4 device run** (`context/changes/free-text-meal-logging/verification.md`).
 - [x] 3.5 No provider secret present in the exported web bundle — scanned 36 files / 4.0 MB: no `sk-ant`, no `ANTHROPIC_API_KEY`, no `anthropic` (any case); owner email/password from `.env.local` also absent (only `EXPO_PUBLIC_*` is inlined) — a8f2201
 - [x] 3.6 A forced transport failure surfaces as `{ ok: false, error }`, not an unhandled rejection — client pointed at an unroutable host → `{"ok":false,"error":"network"}`, no throw — a8f2201
 

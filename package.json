@@ -50,6 +50,7 @@
     "lint": "expo lint",
     "smoke": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-smoke.mjs",
     "smoke:estimate": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-estimate-smoke.mjs",
+    "smoke:log": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-log-smoke.mjs",
     "parity": "node --env-file=.env --env-file-if-exists=.env.local scripts/parity-check.mjs"
   },
   "private": true

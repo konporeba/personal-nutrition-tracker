@@ -539,31 +539,31 @@ remain valid and will render in the day list when their `logged_at` falls on the
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npx tsc --noEmit`
-- [x] 3.2 Linting passes: `npm run lint`
-- [x] 3.3 Web bundle builds: `npx expo export --platform web`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit` — a1a9c76
+- [x] 3.2 Linting passes: `npm run lint` — a1a9c76
+- [x] 3.3 Web bundle builds: `npx expo export --platform web` — a1a9c76
 
 #### Manual
 
-- [x] 3.4 A typed meal commits and appears in the day list with the total updated, no manual refresh
-- [x] 3.5 Editing a macro before saving persists the edited value, not the estimated one
-- [x] 3.6 Clearing a macro field stores `null`, not `0`
-- [x] 3.7 A gibberish input commits as a manual entry with the values typed in, `source = 'manual'`
-- [x] 3.8 An entry logged at a mid-morning time lands in the expected section (checked in the DB)
-- [x] 3.9 Long-press deletes an entry; the row disappears and the total drops accordingly
-- [x] 3.10 The deleted row stays gone after a reload (soft delete persisted, not just cache)
+- [x] 3.4 A typed meal commits and appears in the day list with the total updated, no manual refresh — a1a9c76
+- [x] 3.5 Editing a macro before saving persists the edited value, not the estimated one — a1a9c76
+- [x] 3.6 Clearing a macro field stores `null`, not `0` — a1a9c76
+- [x] 3.7 A gibberish input commits as a manual entry with the values typed in, `source = 'manual'` — a1a9c76
+- [x] 3.8 An entry logged at a mid-morning time lands in the expected section (checked in the DB) — a1a9c76
+- [x] 3.9 Long-press deletes an entry; the row disappears and the total drops accordingly — a1a9c76
+- [x] 3.10 The deleted row stays gone after a reload (soft delete persisted, not just cache) — a1a9c76
 
 ### Phase 4: Verification
 
 #### Automated
 
-- [ ] 4.1 Smoke passes end-to-end: `npm run smoke:log` exits 0
-- [ ] 4.2 Type checking passes: `npx tsc --noEmit`
-- [ ] 4.3 Linting passes: `npm run lint`
-- [ ] 4.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:estimate`
+- [x] 4.1 Smoke passes end-to-end: `npm run smoke:log` exits 0
+- [x] 4.2 Type checking passes: `npx tsc --noEmit`
+- [x] 4.3 Linting passes: `npm run lint`
+- [x] 4.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:estimate`
 
 #### Manual
 
-- [ ] 4.5 The full loop works on a real device or simulator — closing F-02's native-invocation gap
-- [ ] 4.6 Cross-client parity: a meal logged on one client appears on the other after a focus refetch (US-07)
-- [ ] 4.7 `verification.md` records a real run with its output
+- [x] 4.5 The full loop works on a real device or simulator — closing F-02's native-invocation gap
+- [x] 4.6 Cross-client parity: a meal logged on one client appears on the other after a focus refetch (US-07)
+- [x] 4.7 `verification.md` records a real run with its output

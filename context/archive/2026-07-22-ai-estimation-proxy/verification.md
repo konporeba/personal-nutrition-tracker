@@ -91,12 +91,12 @@ With the client pointed at an unroutable host, `estimateMeal` returned
 
 ## Known gaps
 
-- **Native-context invocation is unverified.** The seam is proven from the
-  web/Node code path against the deployed function; a device/simulator run
-  (`npx expo start` → `i`/`a`) has not been performed, and no simulator is
-  available to this environment. The platform split affects only the storage
-  adapter in `@/lib/supabase`, not the invoke path, so the risk is low — but it
-  is a real untested edge. Plan step 3.4 is left open for this reason.
+- ~~**Native-context invocation is unverified.**~~ **Closed 2026-07-24 by S-01
+  (`free-text-meal-logging`).** That slice's Phase 4 device/simulator run
+  (`npx expo start` → `i`/`a`) drove the full capture loop through `estimateMeal`
+  from a native context — the first real native invocation of the deployed
+  function — and the owner confirmed it working. Plan step 3.4 is closed. See
+  `context/changes/free-text-meal-logging/verification.md`.
 - **`quota` is currently unreachable.** A provider-side 429 is swallowed by the
   function's own `502 estimation_failed`, so it classifies as `server`. The
   `quota` branch fires only on a platform 429 in front of the function.
