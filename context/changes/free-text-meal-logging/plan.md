@@ -508,32 +508,32 @@ remain valid and will render in the day list when their `logged_at` falls on the
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npx tsc --noEmit`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 Web bundle builds: `npx expo export --platform web`
-- [x] 1.4 No dangling imports of the deleted scaffold routes or components
+- [x] 1.1 Type checking passes: `npx tsc --noEmit` — 70bdd47
+- [x] 1.2 Linting passes: `npm run lint` — 70bdd47
+- [x] 1.3 Web bundle builds: `npx expo export --platform web` — 70bdd47
+- [x] 1.4 No dangling imports of the deleted scaffold routes or components — 70bdd47
 
 #### Manual
 
-- [x] 1.5 The app opens directly onto Today; no Explore tab exists on native or web
-- [x] 1.6 Entries created by `npm run smoke` appear in the list with a correct running total
-- [x] 1.7 Light and dark mode both render legibly
+- [x] 1.5 The app opens directly onto Today; no Explore tab exists on native or web — 70bdd47
+- [x] 1.6 Entries created by `npm run smoke` appear in the list with a correct running total — 70bdd47
+- [x] 1.7 Light and dark mode both render legibly — 70bdd47
 
 ### Phase 2: Capture & estimate
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.2 Linting passes: `npm run lint`
-- [ ] 2.3 Web bundle builds: `npx expo export --platform web`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit`
+- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.3 Web bundle builds: `npx expo export --platform web`
 
 #### Manual
 
-- [ ] 2.4 Typing a real meal and submitting reaches the review screen showing macros and ≥1 assumption
-- [ ] 2.5 The spinner appears during the call and the input is disabled for its duration
-- [ ] 2.6 With the network disabled, an error appears, the typed text is still there, and Retry issues one new call
-- [ ] 2.7 Gibberish input reaches the review screen with no fabricated numbers
-- [ ] 2.8 Navigating directly to `/review` without a valid `runId` degrades gracefully
+- [x] 2.4 Typing a real meal and submitting reaches the review screen showing macros and ≥1 assumption
+- [x] 2.5 The spinner appears during the call and the input is disabled for its duration
+- [x] 2.6 With the network disabled, an error appears, the typed text is still there, and Retry issues one new call
+- [x] 2.7 Gibberish input reaches the review screen with no fabricated numbers
+- [x] 2.8 Navigating directly to `/review` without a valid `runId` degrades gracefully
 
 ### Phase 3: Commit & delete
 

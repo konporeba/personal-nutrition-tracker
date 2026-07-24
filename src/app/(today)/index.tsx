@@ -1,11 +1,18 @@
-// Today — the app's front door and the read side of the core loop: what has been
-// logged so far and what it adds up to. The composer that feeds it arrives in
-// Phase 2; browsing other days is S-11, so this is always the current day.
+// Today — the app's front door and the whole core loop in one screen: describe a
+// meal at the top, see what has been logged and what it adds up to below.
+// Browsing other days is S-11, so this is always the current day.
 import { useMemo } from 'react';
-import { ActivityIndicator, FlatList, Platform, StyleSheet } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DayTotal } from '@/components/day-total';
+import { MealComposer } from '@/components/meal-composer';
 import { MealEntryRow } from '@/components/meal-entry-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -21,18 +28,30 @@ export default function TodayScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <FlatList
-          data={entries}
-          keyExtractor={(entry) => entry.id}
-          renderItem={({ item }) => <MealEntryRow entry={item} />}
-          ListHeaderComponent={<DayTotal entries={entries} date={today} />}
-          ListEmptyComponent={
-            <EmptyState isPending={isPending} isError={isError} />
-          }
-          contentContainerStyle={[styles.listContent, contentPlatformStyle]}
-          ItemSeparatorComponent={Separator}
-        />
+      <SafeAreaView
+        style={[styles.safeArea, surfacePlatformStyle]}
+        edges={['top', 'left', 'right']}>
+        <KeyboardAvoidingView
+          style={styles.fill}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          {/* Pinned above the list, not inside it — the input should never
+              scroll out of reach. */}
+          <ThemedView style={styles.composer}>
+            <MealComposer />
+          </ThemedView>
+          <FlatList
+            data={entries}
+            keyExtractor={(entry) => entry.id}
+            renderItem={({ item }) => <MealEntryRow entry={item} />}
+            ListHeaderComponent={<DayTotal entries={entries} date={today} />}
+            ListEmptyComponent={
+              <EmptyState isPending={isPending} isError={isError} />
+            }
+            contentContainerStyle={[styles.listContent, listPlatformStyle]}
+            ItemSeparatorComponent={Separator}
+            keyboardShouldPersistTaps="handled"
+          />
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ThemedView>
   );
@@ -53,10 +72,12 @@ function EmptyState({ isPending, isError }: { isPending: boolean; isError: boole
 }
 
 // The web tab bar floats over the top of the screen; the native one sits at the
-// bottom. Each platform pads away from its own.
-const contentPlatformStyle = Platform.select({
-  web: { paddingTop: Spacing.six },
+// bottom. Each platform pads away from its own — the top clearance has to sit on
+// the surface rather than the list, or the pinned composer slides under the bar.
+const surfacePlatformStyle = Platform.select({ web: { paddingTop: Spacing.six } });
+const listPlatformStyle = Platform.select({
   default: { paddingBottom: BottomTabInset + Spacing.three },
+  web: undefined,
 });
 
 const styles = StyleSheet.create({
@@ -69,6 +90,12 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     maxWidth: MaxContentWidth,
+  },
+  fill: {
+    flex: 1,
+  },
+  composer: {
+    paddingHorizontal: Spacing.four,
   },
   listContent: {
     paddingHorizontal: Spacing.four,
