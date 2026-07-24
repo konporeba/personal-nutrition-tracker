@@ -557,13 +557,13 @@ remain valid and will render in the day list when their `logged_at` falls on the
 
 #### Automated
 
-- [x] 4.1 Smoke passes end-to-end: `npm run smoke:log` exits 0
-- [x] 4.2 Type checking passes: `npx tsc --noEmit`
-- [x] 4.3 Linting passes: `npm run lint`
-- [x] 4.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:estimate`
+- [x] 4.1 Smoke passes end-to-end: `npm run smoke:log` exits 0 — 34a2080
+- [x] 4.2 Type checking passes: `npx tsc --noEmit` — 34a2080
+- [x] 4.3 Linting passes: `npm run lint` — 34a2080
+- [x] 4.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:estimate` — 34a2080
 
 #### Manual
 
-- [x] 4.5 The full loop works on a real device or simulator — closing F-02's native-invocation gap
-- [x] 4.6 Cross-client parity: a meal logged on one client appears on the other after a focus refetch (US-07)
-- [x] 4.7 `verification.md` records a real run with its output
+- [x] 4.5 The full loop works on a real device or simulator — closing F-02's native-invocation gap — 34a2080
+- [x] 4.6 Cross-client parity: a meal logged on one client appears on the other after a focus refetch (US-07) — 34a2080
+- [x] 4.7 `verification.md` records a real run with its output — 34a2080
