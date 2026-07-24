@@ -490,10 +490,10 @@ None — `estimation_runs` is reused unchanged from F-01.
 
 #### Automated
 
-- [ ] 4.1 Smoke script passes end-to-end: `npm run smoke:estimate` exits 0
-- [ ] 4.2 Type checking and lint still pass: `tsc --noEmit`, `npm run lint`
+- [x] 4.1 Smoke script passes end-to-end: `npm run smoke:estimate` exits 0 — real meal → 330 kcal / 3 assumptions / owner-scoped run; gibberish → recognized:false, null macros; anon sees 0 runs — 079c98d
+- [x] 4.2 Type checking and lint still pass: `tsc --noEmit`, `npm run lint` — both exit 0 (root tsc covers `scripts/`) — 079c98d
 
 #### Manual
 
-- [ ] 4.3 `verification.md` records the run and result
-- [ ] 4.4 `.env.example` note makes clear the AI key is a function secret, not a build-time value
+- [x] 4.3 `verification.md` records the run and result — plus the Phase 2 auth/RLS table, the bundle scan, and the two known gaps — 079c98d
+- [x] 4.4 `.env.example` note makes clear the AI key is a function secret, not a build-time value — documents `supabase secrets set`, warns against adding it to `.env`/`.env.local` — 079c98d
