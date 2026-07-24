@@ -15,12 +15,24 @@ import type { MealEntry, NewMealEntry } from '@/data/types';
  * The entries for one local calendar day, default today. Behind the shared
  * 5-minute `staleTime` plus fetch-on-focus, so the list catches up with the
  * other client without Realtime.
+ *
+ * Returns the resolved `day` alongside the query so callers render the day they
+ * are actually observing. That pairing is the point: the instant is re-derived
+ * on every render rather than captured once, because apps are resumed rather
+ * than relaunched. A session held open across midnight would otherwise keep
+ * observing yesterday's key — and since a write invalidates the key derived from
+ * its own `logged_at`, a meal logged after midnight would invalidate the new
+ * day while this screen watched the old one, and never appear at all.
  */
-export function useDayEntries(date: Date = new Date()) {
-  return useQuery({
-    queryKey: queryKeys.mealEntries.day(date),
-    queryFn: () => listMealEntriesForDay(date),
+export function useDayEntries(date?: Date) {
+  const day = date ?? new Date();
+
+  const query = useQuery({
+    queryKey: queryKeys.mealEntries.day(day),
+    queryFn: () => listMealEntriesForDay(day),
   });
+
+  return { query, day };
 }
 
 /**

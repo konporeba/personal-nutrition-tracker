@@ -6,11 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import type { MealEntry } from '@/data/types';
-
-/** Sum logged calories, skipping entries that carry none (never coerce null to 0). */
-export function sumCalories(entries: MealEntry[]): number {
-  return entries.reduce((total, entry) => total + (entry.calories ?? 0), 0);
-}
+import { sumCalories } from '@/lib/sum-calories';
 
 const dayFormat = new Intl.DateTimeFormat(undefined, {
   weekday: 'long',

@@ -72,7 +72,10 @@ function ReviewForm({
   const [carbs, setCarbs] = useState(() => seedField(estimate.carbs_g));
   const [fat, setFat] = useState(() => seedField(estimate.fat_g));
 
-  const canSave = name.trim().length > 0 && !create.isPending;
+  // `isSuccess` matters as much as `isPending`: between onSuccess firing and the
+  // navigation unmounting this screen there is a frame in which the button would
+  // otherwise be live again, and a second tap would commit a duplicate entry.
+  const canSave = name.trim().length > 0 && !create.isPending && !create.isSuccess;
 
   function save() {
     if (!canSave) return;

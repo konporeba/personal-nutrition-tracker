@@ -114,6 +114,21 @@ one open item the estimation-proxy slice shipped with. Recorded against that
 slice's `verification.md` (Known gaps) and its plan step 3.4:
 `context/archive/2026-07-22-ai-estimation-proxy/`.
 
+## Deviations from the plan
+
+- **The composer pushes `{ runId, text }`, not `?runId=…` alone.** The plan's
+  handoff design is otherwise followed exactly — the estimate travels through the
+  query cache under `queryKeys.estimate(runId)`, never the URL. The extra `text`
+  param exists because the composer clears on success, so Phase 3's "the typed
+  text seeds the name" for `recognized: false` would have no source; and
+  `estimate.name` is not a usable substitute, since the Edge Function's `sanitize`
+  passes the model's `name` through unchanged on the unrecognized path (including
+  `''`). Two consequences worth knowing: on web the meal description appears in the
+  address bar, and a long description makes a long URL.
+- **`use-meal-entries.ts` is listed under Phase 3's changes but needed no edit** —
+  `useDeleteMealEntry` was already written in Phase 1, per that phase's own
+  contract. Not drift; the plan front-loaded it.
+
 ## Known gaps
 
 - **No component-level tests.** There is still no test runner (per the plan, this

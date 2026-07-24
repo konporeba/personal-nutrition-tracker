@@ -23,6 +23,7 @@ import {
 } from '@/data/meal-entries.repo';
 import type { Section } from '@/data/types';
 import { sectionForTime } from '@/lib/section-for-time';
+import { sumCalories } from '@/lib/sum-calories';
 import { supabase } from '@/lib/supabase';
 
 function assert(cond: unknown, msg: string): asserts cond {
@@ -57,10 +58,6 @@ const SECTION_CASES: { h: number; m: number; want: Section }[] = [
   { h: 18, m: 0, want: 'supper' },
   { h: 23, m: 59, want: 'supper' },
 ];
-
-function sumCalories(entries: { calories: number | null }[]): number {
-  return entries.reduce((total, entry) => total + (entry.calories ?? 0), 0);
-}
 
 async function main() {
   assert(url && anonKey, 'EXPO_PUBLIC_SUPABASE_URL / _ANON_KEY must be set (.env)');

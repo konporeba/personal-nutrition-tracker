@@ -1,7 +1,6 @@
 // Today — the app's front door and the whole core loop in one screen: describe a
 // meal at the top, see what has been logged and what it adds up to below.
 // Browsing other days is S-11, so this is always the current day.
-import { useMemo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -20,10 +19,10 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useDayEntries, useDeleteMealEntry } from '@/data/use-meal-entries';
 
 export default function TodayScreen() {
-  // One instant for the whole render, so the header label and the query key
-  // cannot disagree if the render straddles midnight.
-  const today = useMemo(() => new Date(), []);
-  const { data, isPending, isError } = useDayEntries(today);
+  // `day` comes back from the hook so the header label and the query key are the
+  // same instant by construction, and so the day rolls over on resume.
+  const { query, day } = useDayEntries();
+  const { data, isPending, isError } = query;
   const deleteEntry = useDeleteMealEntry();
   const entries = data ?? [];
 
@@ -46,7 +45,18 @@ export default function TodayScreen() {
             renderItem={({ item }) => (
               <MealEntryRow entry={item} onLongPress={() => deleteEntry.mutate(item)} />
             )}
-            ListHeaderComponent={<DayTotal entries={entries} date={today} />}
+            ListHeaderComponent={
+              <>
+                <DayTotal entries={entries} date={day} />
+                {/* A failed soft delete leaves the row in place, which reads as
+                    "the long-press didn't register" — say so instead. */}
+                {deleteEntry.isError ? (
+                  <ThemedText type="small" themeColor="textSecondary" style={styles.deleteError}>
+                    Couldn&apos;t delete that entry. Try again.
+                  </ThemedText>
+                ) : null}
+              </>
+            }
             ListEmptyComponent={
               <EmptyState isPending={isPending} isError={isError} />
             }
@@ -110,5 +120,8 @@ const styles = StyleSheet.create({
   empty: {
     paddingVertical: Spacing.four,
     textAlign: 'center',
+  },
+  deleteError: {
+    paddingBottom: Spacing.two,
   },
 });

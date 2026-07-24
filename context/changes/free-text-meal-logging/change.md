@@ -1,7 +1,7 @@
 ---
 change_id: free-text-meal-logging
 title: Free text meal logging
-status: implemented
+status: impl_reviewed
 created: 2026-07-24
 updated: 2026-07-24
 archived_at: null
