@@ -591,10 +591,10 @@ filling in the profile.
 - [x] 5.1 Smoke passes end-to-end: `npm run smoke:profile` exits 0 — 5b7efa4
 - [x] 5.2 Type checking passes: `npx tsc --noEmit` — 5b7efa4
 - [x] 5.3 Linting passes: `npm run lint` — 5b7efa4
-- [x] 5.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:estimate`, `npm run smoke:log`
+- [x] 5.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:estimate`, `npm run smoke:log` — 2121bc4
 
 #### Manual
 
-- [ ] 5.5 The full profile → targets → override → weight → Today loop works on a device or simulator
-- [ ] 5.6 Cross-client parity: a profile/target change on one client appears on the other after a focus refetch (US-07)
-- [ ] 5.7 `verification.md` records a real run with its output
+- [x] 5.5 The full profile → targets → override → weight → Today loop works on a device or simulator
+- [x] 5.6 Cross-client parity: a profile/target change on one client appears on the other after a focus refetch (US-07)
+- [x] 5.7 `verification.md` records a real run with its output
