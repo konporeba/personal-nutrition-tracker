@@ -530,26 +530,26 @@ filling in the profile.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npx tsc --noEmit`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 Migration applies cleanly to the deployed project (or local shadow) without error
+- [x] 1.1 Type checking passes: `npx tsc --noEmit` — 732684f
+- [x] 1.2 Linting passes: `npm run lint` — 732684f
+- [x] 1.3 Migration applies cleanly to the deployed project (or local shadow) without error — 732684f
 
 #### Manual
 
-- [x] 1.4 The two tables exist with RLS enabled and the sync-field triggers active
-- [x] 1.5 An anonymous client sees zero rows from each (RLS holds)
+- [x] 1.4 The two tables exist with RLS enabled and the sync-field triggers active — 732684f
+- [x] 1.5 An anonymous client sees zero rows from each (RLS holds) — 732684f
 
 ### Phase 2: Derivation core
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.2 Linting passes: `npm run lint`
-- [ ] 2.3 Web bundle builds: `npx expo export --platform web`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit`
+- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.3 Web bundle builds: `npx expo export --platform web`
 
 #### Manual
 
-- [ ] 2.4 Spot-check one worked example by hand and confirm the function agrees
+- [x] 2.4 Spot-check one worked example by hand and confirm the function agrees
 
 ### Phase 3: Profile & weight UI
 
