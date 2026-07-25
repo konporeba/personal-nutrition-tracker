@@ -423,12 +423,12 @@ category, the row renders a name-derived or generic emoji. No backfill.
 
 #### Automated
 
-- [x] 4.1 Smoke passes end-to-end: `npm run smoke:icon` exits 0
-- [x] 4.2 Type checking passes: `npx tsc --noEmit`
-- [x] 4.3 Linting passes: `npm run lint`
-- [x] 4.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:profile`, `npm run smoke:log`, `npm run smoke:estimate`
+- [x] 4.1 Smoke passes end-to-end: `npm run smoke:icon` exits 0 — 22fcf60
+- [x] 4.2 Type checking passes: `npx tsc --noEmit` — 22fcf60
+- [x] 4.3 Linting passes: `npm run lint` — 22fcf60
+- [x] 4.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:profile`, `npm run smoke:log`, `npm run smoke:estimate` — 22fcf60
 
 #### Manual
 
-- [x] 4.5 The full log → icon-on-Today loop works on a device or simulator
-- [x] 4.6 `verification.md` records a real run with its output
+- [x] 4.5 The full log → icon-on-Today loop works on a device or simulator — 22fcf60
+- [x] 4.6 `verification.md` records a real run with its output — 22fcf60
