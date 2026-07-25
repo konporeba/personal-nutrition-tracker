@@ -572,25 +572,25 @@ filling in the profile.
 
 #### Automated
 
-- [x] 4.1 Type checking passes: `npx tsc --noEmit`
-- [x] 4.2 Linting passes: `npm run lint`
-- [x] 4.3 Web bundle builds: `npx expo export --platform web`
+- [x] 4.1 Type checking passes: `npx tsc --noEmit` — 4e1248e
+- [x] 4.2 Linting passes: `npm run lint` — 4e1248e
+- [x] 4.3 Web bundle builds: `npx expo export --platform web` — 4e1248e
 
 #### Manual
 
-- [x] 4.4 Today shows calories and all three macros as consumed vs target with progress bars
-- [x] 4.5 Committing a meal advances the bars without a manual refresh
-- [x] 4.6 An overridden target is the denominator the bar fills against
-- [x] 4.7 With no profile weight yet, Today degrades to the bare total with a setup hint
-- [x] 4.8 Light and dark both legible
+- [x] 4.4 Today shows calories and all three macros as consumed vs target with progress bars — 4e1248e
+- [x] 4.5 Committing a meal advances the bars without a manual refresh — 4e1248e
+- [x] 4.6 An overridden target is the denominator the bar fills against — 4e1248e
+- [x] 4.7 With no profile weight yet, Today degrades to the bare total with a setup hint — 4e1248e
+- [x] 4.8 Light and dark both legible — 4e1248e
 
 ### Phase 5: Verification
 
 #### Automated
 
-- [ ] 5.1 Smoke passes end-to-end: `npm run smoke:profile` exits 0
-- [ ] 5.2 Type checking passes: `npx tsc --noEmit`
-- [ ] 5.3 Linting passes: `npm run lint`
+- [x] 5.1 Smoke passes end-to-end: `npm run smoke:profile` exits 0
+- [x] 5.2 Type checking passes: `npx tsc --noEmit`
+- [x] 5.3 Linting passes: `npm run lint`
 - [ ] 5.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:estimate`, `npm run smoke:log`
 
 #### Manual
