@@ -1,10 +1,10 @@
 ---
 change_id: profile-and-targets
 title: Profile and derived targets
-status: impl_reviewed
+status: archived
 created: 2026-07-24
 updated: 2026-07-25
-archived_at: null
+archived_at: 2026-07-25T11:16:03Z
 ---
 
 ## Notes

@@ -3,7 +3,7 @@ project: "Personal Nutrition Tracker"
 version: 1
 status: draft
 created: 2026-07-19
-updated: 2026-07-24
+updated: 2026-07-25
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -32,7 +32,7 @@ Existing diet trackers make logging so manual that the owner abandons it after a
 | F-01 | synced-data-backbone         | (foundation) log entries persist to a private synced store       | —               | FR-043, FR-041, FR-007, US-07         | done     |
 | F-02 | ai-estimation-proxy          | (foundation) estimates come from an off-device serverless proxy  | —               | FR-080, FR-005, FR-006                | done     |
 | S-01 | free-text-meal-logging       | log a meal by typing it and reviewing the AI estimate            | F-01, F-02      | US-11, US-12, US-08, FR-080/081/082/084, FR-005/006/008, FR-030 | done     |
-| S-02 | profile-and-targets          | set body stats and see derived, overridable daily targets        | F-01            | US-05, FR-020/021/022/023             | proposed |
+| S-02 | profile-and-targets          | set body stats and see derived, overridable daily targets        | F-01            | US-05, FR-020/021/022/023             | done     |
 | S-05 | food-icon-system             | see every entry carry a consistent category icon                 | F-02, S-01      | US-13, FR-050/051/052                 | proposed |
 | S-03 | label-scan-logging           | log a packaged product by photographing its nutrition label      | F-01, F-02, S-01| US-03, FR-001/002, FR-005/006/007/008, FR-040 | proposed |
 | S-06 | structured-day-view          | see the day as five sections with subtotals and a running total  | S-01, S-05      | US-10, FR-056/057/058/059/060/061/064, FR-030 | proposed |
@@ -122,7 +122,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** target derivation is a BMR/TDEE-class formula fixed at sedentary baseline (OQ-1 resolved), so scope is well-defined; the main care is that overrides never get overwritten by re-derivation. Provides the budget target that FR-030 and the S-06 day view measure against.
-- **Status:** proposed
+- **Status:** done
 
 ### S-05: Food icon system
 
@@ -290,3 +290,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog.
 - **F-01: (foundation) log entries persist to a private synced store** — Archived 2026-07-22 → `context/archive/2026-07-20-synced-data-backbone/`. Lesson: —.
 - **F-02: (foundation) estimates come from an off-device serverless proxy** — Archived 2026-07-24 → `context/archive/2026-07-22-ai-estimation-proxy/`. Lesson: the client seam should own the "unrecognized vs failed" distinction — `recognized: false` is a successful estimate with null macros (the manual-entry cue, FR-008), not an error; folding it into the error union would have pushed that judgement into every capture UI. Known gap carried forward: native-context invocation is unverified (web/Node path proven), and the `quota` error branch is unreachable while provider 429s surface as the function's own 502.
 - **S-01: log a meal by typing it and reviewing the AI estimate** — Archived 2026-07-24 → `context/archive/2026-07-24-free-text-meal-logging/`. Lesson: re-derive "now" per render and let the data hook own it — a day/instant frozen in `useMemo(…, [])` silently rots in a resumed app, so a session spanning midnight watches a stale query key and a meal logged after midnight never appears. Closed F-02's carried-forward gap: this slice's device run is the first proven native invocation of the estimate function.
+- **S-02: set body stats and see derived, overridable daily targets** — Archived 2026-07-25 → `context/archive/2026-07-24-profile-and-targets/`. Lesson: —.
