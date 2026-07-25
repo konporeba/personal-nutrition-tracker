@@ -31,6 +31,7 @@ export async function createMealEntry(input: NewMealEntry): Promise<MealEntry> {
     protein_g: input.protein_g ?? null,
     carbs_g: input.carbs_g ?? null,
     fat_g: input.fat_g ?? null,
+    food_category: input.food_category ?? null,
     estimation_run_id: input.estimation_run_id ?? null,
   };
   const { data, error } = await supabase.from('meal_entries').insert(row).select().single();

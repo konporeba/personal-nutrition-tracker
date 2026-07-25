@@ -28,6 +28,8 @@ export type MealEntry = {
   protein_g: number | null;
   carbs_g: number | null;
   fat_g: number | null;
+  /** Coarse food label from the estimate (S-05), mapped to an icon at render. */
+  food_category: string | null;
   estimation_run_id: string | null;
   created_at: string;
   /** Server-clock, set by a BEFORE UPDATE trigger — the last-write-wins key. */
@@ -61,6 +63,7 @@ export type NewMealEntry = {
   protein_g?: number | null;
   carbs_g?: number | null;
   fat_g?: number | null;
+  food_category?: string | null;
   estimation_run_id?: string | null;
 };
 
@@ -76,6 +79,7 @@ export type MealEntryPatch = Partial<
     | 'protein_g'
     | 'carbs_g'
     | 'fat_g'
+    | 'food_category'
     | 'estimation_run_id'
   >
 >;
