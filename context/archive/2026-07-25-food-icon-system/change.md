@@ -1,10 +1,10 @@
 ---
 change_id: food-icon-system
 title: Food icon system
-status: impl_reviewed
+status: archived
 created: 2026-07-25
 updated: 2026-07-25
-archived_at: null
+archived_at: 2026-07-25T17:41:38Z
 ---
 
 ## Notes
