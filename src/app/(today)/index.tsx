@@ -17,6 +17,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useDayEntries, useDeleteMealEntry } from '@/data/use-meal-entries';
+import { useTargets } from '@/data/use-profile';
 
 export default function TodayScreen() {
   // `day` comes back from the hook so the header label and the query key are the
@@ -25,6 +26,11 @@ export default function TodayScreen() {
   const { data, isPending, isError } = query;
   const deleteEntry = useDeleteMealEntry();
   const entries = data ?? [];
+
+  // Effective (resting) targets for the header's consumed-vs-target bars; null
+  // until a profile and a first weight exist, in which case DayTotal falls back
+  // to the bare S-01 total.
+  const { targets } = useTargets();
 
   return (
     <ThemedView style={styles.container}>
@@ -47,7 +53,7 @@ export default function TodayScreen() {
             )}
             ListHeaderComponent={
               <>
-                <DayTotal entries={entries} date={day} />
+                <DayTotal entries={entries} date={day} targets={targets} />
                 {/* A failed soft delete leaves the row in place, which reads as
                     "the long-press didn't register" — say so instead. */}
                 {deleteEntry.isError ? (

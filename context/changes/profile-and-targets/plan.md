@@ -555,34 +555,34 @@ filling in the profile.
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npx tsc --noEmit`
-- [x] 3.2 Linting passes: `npm run lint`
-- [x] 3.3 Web bundle builds: `npx expo export --platform web`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit` — 3d990c1
+- [x] 3.2 Linting passes: `npm run lint` — 3d990c1
+- [x] 3.3 Web bundle builds: `npx expo export --platform web` — 3d990c1
 
 #### Manual
 
-- [x] 3.4 Entering stats + a weight shows four derived targets
-- [x] 3.5 Overriding one target persists it; editing an unrelated stat re-derives the other three but leaves the override intact
-- [x] 3.6 "Reset to derived" clears an override back to the computed number
-- [x] 3.7 Logging a weight updates current weight and re-derives; the reading appears in history
-- [x] 3.8 Long-press deletes a weight reading; it stays gone after reload
-- [x] 3.9 Profile and Today both reachable via tabs on native and web; light and dark legible
+- [x] 3.4 Entering stats + a weight shows four derived targets — 3d990c1
+- [x] 3.5 Overriding one target persists it; editing an unrelated stat re-derives the other three but leaves the override intact — 3d990c1
+- [x] 3.6 "Reset to derived" clears an override back to the computed number — 3d990c1
+- [x] 3.7 Logging a weight updates current weight and re-derives; the reading appears in history — 3d990c1
+- [x] 3.8 Long-press deletes a weight reading; it stays gone after reload — 3d990c1
+- [x] 3.9 Profile and Today both reachable via tabs on native and web; light and dark legible — 3d990c1
 
 ### Phase 4: Today integration
 
 #### Automated
 
-- [ ] 4.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 4.2 Linting passes: `npm run lint`
-- [ ] 4.3 Web bundle builds: `npx expo export --platform web`
+- [x] 4.1 Type checking passes: `npx tsc --noEmit`
+- [x] 4.2 Linting passes: `npm run lint`
+- [x] 4.3 Web bundle builds: `npx expo export --platform web`
 
 #### Manual
 
-- [ ] 4.4 Today shows calories and all three macros as consumed vs target with progress bars
-- [ ] 4.5 Committing a meal advances the bars without a manual refresh
-- [ ] 4.6 An overridden target is the denominator the bar fills against
-- [ ] 4.7 With no profile weight yet, Today degrades to the bare total with a setup hint
-- [ ] 4.8 Light and dark both legible
+- [x] 4.4 Today shows calories and all three macros as consumed vs target with progress bars
+- [x] 4.5 Committing a meal advances the bars without a manual refresh
+- [x] 4.6 An overridden target is the denominator the bar fills against
+- [x] 4.7 With no profile weight yet, Today degrades to the bare total with a setup hint
+- [x] 4.8 Light and dark both legible
 
 ### Phase 5: Verification
 
