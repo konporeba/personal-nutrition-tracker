@@ -69,18 +69,18 @@ sourcing with soft-delete fallback, and RLS end to end.
 | Linting | `npm run lint` | clean (every phase) |
 | Web bundle | `npx expo export --platform web` | bundles; routes incl. `/(today)`, `/(profile)`, `/(profile)/weight` |
 | F-01 store smoke | `npm run smoke` | PASSED, exit 0 |
-| F-02 estimate smoke | `npm run smoke:estimate` | **fails — `server`** (see below) |
-| S-01 log smoke | `npm run smoke:log` | **fails — `server`** (see below) |
+| F-02 estimate smoke | `npm run smoke:estimate` | PASSED, exit 0 |
+| S-01 log smoke | `npm run smoke:log` | PASSED, exit 0 |
 
-**The estimate and log smokes fail for a reason unrelated to this change.** Both
-call `estimateMeal`, which invokes the Supabase Edge Function (the AI proxy); both
-return `real-meal estimate failed: server` — the function rejected the request or
-the AI call failed (`EstimateErrorKind = 'server'`). S-02 touches neither
-`src/data/estimation.ts`, the Edge Function, nor the estimate/log path; the data
-backbone smoke (`npm run smoke`) passes, confirming the store and RLS are healthy.
-This is an environmental AI-proxy outage, not a regression from Phase 4/5. Re-run
-`npm run smoke:estimate` / `npm run smoke:log` once the estimation function is
-healthy to close criterion 5.4.
+**Both estimate/log smokes were briefly red on an environmental AI-proxy outage,
+now resolved.** During verification they returned `real-meal estimate failed:
+server`. Root cause: the deployed `estimate` Edge Function's `ANTHROPIC_API_KEY`
+function secret was stale (last set 2026-07-22) — the same key tested `200`
+directly against the Anthropic API, and the Supabase-stored digest did not match
+it. Re-setting the secret (`supabase secrets set ANTHROPIC_API_KEY=…` on project
+`hkelauazmbqnyohjbjtw`) fixed both smokes on the next cold start. This was never a
+code issue: S-02 touches neither `src/data/estimation.ts`, the Edge Function, nor
+the estimate/log path, and the data-backbone smoke stayed green throughout.
 
 ## Manual — data layer (Phase 1)
 
@@ -129,9 +129,6 @@ healthy to close criterion 5.4.
 
 ## Known gaps
 
-- **Prior estimate/log smokes are red on an AI-proxy outage** (above), not a
-  regression here. Criterion 5.4 stays open until the estimation function recovers
-  and both re-run green.
 - **Metric only** (kg, cm). Imperial units are out of scope for the single known
   owner.
 - **Today shows the *resting* target only.** The dynamic training budget (S-09 /

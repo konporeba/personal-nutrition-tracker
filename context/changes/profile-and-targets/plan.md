@@ -588,10 +588,10 @@ filling in the profile.
 
 #### Automated
 
-- [x] 5.1 Smoke passes end-to-end: `npm run smoke:profile` exits 0
-- [x] 5.2 Type checking passes: `npx tsc --noEmit`
-- [x] 5.3 Linting passes: `npm run lint`
-- [ ] 5.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:estimate`, `npm run smoke:log`
+- [x] 5.1 Smoke passes end-to-end: `npm run smoke:profile` exits 0 — 5b7efa4
+- [x] 5.2 Type checking passes: `npx tsc --noEmit` — 5b7efa4
+- [x] 5.3 Linting passes: `npm run lint` — 5b7efa4
+- [x] 5.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:estimate`, `npm run smoke:log`
 
 #### Manual
 
