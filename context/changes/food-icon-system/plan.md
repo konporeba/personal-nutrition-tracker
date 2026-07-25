@@ -384,25 +384,25 @@ category, the row renders a name-derived or generic emoji. No backfill.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npx tsc --noEmit`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 Migration applies cleanly to the deployed project (or local shadow) without error
+- [x] 1.1 Type checking passes: `npx tsc --noEmit` — 54c2496
+- [x] 1.2 Linting passes: `npm run lint` — 54c2496
+- [x] 1.3 Migration applies cleanly to the deployed project (or local shadow) without error — 54c2496
 
 #### Manual
 
-- [x] 1.4 The `meal_entries` table shows the new nullable `food_category` column with RLS still enabled
+- [x] 1.4 The `meal_entries` table shows the new nullable `food_category` column with RLS still enabled — 54c2496
 
 ### Phase 2: Emoji mapping core
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.2 Linting passes: `npm run lint`
-- [ ] 2.3 Web bundle builds: `npx expo export --platform web`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit`
+- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.3 Web bundle builds: `npx expo export --platform web`
 
 #### Manual
 
-- [ ] 2.4 Spot-check a handful of labels/names by hand and confirm the function agrees
+- [x] 2.4 Spot-check a handful of labels/names by hand and confirm the function agrees
 
 ### Phase 3: Wire commit + render
 
