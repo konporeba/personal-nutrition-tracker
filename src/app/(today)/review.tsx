@@ -93,6 +93,10 @@ function ReviewForm({
         protein_g: toNumberOrNull(protein),
         carbs_g: toNumberOrNull(carbs),
         fat_g: toNumberOrNull(fat),
+        // The model's coarse label, stored so Today can show a specific icon
+        // (S-05). Null on the unrecognized/manual path — the day view falls back
+        // to a name-derived or generic icon there.
+        food_category: recognized ? estimate.food_category : null,
         // Linked in both modes: an unrecognized input still produced a real run,
         // and the link is the audit trail of what the model was asked.
         estimation_run_id: runId,

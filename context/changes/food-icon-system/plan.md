@@ -396,28 +396,28 @@ category, the row renders a name-derived or generic emoji. No backfill.
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npx tsc --noEmit`
-- [x] 2.2 Linting passes: `npm run lint`
-- [x] 2.3 Web bundle builds: `npx expo export --platform web`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit` — acae521
+- [x] 2.2 Linting passes: `npm run lint` — acae521
+- [x] 2.3 Web bundle builds: `npx expo export --platform web` — acae521
 
 #### Manual
 
-- [x] 2.4 Spot-check a handful of labels/names by hand and confirm the function agrees
+- [x] 2.4 Spot-check a handful of labels/names by hand and confirm the function agrees — acae521
 
 ### Phase 3: Wire commit + render
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 3.2 Linting passes: `npm run lint`
-- [ ] 3.3 Web bundle builds: `npx expo export --platform web`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit`
+- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.3 Web bundle builds: `npx expo export --platform web`
 
 #### Manual
 
-- [ ] 3.4 Logging a recognized meal shows a matching emoji on its Today row
-- [ ] 3.5 A manual/unrecognized entry shows a name-derived emoji, or the generic one when nothing matches
-- [ ] 3.6 Entries logged before this slice (null category) still show an icon via name-derivation
-- [ ] 3.7 The row layout stays legible in light and dark; long names still wrap without pushing the icon or calories off-row
+- [x] 3.4 Logging a recognized meal shows a matching emoji on its Today row
+- [x] 3.5 A manual/unrecognized entry shows a name-derived emoji, or the generic one when nothing matches
+- [x] 3.6 Entries logged before this slice (null category) still show an icon via name-derivation
+- [x] 3.7 The row layout stays legible in light and dark; long names still wrap without pushing the icon or calories off-row
 
 ### Phase 4: Verification
 
