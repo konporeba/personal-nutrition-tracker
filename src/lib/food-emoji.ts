@@ -72,6 +72,14 @@ const FOOD_TABLE: FoodRule[] = [
   { emoji: '🫑', match: ['pepper', 'peppers', 'capsicum'] },
   { emoji: '🍄', match: ['mushroom', 'mushrooms'] },
 
+  // Fruit-containing dishes — matched before the bare fruit block so "apple pie"
+  // is a pie, "orange juice" a juice, "strawberry cake" a cake. Placed AFTER the
+  // protein/veg blocks, so "fish cake" stays 🐟 and "carrot cake" stays 🥕; bare
+  // "apple"/"orange" still fall through to the fruit rules below.
+  { emoji: '🥧', match: ['pie', 'tart'] },
+  { emoji: '🍰', match: ['cake', 'cheesecake'] },
+  { emoji: '🧃', match: ['juice', 'smoothie'] },
+
   // Fruit.
   { emoji: '🍎', match: ['apple', 'apples'] },
   { emoji: '🍌', match: ['banana', 'bananas'] },
@@ -87,12 +95,10 @@ const FOOD_TABLE: FoodRule[] = [
 
   // Sweets — "ice cream" precedes anything that could catch "cream".
   { emoji: '🍨', match: ['ice cream', 'icecream', 'gelato'] },
-  { emoji: '🍰', match: ['cake', 'cheesecake'] },
   { emoji: '🧁', match: ['cupcake', 'muffin'] },
   { emoji: '🍪', match: ['cookie', 'cookies', 'biscuit'] },
   { emoji: '🍫', match: ['chocolate', 'brownie'] },
   { emoji: '🍩', match: ['donut', 'doughnut'] },
-  { emoji: '🥧', match: ['pie'] },
   { emoji: '🍿', match: ['popcorn'] },
   { emoji: '🍬', match: ['candy', 'sweets'] },
   { emoji: '🍯', match: ['honey'] },
@@ -103,7 +109,6 @@ const FOOD_TABLE: FoodRule[] = [
   { emoji: '🍺', match: ['beer', 'ale', 'lager'] },
   { emoji: '🍷', match: ['wine'] },
   { emoji: '🍸', match: ['cocktail', 'martini'] },
-  { emoji: '🧃', match: ['juice', 'smoothie'] },
   { emoji: '💧', match: ['water'] },
   { emoji: '🥤', match: ['soda', 'cola', 'lemonade', 'soft drink', 'beverage', 'drink'] },
 ];
