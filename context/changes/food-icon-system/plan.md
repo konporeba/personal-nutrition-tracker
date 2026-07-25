@@ -408,27 +408,27 @@ category, the row renders a name-derived or generic emoji. No backfill.
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npx tsc --noEmit`
-- [x] 3.2 Linting passes: `npm run lint`
-- [x] 3.3 Web bundle builds: `npx expo export --platform web`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit` — 39f410d
+- [x] 3.2 Linting passes: `npm run lint` — 39f410d
+- [x] 3.3 Web bundle builds: `npx expo export --platform web` — 39f410d
 
 #### Manual
 
-- [x] 3.4 Logging a recognized meal shows a matching emoji on its Today row
-- [x] 3.5 A manual/unrecognized entry shows a name-derived emoji, or the generic one when nothing matches
-- [x] 3.6 Entries logged before this slice (null category) still show an icon via name-derivation
-- [x] 3.7 The row layout stays legible in light and dark; long names still wrap without pushing the icon or calories off-row
+- [x] 3.4 Logging a recognized meal shows a matching emoji on its Today row — 39f410d
+- [x] 3.5 A manual/unrecognized entry shows a name-derived emoji, or the generic one when nothing matches — 39f410d
+- [x] 3.6 Entries logged before this slice (null category) still show an icon via name-derivation — 39f410d
+- [x] 3.7 The row layout stays legible in light and dark; long names still wrap without pushing the icon or calories off-row — 39f410d
 
 ### Phase 4: Verification
 
 #### Automated
 
-- [ ] 4.1 Smoke passes end-to-end: `npm run smoke:icon` exits 0
-- [ ] 4.2 Type checking passes: `npx tsc --noEmit`
-- [ ] 4.3 Linting passes: `npm run lint`
-- [ ] 4.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:profile`, `npm run smoke:log`, `npm run smoke:estimate`
+- [x] 4.1 Smoke passes end-to-end: `npm run smoke:icon` exits 0
+- [x] 4.2 Type checking passes: `npx tsc --noEmit`
+- [x] 4.3 Linting passes: `npm run lint`
+- [x] 4.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:profile`, `npm run smoke:log`, `npm run smoke:estimate`
 
 #### Manual
 
-- [ ] 4.5 The full log → icon-on-Today loop works on a device or simulator
-- [ ] 4.6 `verification.md` records a real run with its output
+- [x] 4.5 The full log → icon-on-Today loop works on a device or simulator
+- [x] 4.6 `verification.md` records a real run with its output
