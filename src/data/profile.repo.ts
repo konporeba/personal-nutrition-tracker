@@ -32,9 +32,11 @@ export async function getProfile(): Promise<Profile | null> {
 }
 
 /**
- * Insert-or-update the profile on its `owner_id` PK. Only the fields present in
- * `patch` are written; overrides passed as `null` reset that target to derived.
- * `updated_at` is advanced by the server trigger, not here.
+ * Insert-or-update the profile on its `owner_id` PK. The upsert builds an INSERT
+ * tuple first, so `patch` MUST carry the five NOT NULL stats even when the row
+ * already exists — a stats-less patch throws (the type enforces this). Overrides
+ * are written when present (`null` resets a target to derived) and left untouched
+ * when omitted. `updated_at` is advanced by the server trigger, not here.
  */
 export async function upsertProfile(patch: ProfilePatch): Promise<Profile> {
   const owner_id = await requireOwnerId();

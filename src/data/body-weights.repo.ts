@@ -42,14 +42,16 @@ export async function listBodyWeights(): Promise<BodyWeight[]> {
     .from('body_weights')
     .select('*')
     .is('deleted_at', null)
-    .order('measured_at', { ascending: false });
+    .order('measured_at', { ascending: false })
+    .order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as BodyWeight[];
 }
 
 /**
- * The latest live reading (highest `measured_at`), or `null` if none exists.
- * This is the "current weight" that feeds derivation.
+ * The latest live reading (highest `measured_at`, ties broken by newest
+ * `created_at` so the order is total), or `null` if none exists. This is the
+ * "current weight" that feeds derivation.
  */
 export async function latestBodyWeight(): Promise<BodyWeight | null> {
   const { data, error } = await supabase
@@ -57,6 +59,7 @@ export async function latestBodyWeight(): Promise<BodyWeight | null> {
     .select('*')
     .is('deleted_at', null)
     .order('measured_at', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
   if (error) throw error;

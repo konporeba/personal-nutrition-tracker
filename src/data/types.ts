@@ -141,21 +141,23 @@ export type NewProfile = {
   fat_target_override?: number | null;
 };
 
-/** Mutable fields for updating the profile — the five stats + four overrides. */
-export type ProfilePatch = Partial<
-  Pick<
-    Profile,
-    | 'height_cm'
-    | 'age'
-    | 'sex'
-    | 'activity_level'
-    | 'goal'
-    | 'calorie_target_override'
-    | 'protein_target_override'
-    | 'carb_target_override'
-    | 'fat_target_override'
-  >
->;
+/**
+ * Upsert input for the profile. The repo upserts on the `owner_id` PK, and
+ * Postgres validates the INSERT tuple *before* the ON CONFLICT update resolves,
+ * so every write MUST carry the five NOT NULL stats — a stats-less patch throws
+ * at runtime. The type therefore requires them (not `Partial`). Overrides are
+ * optional: pass `null` to reset a target back to derived, or omit a column to
+ * leave it unchanged.
+ */
+export type ProfilePatch = Pick<
+  Profile,
+  'height_cm' | 'age' | 'sex' | 'activity_level' | 'goal'
+> & {
+  calorie_target_override?: number | null;
+  protein_target_override?: number | null;
+  carb_target_override?: number | null;
+  fat_target_override?: number | null;
+};
 
 /** A row of `public.body_weights` — one logged reading in the series. */
 export type BodyWeight = {
