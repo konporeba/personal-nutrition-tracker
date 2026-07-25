@@ -15,17 +15,21 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 
 // Web tab bar. Keep in sync with `app-tabs.tsx` — Metro picks one per platform,
 // so a tab added there and not here breaks native silently (and vice versa).
-// A single tab looks sparse; S-02 adds the second one.
 export default function AppTabs() {
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
       <TabList asChild>
         <CustomTabList>
-          {/* `(today)` is a group segment, so it contributes nothing to the URL
-              and the Today route still lives at `/`. */}
-          <TabTrigger name="today" href="/" asChild>
+          {/* Both tabs are group segments and a group's index also resolves to
+              bare `/`, so with two groups `/` is ambiguous. Use the
+              group-qualified href for each so navigation targets the right
+              group deterministically (Today keep in sync with `app-tabs.tsx`). */}
+          <TabTrigger name="today" href="/(today)" asChild>
             <TabButton>Today</TabButton>
+          </TabTrigger>
+          <TabTrigger name="profile" href="/(profile)" asChild>
+            <TabButton>Profile</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>

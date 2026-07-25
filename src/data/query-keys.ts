@@ -21,6 +21,17 @@ export const queryKeys = {
     day: (date: Date) => ['meal-entries', 'day', localDayKey(date)] as const,
   },
   /**
+   * The single owner profile row (stats + overrides). Targets are derived from
+   * this plus the latest weight, so a weight write invalidates this key too.
+   */
+  profile: () => ['profile'] as const,
+  bodyWeights: {
+    /** Prefix covering every weight query — invalidate to refresh them all. */
+    all: () => ['body-weights'] as const,
+    /** The latest reading — the "current weight" that feeds derivation. */
+    latest: () => ['body-weights', 'latest'] as const,
+  },
+  /**
    * A staged estimate, seeded by the composer and read by the review screen.
    * Keyed by the recorded `runId`, so the review route is only reachable with a
    * real run behind it.

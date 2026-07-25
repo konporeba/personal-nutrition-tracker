@@ -543,30 +543,30 @@ filling in the profile.
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npx tsc --noEmit`
-- [x] 2.2 Linting passes: `npm run lint`
-- [x] 2.3 Web bundle builds: `npx expo export --platform web`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit` — d41ce90
+- [x] 2.2 Linting passes: `npm run lint` — d41ce90
+- [x] 2.3 Web bundle builds: `npx expo export --platform web` — d41ce90
 
 #### Manual
 
-- [x] 2.4 Spot-check one worked example by hand and confirm the function agrees
+- [x] 2.4 Spot-check one worked example by hand and confirm the function agrees — d41ce90
 
 ### Phase 3: Profile & weight UI
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 3.2 Linting passes: `npm run lint`
-- [ ] 3.3 Web bundle builds: `npx expo export --platform web`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit`
+- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.3 Web bundle builds: `npx expo export --platform web`
 
 #### Manual
 
-- [ ] 3.4 Entering stats + a weight shows four derived targets
-- [ ] 3.5 Overriding one target persists it; editing an unrelated stat re-derives the other three but leaves the override intact
-- [ ] 3.6 "Reset to derived" clears an override back to the computed number
-- [ ] 3.7 Logging a weight updates current weight and re-derives; the reading appears in history
-- [ ] 3.8 Long-press deletes a weight reading; it stays gone after reload
-- [ ] 3.9 Profile and Today both reachable via tabs on native and web; light and dark legible
+- [x] 3.4 Entering stats + a weight shows four derived targets
+- [x] 3.5 Overriding one target persists it; editing an unrelated stat re-derives the other three but leaves the override intact
+- [x] 3.6 "Reset to derived" clears an override back to the computed number
+- [x] 3.7 Logging a weight updates current weight and re-derives; the reading appears in history
+- [x] 3.8 Long-press deletes a weight reading; it stays gone after reload
+- [x] 3.9 Profile and Today both reachable via tabs on native and web; light and dark legible
 
 ### Phase 4: Today integration
 
