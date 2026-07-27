@@ -36,7 +36,7 @@ Existing diet trackers make logging so manual that the owner abandons it after a
 | S-05 | food-icon-system             | see every entry carry a consistent category icon                 | F-02, S-01      | US-13, FR-050/051/052                 | done     |
 | S-03 | label-scan-logging           | log a packaged product by photographing its nutrition label      | F-01, F-02, S-01| US-03, FR-001/002, FR-005/006/007/008, FR-040 | done     |
 | S-06 | structured-day-view          | see the day as five sections with subtotals and a running total  | S-01, S-05      | US-10, FR-056/057/058/059/060/061/064, FR-030 | done     |
-| S-08 | saved-meals-library          | save a meal and re-log it in one tap                             | S-01, S-05      | US-04, FR-010/011/012, FR-055         | proposed |
+| S-08 | saved-meals-library          | save a meal and re-log it in one tap                             | S-01, S-05      | US-04, FR-010/011/012, FR-055         | done     |
 | S-04 | plate-photo-logging          | log a plate by photo and correct it with a weight                | F-01, F-02, S-03| US-01, US-02, FR-003/004, FR-005/006/007/008 | blocked  |
 | S-07 | meal-detail-view             | inspect a meal's full breakdown and edit/re-section/delete it    | S-05, S-06      | US-09, FR-062/063                     | blocked  |
 | S-09 | training-and-dynamic-budget  | log training and earn calories back as a two-sided ledger        | S-02, S-06      | US-14, US-15, FR-070/071/072/073/075  | blocked  |
@@ -173,7 +173,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** the copy-on-log semantics (a saved-meal edit must not mutate history) is the one subtlety; otherwise this is straightforward reuse of the entry model. Independent of the day-view and detail slices, so it can run in parallel.
-- **Status:** proposed
+- **Status:** done
 
 ### S-04: Log a plate by photo
 
@@ -294,3 +294,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog.
 - **S-05: see every entry carry a consistent category icon** — Archived 2026-07-25 → `context/archive/2026-07-25-food-icon-system/`. Lesson: —.
 - **S-03: log a packaged product by photographing its nutrition label** — Archived 2026-07-27 → `context/archive/2026-07-26-label-scan-logging/`. Lesson: —.
 - **S-06: see the day as five sections with subtotals and a running total** — Archived 2026-07-27 → `context/archive/2026-07-27-structured-day-view/`. Lesson: —.
+- **S-08: the owner saves any logged meal to a reusable library (with its icon) and re-logs it into any day in at most two taps, with no AI call; edits to a saved meal never retroactively change already-logged entries** — Archived 2026-07-27 → `context/archive/2026-07-27-saved-meals-library/`. Lesson: —.
