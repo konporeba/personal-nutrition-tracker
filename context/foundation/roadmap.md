@@ -35,7 +35,7 @@ Existing diet trackers make logging so manual that the owner abandons it after a
 | S-02 | profile-and-targets          | set body stats and see derived, overridable daily targets        | F-01            | US-05, FR-020/021/022/023             | done     |
 | S-05 | food-icon-system             | see every entry carry a consistent category icon                 | F-02, S-01      | US-13, FR-050/051/052                 | done     |
 | S-03 | label-scan-logging           | log a packaged product by photographing its nutrition label      | F-01, F-02, S-01| US-03, FR-001/002, FR-005/006/007/008, FR-040 | done     |
-| S-06 | structured-day-view          | see the day as five sections with subtotals and a running total  | S-01, S-05      | US-10, FR-056/057/058/059/060/061/064, FR-030 | proposed |
+| S-06 | structured-day-view          | see the day as five sections with subtotals and a running total  | S-01, S-05      | US-10, FR-056/057/058/059/060/061/064, FR-030 | done     |
 | S-08 | saved-meals-library          | save a meal and re-log it in one tap                             | S-01, S-05      | US-04, FR-010/011/012, FR-055         | proposed |
 | S-04 | plate-photo-logging          | log a plate by photo and correct it with a weight                | F-01, F-02, S-03| US-01, US-02, FR-003/004, FR-005/006/007/008 | blocked  |
 | S-07 | meal-detail-view             | inspect a meal's full breakdown and edit/re-section/delete it    | S-05, S-06      | US-09, FR-062/063                     | blocked  |
@@ -161,7 +161,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Time boundaries that drive the inferred section (OQ-10) — Owner: user. Block: no (default boundaries shipped; tuned to the owner's eating pattern later).
 - **Risk:** `section` is a required field on every entry (subtotals must be computable without inference), so this formalises the container S-01 wrote into. FR-030's "against the adjusted budget" is only fully realised once S-02 (target) and S-09 (burn adjustment) land — noted so the running total isn't mistaken for complete here.
-- **Status:** proposed
+- **Status:** done
 
 ### S-08: Save and reuse meals
 
@@ -293,3 +293,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog.
 - **S-02: set body stats and see derived, overridable daily targets** — Archived 2026-07-25 → `context/archive/2026-07-24-profile-and-targets/`. Lesson: —.
 - **S-05: see every entry carry a consistent category icon** — Archived 2026-07-25 → `context/archive/2026-07-25-food-icon-system/`. Lesson: —.
 - **S-03: log a packaged product by photographing its nutrition label** — Archived 2026-07-27 → `context/archive/2026-07-26-label-scan-logging/`. Lesson: —.
+- **S-06: see the day as five sections with subtotals and a running total** — Archived 2026-07-27 → `context/archive/2026-07-27-structured-day-view/`. Lesson: —.
