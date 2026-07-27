@@ -403,10 +403,10 @@ value from S-01 onward, so there is no backfill.
 
 #### Automated
 
-- [x] 3.1 Day-view smoke passes: `npm run smoke:day-view`
-- [x] 3.2 Type checking passes: `npx tsc --noEmit`
-- [x] 3.3 Linting passes: `npm run lint`
+- [x] 3.1 Day-view smoke passes: `npm run smoke:day-view` — 8f84ac7
+- [x] 3.2 Type checking passes: `npx tsc --noEmit` — 8f84ac7
+- [x] 3.3 Linting passes: `npm run lint` — 8f84ac7
 
 #### Manual
 
-- [x] 3.4 Full walkthrough on a real day: open Today, confirm all five sections render in order with correct subtotals, move an entry between sections, confirm subtotals and day total behave as expected, confirm delete is still unaffected
+- [x] 3.4 Full walkthrough on a real day: open Today, confirm all five sections render in order with correct subtotals, move an entry between sections, confirm subtotals and day total behave as expected, confirm delete is still unaffected — 8f84ac7
