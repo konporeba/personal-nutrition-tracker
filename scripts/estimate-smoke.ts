@@ -104,12 +104,17 @@ async function main() {
     assert(junk.estimate.fat_g === null, 'gibberish returned fat_g');
     console.log(`✓ unrecognized input: recognized=false, null macros, run ${junk.runId} still recorded`);
 
-    // 6. The image variant is reserved for S-03/S-04 — the function rejects it
+    // 6. Plate-photo estimation is reserved for S-04 — the function rejects it
     //    today, and the seam must surface that as an error, not a throw.
-    const image = await estimateMeal({ kind: 'image', mediaType: 'image/jpeg', data: 'not-an-image' });
-    assert(!image.ok, 'reserved image variant unexpectedly succeeded');
-    assert(image.error === 'server', `image variant mapped to ${image.error}, want server`);
-    console.log('✓ reserved image variant rejected as { ok: false, error: "server" }');
+    const image = await estimateMeal({
+      kind: 'image',
+      imageKind: 'plate',
+      mediaType: 'image/jpeg',
+      data: 'not-an-image',
+    });
+    assert(!image.ok, 'reserved plate-photo variant unexpectedly succeeded');
+    assert(image.error === 'server', `plate-photo variant mapped to ${image.error}, want server`);
+    console.log('✓ reserved plate-photo variant rejected as { ok: false, error: "server" }');
 
     console.log('\nESTIMATE SMOKE PASSED ✅');
   } finally {

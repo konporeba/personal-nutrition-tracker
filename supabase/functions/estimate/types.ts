@@ -24,6 +24,10 @@ export type EntrySource =
  * A single, aggregate estimate for one meal. Macro fields are `null` when the
  * input was not a recognizable food (`recognized: false`) — the proxy never
  * fabricates a number (FR-008).
+ *
+ * For a label-scan estimate (S-03), the macro fields and `serving_size` are
+ * **per serving** — review multiplies by the owner-confirmed servings count
+ * before committing totals to `meal_entries`.
  */
 export type Estimate = {
   /** Short human name for the meal, e.g. "Scrambled eggs and toast". */
@@ -39,17 +43,27 @@ export type Estimate = {
   /** False when the text was not an identifiable food; macros are then null. */
   recognized: boolean;
   confidence: Confidence;
+  /**
+   * Label-scan only (S-03): the printed serving size (e.g. "30 g", "1 cup").
+   * `null` for text/plate estimates and when a label had no legible serving size.
+   */
+  serving_size: string | null;
 };
 
 /** Free-text capture path (S-01). */
 export type TextInput = { kind: 'text'; text: string };
 
 /**
- * Photo capture path — reserved for S-03 (label scan) / S-04 (plate photo).
- * Declared now so later slices add a variant without a breaking contract change;
- * the function rejects it as unsupported until then.
+ * Photo capture path — `label` (S-03) and `plate` (S-04) share the wire shape;
+ * `sourceForInput` maps `imageKind` onto the `label_scan` / `plate_photo` entry
+ * source. The function rejects `imageKind: 'plate'` as unsupported until S-04.
  */
-export type ImageInput = { kind: 'image'; mediaType?: string; data?: string };
+export type ImageInput = {
+  kind: 'image';
+  imageKind: 'label' | 'plate';
+  mediaType?: string;
+  data?: string;
+};
 
 /** Discriminated union of every capture path. Extend, don't replace. */
 export type EstimateInput = TextInput | ImageInput;

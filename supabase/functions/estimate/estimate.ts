@@ -32,6 +32,32 @@ const SYSTEM_PROMPT = [
   '  numbers.',
   '- Set `confidence` to reflect how sure you are about the estimate.',
   '- Keep `calories` roughly consistent with the macronutrient grams.',
+  '- Set `serving_size` to null; it only applies to photographed labels.',
+].join('\n');
+
+// Label-scan (S-03) vision prompt. Per-serving extraction, not the package
+// total — review multiplies by the owner-confirmed servings count.
+const LABEL_SYSTEM_PROMPT = [
+  'You are a nutrition estimation assistant for a personal calorie tracker.',
+  'You are given a photograph of a packaged-product nutrition facts label.',
+  'Read the printed values and report them for a SINGLE serving as listed on',
+  'the label — do not multiply by the number of servings in the package.',
+  '',
+  'Rules:',
+  '- Set `calories`, `protein_g`, `carbs_g`, and `fat_g` to the per-serving',
+  '  values printed on the label. Do not estimate or infer — use the printed',
+  '  numbers exactly.',
+  '- Set `serving_size` to the printed serving size exactly as shown',
+  '  (e.g. "30 g", "1 cup (240 ml)", "2 cookies (28 g)").',
+  '- Set `name` to the product name if visible, otherwise a short description',
+  '  of the product.',
+  '- Set `food_category` to a short lowercase label for the product',
+  '  (e.g. "cereal", "yogurt", "snack bar", "beverage").',
+  '- If the image is not a legible nutrition facts label (wrong subject,',
+  '  too blurry, no visible macro values), set `recognized` to false, set',
+  '  every macro field and `serving_size` to null, and do NOT fabricate',
+  '  numbers.',
+  '- Set `confidence` to reflect how legible and complete the label was.',
 ].join('\n');
 
 // Structured-output schema. Numeric sanity (non-negative, macro/calorie
@@ -49,6 +75,7 @@ const ESTIMATE_SCHEMA = {
     assumptions: { type: 'array', items: { type: 'string' } },
     recognized: { type: 'boolean' },
     confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
+    serving_size: { type: ['string', 'null'] },
   },
   required: [
     'name',
@@ -60,6 +87,7 @@ const ESTIMATE_SCHEMA = {
     'assumptions',
     'recognized',
     'confidence',
+    'serving_size',
   ],
   additionalProperties: false,
 } as const;
@@ -101,6 +129,7 @@ function sanitize(raw: Estimate): Estimate {
     typeof raw.food_category === 'string' ? raw.food_category : 'other';
   const confidence: Estimate['confidence'] =
     raw.confidence === 'high' || raw.confidence === 'medium' ? raw.confidence : 'low';
+  const serving_size = typeof raw.serving_size === 'string' ? raw.serving_size : null;
 
   const calories = nonNeg(raw.calories);
   const recognized = raw.recognized === true && calories !== null;
@@ -116,6 +145,7 @@ function sanitize(raw: Estimate): Estimate {
       assumptions,
       recognized: false,
       confidence,
+      serving_size: null,
     };
   }
 
@@ -129,6 +159,7 @@ function sanitize(raw: Estimate): Estimate {
     assumptions,
     recognized: true,
     confidence,
+    serving_size,
   };
 }
 
@@ -157,6 +188,63 @@ export async function estimateFromText(text: string): Promise<EstimateResult> {
       system: SYSTEM_PROMPT,
       output_config: { format: { type: 'json_schema', schema: ESTIMATE_SCHEMA } },
       messages: [{ role: 'user', content: text }],
+    }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`anthropic ${res.status}: ${detail.slice(0, 300)}`);
+  }
+
+  const data = (await res.json()) as AnthropicResponse;
+  if (data.stop_reason === 'refusal') throw new Error('model refused the request');
+  if (data.stop_reason === 'max_tokens') throw new Error('model output was truncated');
+
+  const parsed = JSON.parse(extractJson(data)) as Estimate;
+  return {
+    estimate: sanitize(parsed),
+    raw: { model: data.model, stop_reason: data.stop_reason, usage: data.usage, parsed },
+  };
+}
+
+/**
+ * Estimate a meal from a photographed nutrition label (S-03). Same request
+ * shape as `estimateFromText` — model, schema, and `sanitize` are shared —
+ * with an image content block ahead of the instruction text and a label-OCR
+ * system prompt in place of the free-text one. Throws on transport/model error.
+ */
+export async function estimateFromImage(
+  mediaType: string,
+  data64: string,
+): Promise<EstimateResult> {
+  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
+
+  const res = await fetch(ANTHROPIC_URL, {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': ANTHROPIC_VERSION,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
+      thinking: { type: 'adaptive' },
+      system: LABEL_SYSTEM_PROMPT,
+      output_config: { format: { type: 'json_schema', schema: ESTIMATE_SCHEMA } },
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: data64 } },
+            {
+              type: 'text',
+              text: 'Read the nutrition facts label in this image and report the per-serving values.',
+            },
+          ],
+        },
+      ],
     }),
   });
 
