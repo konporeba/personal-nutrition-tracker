@@ -31,6 +31,10 @@ export const queryKeys = {
     /** The latest reading — the "current weight" that feeds derivation. */
     latest: () => ['body-weights', 'latest'] as const,
   },
+  savedMeals: {
+    /** The full saved-meals library — a flat list, no day bucketing. */
+    all: () => ['saved-meals'] as const,
+  },
   /**
    * A staged estimate, seeded by the composer and read by the review screen.
    * Keyed by the recorded `runId`, so the review route is only reachable with a

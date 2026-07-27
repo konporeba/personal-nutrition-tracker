@@ -91,6 +91,49 @@ export type NewEstimationRun = {
   raw_result?: unknown;
 };
 
+/**
+ * A row of `public.saved_meals` (S-08) — a reusable template a `MealEntry` gets
+ * copied from at re-log time. No log-specific fields (no `logged_at`/`section`/
+ * `source`), and no FK back from `meal_entries`: copy-on-log means an edit here
+ * never retroactively changes an entry already logged from it.
+ */
+export type SavedMeal = {
+  id: string;
+  owner_id: string;
+  name: string;
+  calories: number | null;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
+  /** Same free-text category as `MealEntry.food_category`, resolved to an icon via `iconForEntry`. */
+  food_category: string | null;
+  created_at: string;
+  /** Server-clock, set by a BEFORE UPDATE trigger — the last-write-wins key. */
+  updated_at: string;
+  /** Non-null once soft-deleted; every read path filters `deleted_at IS NULL`. */
+  deleted_at: string | null;
+};
+
+/**
+ * Insert input for a new saved meal. `owner_id` is filled by the repo from the
+ * session; `id` may be client-supplied for optimistic insert; `created_at` /
+ * `updated_at` / `deleted_at` are server-managed.
+ */
+export type NewSavedMeal = {
+  id?: string;
+  name: string;
+  calories?: number | null;
+  protein_g?: number | null;
+  carbs_g?: number | null;
+  fat_g?: number | null;
+  food_category?: string | null;
+};
+
+/** Mutable fields for updating a saved meal. */
+export type SavedMealPatch = Partial<
+  Pick<SavedMeal, 'name' | 'calories' | 'protein_g' | 'carbs_g' | 'fat_g' | 'food_category'>
+>;
+
 // Profile & body-weight rows (S-02). String-literal unions mirror the Postgres
 // enums `activity_level` / `body_goal` / `body_sex`.
 
