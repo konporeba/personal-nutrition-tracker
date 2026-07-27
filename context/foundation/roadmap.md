@@ -3,7 +3,7 @@ project: "Personal Nutrition Tracker"
 version: 1
 status: draft
 created: 2026-07-19
-updated: 2026-07-25
+updated: 2026-07-27
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -34,7 +34,7 @@ Existing diet trackers make logging so manual that the owner abandons it after a
 | S-01 | free-text-meal-logging       | log a meal by typing it and reviewing the AI estimate            | F-01, F-02      | US-11, US-12, US-08, FR-080/081/082/084, FR-005/006/008, FR-030 | done     |
 | S-02 | profile-and-targets          | set body stats and see derived, overridable daily targets        | F-01            | US-05, FR-020/021/022/023             | done     |
 | S-05 | food-icon-system             | see every entry carry a consistent category icon                 | F-02, S-01      | US-13, FR-050/051/052                 | done     |
-| S-03 | label-scan-logging           | log a packaged product by photographing its nutrition label      | F-01, F-02, S-01| US-03, FR-001/002, FR-005/006/007/008, FR-040 | proposed |
+| S-03 | label-scan-logging           | log a packaged product by photographing its nutrition label      | F-01, F-02, S-01| US-03, FR-001/002, FR-005/006/007/008, FR-040 | done     |
 | S-06 | structured-day-view          | see the day as five sections with subtotals and a running total  | S-01, S-05      | US-10, FR-056/057/058/059/060/061/064, FR-030 | proposed |
 | S-08 | saved-meals-library          | save a meal and re-log it in one tap                             | S-01, S-05      | US-04, FR-010/011/012, FR-055         | proposed |
 | S-04 | plate-photo-logging          | log a plate by photo and correct it with a weight                | F-01, F-02, S-03| US-01, US-02, FR-003/004, FR-005/006/007/008 | blocked  |
@@ -148,7 +148,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Discard source photos after N days or retain indefinitely (OQ-7) — Owner: user. Block: no (default retain-as-evidence; a retention policy can be added later).
 - **Risk:** this establishes the photo-capture pipeline (camera + gallery + evidence-only retention) that S-04 reuses. Chosen as the first photo path because label OCR is near-exact and does NOT need the per-component decision (OQ-6) that blocks the plate path — so a capture path ships while OQ-6 is still open.
-- **Status:** proposed
+- **Status:** done
 
 ### S-06: See the structured day
 
@@ -292,3 +292,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog.
 - **S-01: log a meal by typing it and reviewing the AI estimate** — Archived 2026-07-24 → `context/archive/2026-07-24-free-text-meal-logging/`. Lesson: re-derive "now" per render and let the data hook own it — a day/instant frozen in `useMemo(…, [])` silently rots in a resumed app, so a session spanning midnight watches a stale query key and a meal logged after midnight never appears. Closed F-02's carried-forward gap: this slice's device run is the first proven native invocation of the estimate function.
 - **S-02: set body stats and see derived, overridable daily targets** — Archived 2026-07-25 → `context/archive/2026-07-24-profile-and-targets/`. Lesson: —.
 - **S-05: see every entry carry a consistent category icon** — Archived 2026-07-25 → `context/archive/2026-07-25-food-icon-system/`. Lesson: —.
+- **S-03: log a packaged product by photographing its nutrition label** — Archived 2026-07-27 → `context/archive/2026-07-26-label-scan-logging/`. Lesson: —.

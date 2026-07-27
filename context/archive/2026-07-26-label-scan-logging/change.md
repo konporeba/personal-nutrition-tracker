@@ -1,10 +1,10 @@
 ---
 change_id: label-scan-logging
 title: Label scan logging
-status: impl_reviewed
+status: archived
 created: 2026-07-26
 updated: 2026-07-27
-archived_at: null
+archived_at: 2026-07-27T14:43:23Z
 ---
 
 ## Notes
