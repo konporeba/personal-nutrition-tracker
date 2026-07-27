@@ -1,11 +1,12 @@
-// One row of the Today list: an icon, what was eaten, and what it cost. The
-// sectioned day view (S-06) is a later slice — this renders a flat chronological
-// row. The leading emoji (S-05) is resolved from the entry's stored
-// `food_category`, or best-effort from its name, so the day is scannable.
+// One row of a section's list: an icon, what was eaten, and what it cost. The
+// leading emoji (S-05) is resolved from the entry's stored `food_category`, or
+// best-effort from its name, so the day is scannable.
 //
 // Deleting is a long-press, not a tap. There is deliberately no confirm step
 // (editing a committed entry is S-07, so delete-and-relog is the whole correction
-// path for now), which means the gesture itself has to be the safeguard.
+// path for now), which means the gesture itself has to be the safeguard. Tapping
+// is the separate re-section action (S-06, FR-064) — the two gestures don't
+// conflict since RN fires only one of `onPress`/`onLongPress` per touch.
 import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -16,13 +17,18 @@ import { iconForEntry } from '@/lib/food-emoji';
 
 export function MealEntryRow({
   entry,
+  onPress,
   onLongPress,
 }: {
   entry: MealEntry;
+  onPress?: () => void;
   onLongPress?: () => void;
 }) {
   return (
-    <Pressable onLongPress={onLongPress} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={({ pressed }) => pressed && styles.pressed}>
       <ThemedView type="backgroundElement" style={styles.row}>
         <ThemedView type="backgroundElement" style={styles.left}>
           <ThemedText style={styles.icon}>{iconForEntry(entry)}</ThemedText>

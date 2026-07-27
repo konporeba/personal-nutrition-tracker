@@ -1,6 +1,7 @@
 // Today — the app's front door and the whole core loop in one screen: describe a
 // meal at the top, see what has been logged and what it adds up to below.
 // Browsing other days is S-11, so this is always the current day.
+import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -13,12 +14,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DayTotal } from '@/components/day-total';
 import { MealComposer } from '@/components/meal-composer';
 import { MealEntryRow } from '@/components/meal-entry-row';
+import { MoveSectionSheet } from '@/components/move-section-sheet';
 import { SectionSubtotal } from '@/components/section-subtotal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import type { MealEntry, Section } from '@/data/types';
-import { useDayEntries, useDeleteMealEntry } from '@/data/use-meal-entries';
+import {
+  useDayEntries,
+  useDeleteMealEntry,
+  useUpdateMealEntrySection,
+} from '@/data/use-meal-entries';
 import { useTargets } from '@/data/use-profile';
 import { groupEntriesBySection } from '@/lib/group-by-section';
 import type { MacroTotals } from '@/lib/sum-macros';
@@ -38,7 +44,24 @@ export default function TodayScreen() {
   const { query, day } = useDayEntries();
   const { data, isPending, isError } = query;
   const deleteEntry = useDeleteMealEntry();
+  const updateSection = useUpdateMealEntrySection();
   const entries = data ?? [];
+
+  // The entry currently targeted for a move, or null when the sheet is closed.
+  const [movingEntry, setMovingEntry] = useState<MealEntry | null>(null);
+
+  function moveTo(section: Section) {
+    if (!movingEntry || updateSection.isPending) return;
+    // Picking the entry's current section is a no-op close, not a wasted write.
+    if (section === movingEntry.section) {
+      setMovingEntry(null);
+      return;
+    }
+    updateSection.mutate(
+      { id: movingEntry.id, logged_at: movingEntry.logged_at, section },
+      { onSuccess: () => setMovingEntry(null) },
+    );
+  }
 
   // Effective (resting) targets for the header's consumed-vs-target bars; null
   // until a profile and a first weight exist, in which case DayTotal falls back
@@ -81,7 +104,11 @@ export default function TodayScreen() {
             sections={sections}
             keyExtractor={(entry) => entry.id}
             renderItem={({ item }) => (
-              <MealEntryRow entry={item} onLongPress={() => deleteEntry.mutate(item)} />
+              <MealEntryRow
+                entry={item}
+                onPress={() => setMovingEntry(item)}
+                onLongPress={() => deleteEntry.mutate(item)}
+              />
             )}
             renderSectionHeader={({ section }) => (
               <SectionSubtotal
@@ -101,6 +128,13 @@ export default function TodayScreen() {
                     Couldn&apos;t delete that entry. Try again.
                   </ThemedText>
                 ) : null}
+                {/* A failed move leaves the entry in its original section — say so,
+                    same as the delete-failure message above. */}
+                {updateSection.isError ? (
+                  <ThemedText type="small" themeColor="textSecondary" style={styles.deleteError}>
+                    Couldn&apos;t move that entry. Try again.
+                  </ThemedText>
+                ) : null}
               </>
             }
             ListEmptyComponent={<EmptyState isPending={isPending} />}
@@ -110,6 +144,14 @@ export default function TodayScreen() {
           />
         </KeyboardAvoidingView>
       </SafeAreaView>
+      <MoveSectionSheet
+        visible={movingEntry !== null}
+        // Unused while hidden (`visible` gates it) — just satisfies the type
+        // when no entry is targeted.
+        currentSection={movingEntry?.section ?? 'breakfast'}
+        onSelect={moveTo}
+        onRequestClose={() => setMovingEntry(null)}
+      />
     </ThemedView>
   );
 }

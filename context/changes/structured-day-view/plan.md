@@ -372,32 +372,32 @@ value from S-01 onward, so there is no backfill.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npx tsc --noEmit`
-- [x] 1.2 Linting passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npx tsc --noEmit` — 490ba09
+- [x] 1.2 Linting passes: `npm run lint` — 490ba09
 
 #### Manual
 
-- [x] 1.3 Today shows all five section headers, in fixed order, on a day with entries in only some sections — sections with no entries still show their header and a 0 kcal subtotal
-- [x] 1.4 Each section's subtotal (calories + macro chips) matches the sum of that section's visible rows
-- [x] 1.5 Entries within a section remain in chronological (earliest-first) order
-- [x] 1.6 The day-level DayTotal above the sections is unchanged and still reflects the full day's total regardless of section boundaries
-- [x] 1.7 Section headers scroll with the content (no sticky pinning)
+- [x] 1.3 Today shows all five section headers, in fixed order, on a day with entries in only some sections — sections with no entries still show their header and a 0 kcal subtotal — 490ba09
+- [x] 1.4 Each section's subtotal (calories + macro chips) matches the sum of that section's visible rows — 490ba09
+- [x] 1.5 Entries within a section remain in chronological (earliest-first) order — 490ba09
+- [x] 1.6 The day-level DayTotal above the sections is unchanged and still reflects the full day's total regardless of section boundaries — 490ba09
+- [x] 1.7 Section headers scroll with the content (no sticky pinning) — 490ba09
 
 ### Phase 2: Move an entry between sections
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit`
+- [x] 2.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.3 Tapping an entry opens the "Move to…" sheet listing the other four sections (not the entry's current one, or showing it clearly disabled)
-- [ ] 2.4 Picking a section closes the sheet, moves the entry, and both the old and new section's subtotals and entry lists update without a manual refresh
-- [ ] 2.5 The day-level total is unchanged by a move
-- [ ] 2.6 Long-press on a row still deletes it, unaffected by the new tap behavior
-- [ ] 2.7 A failed move surfaces an inline error message and leaves the entry in its original section
-- [ ] 2.8 The sheet behaves correctly on both a native build and web
+- [x] 2.3 Tapping an entry opens the "Move to…" sheet listing the other four sections (not the entry's current one, or showing it clearly disabled)
+- [x] 2.4 Picking a section closes the sheet, moves the entry, and both the old and new section's subtotals and entry lists update without a manual refresh
+- [x] 2.5 The day-level total is unchanged by a move
+- [x] 2.6 Long-press on a row still deletes it, unaffected by the new tap behavior
+- [x] 2.7 A failed move surfaces an inline error message and leaves the entry in its original section
+- [x] 2.8 The sheet behaves correctly on both a native build and web
 
 ### Phase 3: Smoke coverage
 

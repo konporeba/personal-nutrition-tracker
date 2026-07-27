@@ -9,7 +9,8 @@ import { Spacing } from '@/constants/theme';
 import type { Section } from '@/data/types';
 import type { MacroTotals } from '@/lib/sum-macros';
 
-const SECTION_LABELS: Record<Section, string> = {
+/** Display label per section — shared with `MoveSectionSheet`. */
+export const SECTION_LABELS: Record<Section, string> = {
   breakfast: 'Breakfast',
   snack: 'Snack',
   lunch: 'Lunch',

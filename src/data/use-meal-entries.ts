@@ -7,9 +7,10 @@ import {
   createMealEntry,
   listMealEntriesForDay,
   softDeleteMealEntry,
+  updateMealEntry,
 } from '@/data/meal-entries.repo';
 import { queryKeys } from '@/data/query-keys';
-import type { MealEntry, NewMealEntry } from '@/data/types';
+import type { MealEntry, NewMealEntry, Section } from '@/data/types';
 
 /**
  * The entries for one local calendar day, default today. Behind the shared
@@ -65,6 +66,25 @@ export function useDeleteMealEntry() {
       await softDeleteMealEntry(entry.id);
       return entry;
     },
+    onSuccess: (entry) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.mealEntries.day(new Date(entry.logged_at)),
+      });
+    },
+  });
+}
+
+/**
+ * Move an entry into a different section (FR-064). Same invalidation pattern
+ * as `useDeleteMealEntry` — the day key comes from the entry's own
+ * `logged_at`, so the move is reflected wherever it actually landed.
+ */
+export function useUpdateMealEntrySection() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: Pick<MealEntry, 'id' | 'logged_at'> & { section: Section }) =>
+      updateMealEntry(input.id, { section: input.section }),
     onSuccess: (entry) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.mealEntries.day(new Date(entry.logged_at)),
