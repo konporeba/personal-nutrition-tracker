@@ -54,6 +54,7 @@
     "smoke:log": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-log-smoke.mjs",
     "smoke:profile": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-profile-smoke.mjs",
     "smoke:icon": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-icon-smoke.mjs",
+    "smoke:day-view": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-day-view-smoke.mjs",
     "parity": "node --env-file=.env --env-file-if-exists=.env.local scripts/parity-check.mjs"
   },
   "private": true

@@ -387,26 +387,26 @@ value from S-01 onward, so there is no backfill.
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npx tsc --noEmit`
-- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit` — 622d4d8
+- [x] 2.2 Linting passes: `npm run lint` — 622d4d8
 
 #### Manual
 
-- [x] 2.3 Tapping an entry opens the "Move to…" sheet listing the other four sections (not the entry's current one, or showing it clearly disabled)
-- [x] 2.4 Picking a section closes the sheet, moves the entry, and both the old and new section's subtotals and entry lists update without a manual refresh
-- [x] 2.5 The day-level total is unchanged by a move
-- [x] 2.6 Long-press on a row still deletes it, unaffected by the new tap behavior
-- [x] 2.7 A failed move surfaces an inline error message and leaves the entry in its original section
-- [x] 2.8 The sheet behaves correctly on both a native build and web
+- [x] 2.3 Tapping an entry opens the "Move to…" sheet listing the other four sections (not the entry's current one, or showing it clearly disabled) — 622d4d8
+- [x] 2.4 Picking a section closes the sheet, moves the entry, and both the old and new section's subtotals and entry lists update without a manual refresh — 622d4d8
+- [x] 2.5 The day-level total is unchanged by a move — 622d4d8
+- [x] 2.6 Long-press on a row still deletes it, unaffected by the new tap behavior — 622d4d8
+- [x] 2.7 A failed move surfaces an inline error message and leaves the entry in its original section — 622d4d8
+- [x] 2.8 The sheet behaves correctly on both a native build and web — 622d4d8
 
 ### Phase 3: Smoke coverage
 
 #### Automated
 
-- [ ] 3.1 Day-view smoke passes: `npm run smoke:day-view`
-- [ ] 3.2 Type checking passes: `npx tsc --noEmit`
-- [ ] 3.3 Linting passes: `npm run lint`
+- [x] 3.1 Day-view smoke passes: `npm run smoke:day-view`
+- [x] 3.2 Type checking passes: `npx tsc --noEmit`
+- [x] 3.3 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 3.4 Full walkthrough on a real day: open Today, confirm all five sections render in order with correct subtotals, move an entry between sections, confirm subtotals and day total behave as expected, confirm delete is still unaffected
+- [x] 3.4 Full walkthrough on a real day: open Today, confirm all five sections render in order with correct subtotals, move an entry between sections, confirm subtotals and day total behave as expected, confirm delete is still unaffected
