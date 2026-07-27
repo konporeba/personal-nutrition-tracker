@@ -380,31 +380,31 @@ Purely additive: one new table, no changes to `meal_entries` or any existing tab
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npx tsc --noEmit`
-- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit` — a794942
+- [x] 3.2 Linting passes: `npm run lint` — a794942
 
 #### Manual
 
-- [x] 3.3 Today has a visible way to reach the saved-meals library
-- [x] 3.4 The library lists every saved meal with its icon, name, and calories
-- [x] 3.5 Tapping a saved-meal row creates a new entry on today's day view in the section implied by the current time, with no loading/estimate screen and no AI call
-- [x] 3.6 The day's running total updates immediately to reflect the re-logged entry
-- [x] 3.7 Re-logging the same saved meal twice creates two independent entries
+- [x] 3.3 Today has a visible way to reach the saved-meals library — a794942
+- [x] 3.4 The library lists every saved meal with its icon, name, and calories — a794942
+- [x] 3.5 Tapping a saved-meal row creates a new entry on today's day view in the section implied by the current time, with no loading/estimate screen and no AI call — a794942
+- [x] 3.6 The day's running total updates immediately to reflect the re-logged entry — a794942
+- [x] 3.7 Re-logging the same saved meal twice creates two independent entries — a794942
 
 ### Phase 4: Manage saved meals — edit, delete, and log to another day
 
 #### Automated
 
-- [ ] 4.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 4.2 Linting passes: `npm run lint`
+- [x] 4.1 Type checking passes: `npx tsc --noEmit`
+- [x] 4.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 4.3 Long-pressing a saved-meal row opens a sheet with "Log to another day…", "Edit", and "Delete"
-- [ ] 4.4 Edit opens a form pre-filled with the saved meal's current values; saving updates the library entry and the library list reflects the change immediately
-- [ ] 4.5 Editing a saved meal that was already re-logged earlier does NOT change the previously-logged entry's values on Today or any prior day
-- [ ] 4.6 Delete removes the saved meal from the library immediately and does not affect any previously-logged entries
-- [ ] 4.7 "Log to another day…" lets the owner pick a day other than today and a section, then creates the entry on that day; the day+section picker cannot select a future day
+- [x] 4.3 Long-pressing a saved-meal row opens a sheet with "Log to another day…", "Edit", and "Delete"
+- [x] 4.4 Edit opens a form pre-filled with the saved meal's current values; saving updates the library entry and the library list reflects the change immediately
+- [x] 4.5 Editing a saved meal that was already re-logged earlier does NOT change the previously-logged entry's values on Today or any prior day
+- [x] 4.6 Delete removes the saved meal from the library immediately and does not affect any previously-logged entries
+- [x] 4.7 "Log to another day…" lets the owner pick a day other than today and a section, then creates the entry on that day; the day+section picker cannot select a future day
 
 ### Phase 5: Smoke coverage
 

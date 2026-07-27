@@ -1,25 +1,34 @@
 // Saved meals library (S-08): every meal saved from the review screen. Tapping
 // one re-logs it to today instantly — no AI call, no confirmation screen — the
 // path that satisfies FR-011's "at most two interactions" requirement (open
-// library, tap the row). Long-press management (Edit / Delete / Log to
-// another day) is wired in Phase 4.
+// library, tap the row). Long-press opens a management sheet: Edit, Delete, or
+// "Log to another day…".
 import { Stack, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet } from 'react-native';
 
+import { LogToDaySheet } from '@/components/log-to-day-sheet';
+import { SavedMealActionsSheet } from '@/components/saved-meal-actions-sheet';
 import { SavedMealRow } from '@/components/saved-meal-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import type { SavedMeal } from '@/data/types';
+import type { SavedMeal, Section } from '@/data/types';
 import { useCreateMealEntry } from '@/data/use-meal-entries';
-import { useSavedMeals } from '@/data/use-saved-meals';
+import { useDeleteSavedMeal, useSavedMeals } from '@/data/use-saved-meals';
 import { sectionForTime } from '@/lib/section-for-time';
 
 export default function LibraryScreen() {
   const router = useRouter();
   const { data, isPending, isError } = useSavedMeals();
   const createEntry = useCreateMealEntry();
+  const deleteSavedMeal = useDeleteSavedMeal();
   const savedMeals = data ?? [];
+
+  // The saved meal targeted by a long-press, or null when the actions sheet is
+  // closed. Only one of the two sheets below is ever visible at a time.
+  const [actionsFor, setActionsFor] = useState<SavedMeal | null>(null);
+  const [loggingDayFor, setLoggingDayFor] = useState<SavedMeal | null>(null);
 
   function relog(savedMeal: SavedMeal) {
     if (createEntry.isPending) return;
@@ -47,6 +56,43 @@ export default function LibraryScreen() {
     );
   }
 
+  // Same write path as `relog`, except the day comes from the picker rather
+  // than "now" — the picked calendar day combined with the current
+  // clock-time, so `logged_at` lands in the picked day's local bucket and
+  // still carries a sensible time-of-day for the chosen section.
+  function logToDay(savedMeal: SavedMeal, day: Date, section: Section) {
+    if (createEntry.isPending) return;
+    const now = new Date();
+    const loggedAt = new Date(
+      day.getFullYear(),
+      day.getMonth(),
+      day.getDate(),
+      now.getHours(),
+      now.getMinutes()
+    );
+
+    createEntry.mutate(
+      {
+        logged_at: loggedAt.toISOString(),
+        section,
+        source: 'saved_meal',
+        name: savedMeal.name,
+        calories: savedMeal.calories,
+        protein_g: savedMeal.protein_g,
+        carbs_g: savedMeal.carbs_g,
+        fat_g: savedMeal.fat_g,
+        food_category: savedMeal.food_category,
+        estimation_run_id: null,
+      },
+      {
+        onSuccess: () => {
+          setLoggingDayFor(null);
+          if (router.canGoBack()) router.back();
+        },
+      }
+    );
+  }
+
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ title: 'Saved meals' }} />
@@ -54,7 +100,13 @@ export default function LibraryScreen() {
         <FlatList
           data={savedMeals}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <SavedMealRow savedMeal={item} onPress={() => relog(item)} />}
+          renderItem={({ item }) => (
+            <SavedMealRow
+              savedMeal={item}
+              onPress={() => relog(item)}
+              onLongPress={() => setActionsFor(item)}
+            />
+          )}
           ItemSeparatorComponent={Separator}
           ListEmptyComponent={
             <ThemedText themeColor="textSecondary" style={styles.empty}>
@@ -72,8 +124,36 @@ export default function LibraryScreen() {
             Couldn&apos;t log that meal. Try again.
           </ThemedText>
         ) : null}
+        {deleteSavedMeal.isError ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            Couldn&apos;t delete that saved meal. Try again.
+          </ThemedText>
+        ) : null}
         {createEntry.isPending ? <ActivityIndicator style={styles.logging} /> : null}
       </ThemedView>
+      <SavedMealActionsSheet
+        visible={actionsFor !== null}
+        savedMeal={actionsFor}
+        onEdit={(savedMeal) => {
+          setActionsFor(null);
+          router.push({ pathname: '/(today)/saved-meal-edit', params: { id: savedMeal.id } });
+        }}
+        onLogToAnotherDay={(savedMeal) => {
+          setActionsFor(null);
+          setLoggingDayFor(savedMeal);
+        }}
+        onDelete={(savedMeal) => {
+          setActionsFor(null);
+          deleteSavedMeal.mutate(savedMeal);
+        }}
+        onRequestClose={() => setActionsFor(null)}
+      />
+      <LogToDaySheet
+        visible={loggingDayFor !== null}
+        savedMeal={loggingDayFor}
+        onLog={(day, section) => loggingDayFor && logToDay(loggingDayFor, day, section)}
+        onRequestClose={() => setLoggingDayFor(null)}
+      />
     </ThemedView>
   );
 }
