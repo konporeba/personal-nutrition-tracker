@@ -9,6 +9,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { estimateMeal, type EstimateErrorKind } from '@/data/estimation';
+import type { EstimateInput } from '@/data/estimation-types';
 import { queryKeys } from '@/data/query-keys';
 
 /** A failed estimation, carrying the kind so the UI can word the message. */
@@ -36,7 +37,7 @@ export function estimateErrorMessage(error: unknown): string {
 }
 
 /**
- * Estimate a free-text meal description.
+ * Estimate a meal — free-text (S-01) or a photographed label (S-03).
  *
  * Note `recognized: false` is *not* an error — it is a successful estimate with
  * null macros, and the review screen turns it into the manual-entry form (FR-008).
@@ -49,8 +50,8 @@ export function useEstimateMeal() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (text: string) => {
-      const result = await estimateMeal({ kind: 'text', text });
+    mutationFn: async (input: EstimateInput) => {
+      const result = await estimateMeal(input);
       if (!result.ok) throw new EstimateFailedError(result.error);
       return result;
     },

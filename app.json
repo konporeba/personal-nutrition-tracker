@@ -32,6 +32,13 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to scan a nutrition label.",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan a nutrition label."
+        }
       ]
     ],
     "experiments": {

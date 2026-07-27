@@ -37,4 +37,10 @@ export const queryKeys = {
    * real run behind it.
    */
   estimate: (runId: string) => ['estimate', runId] as const,
+  /**
+   * The captured label photo (S-03), staged alongside its estimate so review
+   * can upload it as evidence after commit without the bytes travelling
+   * through the URL.
+   */
+  labelPhoto: (runId: string) => ['label-photo', runId] as const,
 } as const;

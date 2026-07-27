@@ -313,28 +313,28 @@ final manual device pass.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npx tsc --noEmit`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 Function deploys cleanly (Supabase deploy of `estimate`)
+- [x] 1.1 Type checking passes: `npx tsc --noEmit` — e04e0db
+- [x] 1.2 Linting passes: `npm run lint` — e04e0db
+- [x] 1.3 Function deploys cleanly (Supabase deploy of `estimate`) — e04e0db
 
 #### Manual
 
-- [x] 1.4 Real label returns recognized per-serving macros + non-null serving_size; run recorded as `label_scan`
-- [x] 1.5 Non-label returns recognized:false with null macros and null serving_size (FR-008)
+- [x] 1.4 Real label returns recognized per-serving macros + non-null serving_size; run recorded as `label_scan` — e04e0db
+- [x] 1.5 Non-label returns recognized:false with null macros and null serving_size (FR-008) — e04e0db
 
 ### Phase 2: Capture Pipeline
 
 #### Automated
 
-- [ ] 2.1 Dependencies install and resolve: `npx expo install --check`
-- [ ] 2.2 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.3 Linting passes: `npm run lint`
+- [x] 2.1 Dependencies install and resolve: `npx expo install --check`
+- [x] 2.2 Type checking passes: `npx tsc --noEmit`
+- [x] 2.3 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.4 Device: "Scan a label" opens camera and gallery; capture reaches review
-- [ ] 2.5 Web: "Scan a label" opens gallery/file picker (no camera) and reaches review
-- [ ] 2.6 Canceling the picker leaves the composer untouched
+- [x] 2.4 Device: "Scan a label" opens camera and gallery; capture reaches review
+- [x] 2.5 Web: "Scan a label" opens gallery/file picker (no camera) and reaches review
+- [x] 2.6 Canceling the picker leaves the composer untouched
 
 ### Phase 3: Review, Servings & Evidence Upload
 
