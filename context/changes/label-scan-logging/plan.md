@@ -340,26 +340,26 @@ final manual device pass.
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npx tsc --noEmit`
-- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit` — 36933ac
+- [x] 3.2 Linting passes: `npm run lint` — 36933ac
 
 #### Manual
 
-- [x] 3.3 Servings multiplier scales calories + all macros by N before saving
-- [x] 3.4 Committed entry has source `label_scan` and shows its S-05 icon
-- [x] 3.5 Unreadable label uses the manual form and logs as `manual`
-- [x] 3.6 Evidence photo uploaded after commit; a simulated upload failure still logs the entry
+- [x] 3.3 Servings multiplier scales calories + all macros by N before saving — 36933ac
+- [x] 3.4 Committed entry has source `label_scan` and shows its S-05 icon — 36933ac
+- [x] 3.5 Unreadable label uses the manual form and logs as `manual` — 36933ac
+- [x] 3.6 Evidence photo uploaded after commit; a simulated upload failure still logs the entry — 36933ac
 
 ### Phase 4: Verification (smoke + parity)
 
 #### Automated
 
-- [ ] 4.1 Estimate smoke passes: `npm run smoke:estimate`
-- [ ] 4.2 Full smoke passes: `npm run smoke`
-- [ ] 4.3 Type checking passes: `npx tsc --noEmit`
-- [ ] 4.4 Linting passes: `npm run lint`
+- [x] 4.1 Estimate smoke passes: `npm run smoke:estimate`
+- [x] 4.2 Full smoke passes: `npm run smoke`
+- [x] 4.3 Type checking passes: `npx tsc --noEmit`
+- [x] 4.4 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 4.5 Device end-to-end: photo → review → confirm servings → logged with totals, `label_scan`, icon, evidence photo
-- [ ] 4.6 Web end-to-end via gallery upload (no camera)
+- [x] 4.5 Device end-to-end: photo → review → confirm servings → logged with totals, `label_scan`, icon, evidence photo
+- [x] 4.6 Web end-to-end via gallery upload (no camera)

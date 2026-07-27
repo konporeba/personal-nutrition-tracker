@@ -1,11 +1,15 @@
-// Smoke test for the server-side AI estimation proxy (F-02).
+// Smoke test for the server-side AI estimation proxy (F-02) and the label-scan
+// vision path (S-03).
 //
 // Authenticates as the owner (creds from the git-ignored .env.local) and drives
 // the real client seam `estimateMeal` against the **deployed** Edge Function:
 // a real meal text must come back recognized with usable macros and a recorded
 // EstimationRun; gibberish must come back recognized:false with null macros
-// (never a fabricated number, FR-008). Also asserts the recorded run is
-// owner-scoped and invisible to an anonymous client (RLS).
+// (never a fabricated number, FR-008). A real label photo (scripts/fixtures/)
+// must come back recognized with per-serving macros, a serving_size, and a
+// run recorded as source:'label_scan'; a non-label photo must never fabricate
+// a value either. Also asserts the recorded run is owner-scoped and invisible
+// to an anonymous client (RLS).
 //
 // This is what keeps the two copies of the wire contract honest — the Deno one
 // in supabase/functions/estimate/types.ts and the client one in
@@ -13,6 +17,8 @@
 //
 // Run: `npm run smoke:estimate` (bundles + runs via scripts/run-estimate-smoke.mjs).
 import { createClient } from '@supabase/supabase-js';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import { estimateMeal } from '@/data/estimation';
 import { supabase } from '@/lib/supabase';
@@ -28,6 +34,11 @@ const ownerPassword = process.env.OWNER_PASSWORD;
 
 const REAL_MEAL = 'two scrambled eggs with a slice of buttered toast';
 const GIBBERISH = 'zxqw plnk vvbb';
+
+/** Fixtures for the label-scan (S-03) vision path, resolved from the repo root. */
+function readFixtureBase64(name: string): string {
+  return readFileSync(resolve(process.cwd(), 'scripts/fixtures', name)).toString('base64');
+}
 
 async function main() {
   assert(url && anonKey, 'EXPO_PUBLIC_SUPABASE_URL / _ANON_KEY must be set (.env)');
@@ -104,16 +115,73 @@ async function main() {
     assert(junk.estimate.fat_g === null, 'gibberish returned fat_g');
     console.log(`✓ unrecognized input: recognized=false, null macros, run ${junk.runId} still recorded`);
 
-    // 6. Plate-photo estimation is reserved for S-04 — the function rejects it
+    // 6. A real, legible label — recognized with per-serving macros and a
+    //    non-null serving_size; the recorded run carries source:'label_scan'.
+    const labelData = readFixtureBase64('label.jpg');
+    const label = await estimateMeal({
+      kind: 'image',
+      imageKind: 'label',
+      mediaType: 'image/jpeg',
+      data: labelData,
+    });
+    assert(label.ok, `label estimate failed: ${label.ok ? '' : label.error}`);
+    runIds.push(label.runId);
+    const labelEst = label.estimate;
+    assert(labelEst.recognized === true, 'a legible label came back as unrecognized');
+    assert(
+      typeof labelEst.calories === 'number' && labelEst.calories > 0,
+      'label calories missing or not positive',
+    );
+    assert(typeof labelEst.protein_g === 'number', 'label protein_g is null on a recognized estimate');
+    assert(typeof labelEst.carbs_g === 'number', 'label carbs_g is null on a recognized estimate');
+    assert(typeof labelEst.fat_g === 'number', 'label fat_g is null on a recognized estimate');
+    assert(
+      typeof labelEst.serving_size === 'string' && labelEst.serving_size.length > 0,
+      'label estimate has no serving_size',
+    );
+    console.log(
+      `✓ label estimated "${labelEst.name}": ${labelEst.calories} kcal per ${labelEst.serving_size} ` +
+        `(${labelEst.protein_g}p/${labelEst.carbs_g}c/${labelEst.fat_g}f)`,
+    );
+
+    const labelRunRead = await supabase
+      .from('estimation_runs')
+      .select('source')
+      .eq('id', label.runId)
+      .single();
+    assert(!labelRunRead.error && labelRunRead.data, `estimation_runs row ${label.runId} not found`);
+    assert(
+      labelRunRead.data.source === 'label_scan',
+      `label run source is ${labelRunRead.data.source}, want label_scan`,
+    );
+    console.log(`✓ EstimationRun ${label.runId} recorded with source=label_scan`);
+
+    // 7. A non-label image — never fabricate a value (FR-008); null macros and
+    //    null serving_size, same never-fabricate contract as text gibberish.
+    const notLabelData = readFixtureBase64('not-a-label.jpg');
+    const notLabel = await estimateMeal({
+      kind: 'image',
+      imageKind: 'label',
+      mediaType: 'image/jpeg',
+      data: notLabelData,
+    });
+    assert(notLabel.ok, `non-label estimate returned an error: ${notLabel.ok ? '' : notLabel.error}`);
+    runIds.push(notLabel.runId);
+    assert(notLabel.estimate.recognized === false, 'non-label image came back as recognized');
+    assert(notLabel.estimate.calories === null, 'non-label image returned a calorie number (fabricated!)');
+    assert(notLabel.estimate.serving_size === null, 'non-label image returned a serving_size (fabricated!)');
+    console.log('✓ non-label image: recognized=false, null macros, null serving_size');
+
+    // 8. Plate-photo estimation is reserved for S-04 — the function rejects it
     //    today, and the seam must surface that as an error, not a throw.
-    const image = await estimateMeal({
+    const plate = await estimateMeal({
       kind: 'image',
       imageKind: 'plate',
       mediaType: 'image/jpeg',
       data: 'not-an-image',
     });
-    assert(!image.ok, 'reserved plate-photo variant unexpectedly succeeded');
-    assert(image.error === 'server', `plate-photo variant mapped to ${image.error}, want server`);
+    assert(!plate.ok, 'reserved plate-photo variant unexpectedly succeeded');
+    assert(plate.error === 'server', `plate-photo variant mapped to ${plate.error}, want server`);
     console.log('✓ reserved plate-photo variant rejected as { ok: false, error: "server" }');
 
     console.log('\nESTIMATE SMOKE PASSED ✅');
