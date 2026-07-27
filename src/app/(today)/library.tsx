@@ -31,7 +31,11 @@ export default function LibraryScreen() {
   const [loggingDayFor, setLoggingDayFor] = useState<SavedMeal | null>(null);
 
   function relog(savedMeal: SavedMeal) {
-    if (createEntry.isPending) return;
+    // `isSuccess` matters as much as `isPending`: between `onSuccess` firing
+    // and the navigation unmounting this screen there is a frame in which the
+    // row would otherwise be tappable again, and a second tap would commit a
+    // duplicate entry — same reasoning as `review.tsx`'s `canSave` guard.
+    if (createEntry.isPending || createEntry.isSuccess) return;
     const loggedAt = new Date();
 
     createEntry.mutate(
@@ -61,7 +65,10 @@ export default function LibraryScreen() {
   // clock-time, so `logged_at` lands in the picked day's local bucket and
   // still carries a sensible time-of-day for the chosen section.
   function logToDay(savedMeal: SavedMeal, day: Date, section: Section) {
-    if (createEntry.isPending) return;
+    // Same double-submit guard as `relog` — `createEntry` is one shared
+    // mutation instance for the whole screen, so this closes the window for
+    // both write paths.
+    if (createEntry.isPending || createEntry.isSuccess) return;
     const now = new Date();
     const loggedAt = new Date(
       day.getFullYear(),
