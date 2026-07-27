@@ -354,12 +354,12 @@ final manual device pass.
 
 #### Automated
 
-- [x] 4.1 Estimate smoke passes: `npm run smoke:estimate`
-- [x] 4.2 Full smoke passes: `npm run smoke`
-- [x] 4.3 Type checking passes: `npx tsc --noEmit`
-- [x] 4.4 Linting passes: `npm run lint`
+- [x] 4.1 Estimate smoke passes: `npm run smoke:estimate` — 310f469
+- [x] 4.2 Full smoke passes: `npm run smoke` — 310f469
+- [x] 4.3 Type checking passes: `npx tsc --noEmit` — 310f469
+- [x] 4.4 Linting passes: `npm run lint` — 310f469
 
 #### Manual
 
-- [x] 4.5 Device end-to-end: photo → review → confirm servings → logged with totals, `label_scan`, icon, evidence photo
-- [x] 4.6 Web end-to-end via gallery upload (no camera)
+- [x] 4.5 Device end-to-end: photo → review → confirm servings → logged with totals, `label_scan`, icon, evidence photo — 310f469
+- [x] 4.6 Web end-to-end via gallery upload (no camera) — 310f469

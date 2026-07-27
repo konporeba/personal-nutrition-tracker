@@ -1,7 +1,7 @@
 ---
 change_id: label-scan-logging
 title: Label scan logging
-status: implementing
+status: implemented
 created: 2026-07-26
 updated: 2026-07-27
 archived_at: null
