@@ -1,7 +1,7 @@
 ---
 change_id: structured-day-view
 title: Structured day view
-status: implemented
+status: impl_reviewed
 created: 2026-07-27
 updated: 2026-07-27
 ---

@@ -2,6 +2,7 @@
 // re-section it. RN's built-in Modal — no new dependency, matching the
 // project's home-grown-theming stance (no component library).
 import { Modal, Pressable, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SECTION_LABELS } from '@/components/section-subtotal';
 import { ThemedText } from '@/components/themed-text';
@@ -30,39 +31,44 @@ export function MoveSectionSheet({
       <Pressable style={styles.backdrop} onPress={onRequestClose}>
         <Pressable onPress={() => {}}>
           <ThemedView type="backgroundElement" style={styles.sheet}>
-            <ThemedText type="smallBold" style={styles.title}>
-              Move to…
-            </ThemedText>
-            {SECTION_ORDER.map((section) => {
-              const isCurrent = section === currentSection;
-              return (
-                <Pressable
-                  key={section}
-                  disabled={isCurrent}
-                  onPress={() => onSelect(section)}
-                  style={({ pressed }) => pressed && !isCurrent && styles.pressed}>
-                  <ThemedView
-                    type={isCurrent ? 'backgroundSelected' : 'backgroundElement'}
-                    style={styles.option}>
-                    <ThemedText themeColor={isCurrent ? 'textSecondary' : 'text'}>
-                      {SECTION_LABELS[section]}
-                    </ThemedText>
-                    {isCurrent ? (
-                      <ThemedText type="small" themeColor="textSecondary">
-                        Current
+            {/* Bottom-only: the sheet already pads its other edges via
+                `styles.sheet`; this just keeps Cancel clear of a home
+                indicator/gesture bar, the same inset the main list applies. */}
+            <SafeAreaView edges={['bottom']} style={styles.sheetInner}>
+              <ThemedText type="smallBold" style={styles.title}>
+                Move to…
+              </ThemedText>
+              {SECTION_ORDER.map((section) => {
+                const isCurrent = section === currentSection;
+                return (
+                  <Pressable
+                    key={section}
+                    disabled={isCurrent}
+                    onPress={() => onSelect(section)}
+                    style={({ pressed }) => pressed && !isCurrent && styles.pressed}>
+                    <ThemedView
+                      type={isCurrent ? 'backgroundSelected' : 'backgroundElement'}
+                      style={styles.option}>
+                      <ThemedText themeColor={isCurrent ? 'textSecondary' : 'text'}>
+                        {SECTION_LABELS[section]}
                       </ThemedText>
-                    ) : null}
-                  </ThemedView>
-                </Pressable>
-              );
-            })}
-            <Pressable onPress={onRequestClose} style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView style={styles.cancel}>
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  Cancel
-                </ThemedText>
-              </ThemedView>
-            </Pressable>
+                      {isCurrent ? (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          Current
+                        </ThemedText>
+                      ) : null}
+                    </ThemedView>
+                  </Pressable>
+                );
+              })}
+              <Pressable onPress={onRequestClose} style={({ pressed }) => pressed && styles.pressed}>
+                <ThemedView style={styles.cancel}>
+                  <ThemedText type="smallBold" themeColor="textSecondary">
+                    Cancel
+                  </ThemedText>
+                </ThemedView>
+              </Pressable>
+            </SafeAreaView>
           </ThemedView>
         </Pressable>
       </Pressable>
@@ -77,10 +83,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   sheet: {
-    gap: Spacing.two,
     padding: Spacing.four,
     borderTopLeftRadius: Spacing.three,
     borderTopRightRadius: Spacing.three,
+  },
+  sheetInner: {
+    gap: Spacing.two,
   },
   title: {
     paddingBottom: Spacing.one,

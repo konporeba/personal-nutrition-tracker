@@ -25,7 +25,7 @@ export type SectionGroup = {
  * `listMealEntriesForDay`).
  */
 export function groupEntriesBySection(entries: MealEntry[]): SectionGroup[] {
-  return SECTION_ORDER.map((section) => {
+  const groups = SECTION_ORDER.map((section) => {
     const sectionEntries = entries.filter((entry) => entry.section === section);
     return {
       section,
@@ -34,4 +34,20 @@ export function groupEntriesBySection(entries: MealEntry[]): SectionGroup[] {
       macros: sumMacros(sectionEntries),
     };
   });
+
+  // Every entry should land in exactly one of the 5 known sections — the DB
+  // enum is typed 1:1 with `Section`. If it ever doesn't (e.g. a new enum
+  // value added before this client updates), the entry would silently vanish
+  // from every group while callers summing the raw `entries` list (DayTotal)
+  // still count it, producing a total that doesn't match what's visible. Warn
+  // rather than throw: a stale client showing a mismatched total is better
+  // than one that crashes the day view outright.
+  const grouped = groups.reduce((total, group) => total + group.entries.length, 0);
+  if (grouped !== entries.length) {
+    console.warn(
+      `[group-by-section] ${entries.length - grouped} entry(ies) had a section outside ${SECTION_ORDER.join('/')} and were dropped from every group`,
+    );
+  }
+
+  return groups;
 }
