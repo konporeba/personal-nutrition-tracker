@@ -367,29 +367,29 @@ Purely additive: one new table, no changes to `meal_entries` or any existing tab
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npx tsc --noEmit`
-- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit` — a5c10d5
+- [x] 2.2 Linting passes: `npm run lint` — a5c10d5
 
 #### Manual
 
-- [x] 2.3 Logging a meal with "Save to library" checked creates both the `meal_entries` row and a matching `saved_meals` row with the same name/macros/food_category
-- [x] 2.4 Logging with the checkbox unchecked creates only the `meal_entries` row
-- [x] 2.5 A failed saved-meal creation still lets the meal log successfully and still navigates back to Today
+- [x] 2.3 Logging a meal with "Save to library" checked creates both the `meal_entries` row and a matching `saved_meals` row with the same name/macros/food_category — a5c10d5
+- [x] 2.4 Logging with the checkbox unchecked creates only the `meal_entries` row — a5c10d5
+- [x] 2.5 A failed saved-meal creation still lets the meal log successfully and still navigates back to Today — a5c10d5
 
 ### Phase 3: Library screen and fast re-log
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit`
+- [x] 3.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 3.3 Today has a visible way to reach the saved-meals library
-- [ ] 3.4 The library lists every saved meal with its icon, name, and calories
-- [ ] 3.5 Tapping a saved-meal row creates a new entry on today's day view in the section implied by the current time, with no loading/estimate screen and no AI call
-- [ ] 3.6 The day's running total updates immediately to reflect the re-logged entry
-- [ ] 3.7 Re-logging the same saved meal twice creates two independent entries
+- [x] 3.3 Today has a visible way to reach the saved-meals library
+- [x] 3.4 The library lists every saved meal with its icon, name, and calories
+- [x] 3.5 Tapping a saved-meal row creates a new entry on today's day view in the section implied by the current time, with no loading/estimate screen and no AI call
+- [x] 3.6 The day's running total updates immediately to reflect the re-logged entry
+- [x] 3.7 Re-logging the same saved meal twice creates two independent entries
 
 ### Phase 4: Manage saved meals — edit, delete, and log to another day
 

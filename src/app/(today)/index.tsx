@@ -1,11 +1,13 @@
 // Today — the app's front door and the whole core loop in one screen: describe a
 // meal at the top, see what has been logged and what it adds up to below.
 // Browsing other days is S-11, so this is always the current day.
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   SectionList,
   StyleSheet,
 } from 'react-native';
@@ -39,6 +41,7 @@ type DaySection = {
 };
 
 export default function TodayScreen() {
+  const router = useRouter();
   // `day` comes back from the hook so the header label and the query key are the
   // same instant by construction, and so the day rolls over on resume.
   const { query, day } = useDayEntries();
@@ -99,6 +102,13 @@ export default function TodayScreen() {
               scroll out of reach. */}
           <ThemedView style={styles.composer}>
             <MealComposer />
+            <Pressable
+              onPress={() => router.push('/(today)/library')}
+              style={({ pressed }) => pressed && styles.pressed}>
+              <ThemedView type="backgroundSelected" style={styles.libraryButton}>
+                <ThemedText type="smallBold">Saved meals</ThemedText>
+              </ThemedView>
+            </Pressable>
           </ThemedView>
           <SectionList
             sections={sections}
@@ -198,6 +208,16 @@ const styles = StyleSheet.create({
   },
   composer: {
     paddingHorizontal: Spacing.four,
+    gap: Spacing.two,
+  },
+  libraryButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.three,
+    borderRadius: Spacing.three,
+  },
+  pressed: {
+    opacity: 0.7,
   },
   listContent: {
     paddingHorizontal: Spacing.four,
