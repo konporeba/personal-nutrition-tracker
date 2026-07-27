@@ -23,6 +23,7 @@ import type { Estimate } from '@/data/estimation-types';
 import { uploadMealPhoto } from '@/data/meal-photos.repo';
 import { queryKeys } from '@/data/query-keys';
 import { useCreateMealEntry } from '@/data/use-meal-entries';
+import { useCreateSavedMeal } from '@/data/use-saved-meals';
 import { useTheme } from '@/hooks/use-theme';
 import type { CapturedLabel } from '@/lib/capture-label';
 import { sectionForTime } from '@/lib/section-for-time';
@@ -81,6 +82,7 @@ function ReviewForm({
   const router = useRouter();
   const queryClient = useQueryClient();
   const create = useCreateMealEntry();
+  const createSavedMeal = useCreateSavedMeal();
   const recognized = estimate.recognized;
   // A label capture is only "per-serving" when it actually extracted a serving
   // size; an unrecognized label has none and falls through to the plain manual
@@ -97,6 +99,7 @@ function ReviewForm({
   const [carbs, setCarbs] = useState(() => seedField(estimate.carbs_g));
   const [fat, setFat] = useState(() => seedField(estimate.fat_g));
   const [servings, setServings] = useState('1');
+  const [saveToLibrary, setSaveToLibrary] = useState(false);
 
   // `isSuccess` matters as much as `isPending`: between onSuccess firing and the
   // navigation unmounting this screen there is a frame in which the button would
@@ -145,6 +148,26 @@ function ReviewForm({
             uploadMealPhoto(entry.id, photo.data).catch((err) => {
               console.error('[review] evidence photo upload failed:', err);
             });
+          }
+          // Best-effort too, same posture as the photo upload above: saving to
+          // the library (S-08) is a convenience on top of an already-committed
+          // entry, so a failure here must never undo or block the log.
+          if (saveToLibrary) {
+            createSavedMeal.mutate(
+              {
+                name: entry.name,
+                calories: entry.calories,
+                protein_g: entry.protein_g,
+                carbs_g: entry.carbs_g,
+                fat_g: entry.fat_g,
+                food_category: entry.food_category,
+              },
+              {
+                onError: (err) => {
+                  console.error('[review] save-to-library failed:', err);
+                },
+              }
+            );
           }
           // The staged estimate (and, for a label scan, the captured photo
           // bytes) have served their purpose — drop them rather than letting
@@ -200,6 +223,19 @@ function ReviewForm({
           ))}
         </ThemedView>
       ) : null}
+
+      <Pressable
+        onPress={() => setSaveToLibrary((prev) => !prev)}
+        style={({ pressed }) => pressed && styles.pressed}>
+        <ThemedView style={styles.checkboxRow}>
+          <ThemedView
+            type={saveToLibrary ? 'backgroundSelected' : 'backgroundElement'}
+            style={styles.checkbox}>
+            {saveToLibrary ? <ThemedText type="smallBold">✓</ThemedText> : null}
+          </ThemedView>
+          <ThemedText type="small">Save to library</ThemedText>
+        </ThemedView>
+      </Pressable>
 
       {create.isError ? (
         <ThemedText type="small" themeColor="textSecondary">
@@ -379,6 +415,18 @@ const styles = StyleSheet.create({
   assumptions: {
     gap: Spacing.one,
     paddingTop: Spacing.two,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: Spacing.one,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   button: {
     alignSelf: 'flex-start',

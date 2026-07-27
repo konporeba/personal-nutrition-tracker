@@ -354,27 +354,27 @@ Purely additive: one new table, no changes to `meal_entries` or any existing tab
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly to the deployed project (or local shadow) without error
-- [x] 1.2 Type checking passes: `npx tsc --noEmit`
-- [x] 1.3 Linting passes: `npm run lint`
+- [x] 1.1 Migration applies cleanly to the deployed project (or local shadow) without error — e8b1fc5
+- [x] 1.2 Type checking passes: `npx tsc --noEmit` — e8b1fc5
+- [x] 1.3 Linting passes: `npm run lint` — e8b1fc5
 
 #### Manual
 
-- [x] 1.4 The `saved_meals` table exists with the expected columns; a manual update advances `updated_at` via the trigger
-- [x] 1.5 RLS blocks access to `saved_meals` without the owner's session
+- [x] 1.4 The `saved_meals` table exists with the expected columns; a manual update advances `updated_at` via the trigger — e8b1fc5
+- [x] 1.5 RLS blocks access to `saved_meals` without the owner's session — e8b1fc5
 
 ### Phase 2: Save to library at commit time
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit`
+- [x] 2.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.3 Logging a meal with "Save to library" checked creates both the `meal_entries` row and a matching `saved_meals` row with the same name/macros/food_category
-- [ ] 2.4 Logging with the checkbox unchecked creates only the `meal_entries` row
-- [ ] 2.5 A failed saved-meal creation still lets the meal log successfully and still navigates back to Today
+- [x] 2.3 Logging a meal with "Save to library" checked creates both the `meal_entries` row and a matching `saved_meals` row with the same name/macros/food_category
+- [x] 2.4 Logging with the checkbox unchecked creates only the `meal_entries` row
+- [x] 2.5 A failed saved-meal creation still lets the meal log successfully and still navigates back to Today
 
 ### Phase 3: Library screen and fast re-log
 
