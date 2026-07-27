@@ -20,17 +20,27 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import type { Estimate } from '@/data/estimation-types';
+import { uploadMealPhoto } from '@/data/meal-photos.repo';
 import { queryKeys } from '@/data/query-keys';
 import { useCreateMealEntry } from '@/data/use-meal-entries';
 import { useTheme } from '@/hooks/use-theme';
+import type { CapturedLabel } from '@/lib/capture-label';
 import { sectionForTime } from '@/lib/section-for-time';
 
 export default function ReviewScreen() {
-  const { runId, text } = useLocalSearchParams<{ runId?: string; text?: string }>();
+  const { runId, text, source } = useLocalSearchParams<{
+    runId?: string;
+    text?: string;
+    source?: string;
+  }>();
   const queryClient = useQueryClient();
 
   const estimate = runId
     ? queryClient.getQueryData<Estimate>(queryKeys.estimate(runId))
+    : undefined;
+  // Staged by the composer's scan affordance; undefined for the text path.
+  const photo = runId
+    ? queryClient.getQueryData<CapturedLabel>(queryKeys.labelPhoto(runId))
     : undefined;
 
   return (
@@ -39,7 +49,13 @@ export default function ReviewScreen() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <ThemedView style={styles.inner}>
           {estimate && runId ? (
-            <ReviewForm estimate={estimate} runId={runId} typedText={text ?? ''} />
+            <ReviewForm
+              estimate={estimate}
+              runId={runId}
+              typedText={text ?? ''}
+              isLabelScan={source === 'label_scan'}
+              photo={photo}
+            />
           ) : (
             <MissingEstimate />
           )}
@@ -53,14 +69,22 @@ function ReviewForm({
   estimate,
   runId,
   typedText,
+  isLabelScan,
+  photo,
 }: {
   estimate: Estimate;
   runId: string;
   typedText: string;
+  isLabelScan: boolean;
+  photo: CapturedLabel | undefined;
 }) {
   const router = useRouter();
   const create = useCreateMealEntry();
   const recognized = estimate.recognized;
+  // A label capture is only "per-serving" when it actually extracted a serving
+  // size; an unrecognized label has none and falls through to the plain manual
+  // form below, same as any other unrecognized input.
+  const showServings = recognized && estimate.serving_size !== null;
 
   // Seeded once. An unrecognized input contributes no numbers at all — the
   // owner's own text is the only thing worth carrying over.
@@ -71,11 +95,19 @@ function ReviewForm({
   const [protein, setProtein] = useState(() => seedField(estimate.protein_g));
   const [carbs, setCarbs] = useState(() => seedField(estimate.carbs_g));
   const [fat, setFat] = useState(() => seedField(estimate.fat_g));
+  const [servings, setServings] = useState('1');
 
   // `isSuccess` matters as much as `isPending`: between onSuccess firing and the
   // navigation unmounting this screen there is a frame in which the button would
   // otherwise be live again, and a second tap would commit a duplicate entry.
   const canSave = name.trim().length > 0 && !create.isPending && !create.isSuccess;
+
+  // 1× for every non-label path, so their totals are unaffected.
+  const multiplier = showServings ? parseServings(servings) : 1;
+  function total(perServing: string): number | null {
+    const value = toNumberOrNull(perServing);
+    return value === null ? null : value * multiplier;
+  }
 
   function save() {
     if (!canSave) return;
@@ -85,14 +117,15 @@ function ReviewForm({
       {
         logged_at: loggedAt.toISOString(),
         section: sectionForTime(loggedAt),
-        // An unrecognized estimate that the owner filled in by hand is a manual
-        // entry, whatever the capture path was (FR-006).
-        source: recognized ? 'free_text' : 'manual',
+        // A label capture that came back unrecognized is filled in by hand, same
+        // as any other unrecognized input — the capture path alone doesn't make
+        // it a label_scan entry (FR-006).
+        source: recognized ? (isLabelScan ? 'label_scan' : 'free_text') : 'manual',
         name: name.trim(),
-        calories: toNumberOrNull(calories),
-        protein_g: toNumberOrNull(protein),
-        carbs_g: toNumberOrNull(carbs),
-        fat_g: toNumberOrNull(fat),
+        calories: total(calories),
+        protein_g: total(protein),
+        carbs_g: total(carbs),
+        fat_g: total(fat),
         // The model's coarse label, stored so Today can show a specific icon
         // (S-05). Null on the unrecognized/manual path — and an empty label
         // normalizes to null too, so "no category" has one representation. The
@@ -102,7 +135,19 @@ function ReviewForm({
         // and the link is the audit trail of what the model was asked.
         estimation_run_id: runId,
       },
-      { onSuccess: () => backToToday(router) }
+      {
+        onSuccess: (entry) => {
+          // Best-effort, after the entry already exists: the photo is evidence
+          // only, so a failed upload must never block the log or surface to the
+          // owner (FR-007's privacy model, extended by S-03).
+          if (isLabelScan && photo) {
+            uploadMealPhoto(entry.id, photo.data).catch((err) => {
+              console.error('[review] evidence photo upload failed:', err);
+            });
+          }
+          backToToday(router);
+        },
+      }
     );
   }
 
@@ -117,14 +162,26 @@ function ReviewForm({
         </ThemedView>
       ) : null}
 
+      {showServings ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Serving size: {estimate.serving_size}
+        </ThemedText>
+      ) : null}
+
       <Field label="Meal" value={name} onChangeText={setName} placeholder="What was it?" />
       <NumericField label="Calories" unit="kcal" value={calories} onChangeText={setCalories} />
       <NumericField label="Protein" unit="g" value={protein} onChangeText={setProtein} />
       <NumericField label="Carbs" unit="g" value={carbs} onChangeText={setCarbs} />
       <NumericField label="Fat" unit="g" value={fat} onChangeText={setFat} />
 
+      {showServings ? (
+        <NumericField label="Servings" unit="×" value={servings} onChangeText={setServings} />
+      ) : null}
+
       <ThemedText type="small" themeColor="textSecondary">
-        Leave a field empty to log it as unknown rather than zero.
+        {showServings
+          ? 'Values above are per serving; totals are multiplied by servings before saving.'
+          : 'Leave a field empty to log it as unknown rather than zero.'}
       </ThemedText>
 
       {estimate.assumptions.length > 0 ? (
@@ -278,6 +335,12 @@ function toNumberOrNull(value: string): number | null {
   if (trimmed === '' || trimmed === '.') return null;
   const parsed = Number(trimmed);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+/** An invalid or non-positive servings count falls back to 1 (the seeded default). */
+function parseServings(value: string): number {
+  const parsed = Number(value.trim());
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
 const styles = StyleSheet.create({

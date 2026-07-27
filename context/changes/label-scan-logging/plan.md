@@ -326,29 +326,29 @@ final manual device pass.
 
 #### Automated
 
-- [x] 2.1 Dependencies install and resolve: `npx expo install --check`
-- [x] 2.2 Type checking passes: `npx tsc --noEmit`
-- [x] 2.3 Linting passes: `npm run lint`
+- [x] 2.1 Dependencies install and resolve: `npx expo install --check` — b85ac64
+- [x] 2.2 Type checking passes: `npx tsc --noEmit` — b85ac64
+- [x] 2.3 Linting passes: `npm run lint` — b85ac64
 
 #### Manual
 
-- [x] 2.4 Device: "Scan a label" opens camera and gallery; capture reaches review
-- [x] 2.5 Web: "Scan a label" opens gallery/file picker (no camera) and reaches review
-- [x] 2.6 Canceling the picker leaves the composer untouched
+- [x] 2.4 Device: "Scan a label" opens camera and gallery; capture reaches review — b85ac64
+- [x] 2.5 Web: "Scan a label" opens gallery/file picker (no camera) and reaches review — b85ac64
+- [x] 2.6 Canceling the picker leaves the composer untouched — b85ac64
 
 ### Phase 3: Review, Servings & Evidence Upload
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit`
+- [x] 3.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 3.3 Servings multiplier scales calories + all macros by N before saving
-- [ ] 3.4 Committed entry has source `label_scan` and shows its S-05 icon
-- [ ] 3.5 Unreadable label uses the manual form and logs as `manual`
-- [ ] 3.6 Evidence photo uploaded after commit; a simulated upload failure still logs the entry
+- [x] 3.3 Servings multiplier scales calories + all macros by N before saving
+- [x] 3.4 Committed entry has source `label_scan` and shows its S-05 icon
+- [x] 3.5 Unreadable label uses the manual form and logs as `manual`
+- [x] 3.6 Evidence photo uploaded after commit; a simulated upload failure still logs the entry
 
 ### Phase 4: Verification (smoke + parity)
 
