@@ -79,6 +79,7 @@ function ReviewForm({
   photo: CapturedLabel | undefined;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const create = useCreateMealEntry();
   const recognized = estimate.recognized;
   // A label capture is only "per-serving" when it actually extracted a serving
@@ -145,6 +146,11 @@ function ReviewForm({
               console.error('[review] evidence photo upload failed:', err);
             });
           }
+          // The staged estimate (and, for a label scan, the captured photo
+          // bytes) have served their purpose — drop them rather than letting
+          // them sit in the persisted cache for up to the default gcTime.
+          queryClient.removeQueries({ queryKey: queryKeys.estimate(runId) });
+          queryClient.removeQueries({ queryKey: queryKeys.labelPhoto(runId) });
           backToToday(router);
         },
       }

@@ -18,6 +18,20 @@ const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+// The client always downscales before sending (~1500px long edge, q0.7 JPEG),
+// but this is a public authenticated boundary — cap base64 length defensively
+// rather than trusting the caller. ~6MB base64 is a generous multiple of what
+// a downscaled label photo actually produces.
+const MAX_IMAGE_DATA_LENGTH = 6 * 1024 * 1024;
+
+// Anthropic's accepted image media types (messages API image content block).
+const ACCEPTED_IMAGE_MEDIA_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+]);
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -68,7 +82,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (typeof input.data !== 'string' || input.data.trim() === '') {
       return json({ error: 'invalid_input' }, 400);
     }
-    if (typeof input.mediaType !== 'string' || input.mediaType.trim() === '') {
+    if (input.data.length > MAX_IMAGE_DATA_LENGTH) {
+      return json({ error: 'invalid_input' }, 400);
+    }
+    if (typeof input.mediaType !== 'string' || !ACCEPTED_IMAGE_MEDIA_TYPES.has(input.mediaType)) {
       return json({ error: 'invalid_input' }, 400);
     }
 

@@ -22,15 +22,21 @@ export function MealComposer() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [text, setText] = useState('');
+  const [scanError, setScanError] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
   const estimate = useEstimateMeal();
 
   const trimmed = text.trim();
   const canSubmit = trimmed.length > 0 && !estimate.isPending;
-  const canScan = !estimate.isPending;
+  // `isCapturing` covers the picker+downscale window, before `estimate.isPending`
+  // engages — without it a second tap during that window fires a second picker
+  // and a second billed AI call.
+  const canScan = !estimate.isPending && !isCapturing;
 
   function submit() {
     // Whitespace alone is not a meal — never spend an AI call on it.
     if (!canSubmit) return;
+    setScanError(false);
     estimate.mutate(
       { kind: 'text', text: trimmed },
       {
@@ -46,8 +52,22 @@ export function MealComposer() {
 
   async function scanLabel() {
     if (!canScan) return;
-    // A canceled picker leaves the composer exactly as it was — no AI call spent.
-    const captured = await captureLabel();
+    setScanError(false);
+    setIsCapturing(true);
+
+    let captured;
+    try {
+      // A canceled picker leaves the composer exactly as it was — no AI call spent.
+      captured = await captureLabel();
+    } catch (err) {
+      // A picker/downscale failure (e.g. an unreadable photo) must surface the
+      // same way a failed estimate does — never fail silently.
+      console.error('[meal-composer] label capture failed:', err);
+      setScanError(true);
+      setIsCapturing(false);
+      return;
+    }
+    setIsCapturing(false);
     if (!captured) return;
 
     estimate.mutate(
@@ -119,6 +139,12 @@ export function MealComposer() {
       {estimate.isError && !estimate.isPending ? (
         <ThemedText type="small" themeColor="textSecondary">
           {estimateErrorMessage(estimate.error)}
+        </ThemedText>
+      ) : null}
+
+      {scanError && !estimate.isPending ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Couldn&apos;t read that photo. Try again.
         </ThemedText>
       ) : null}
     </ThemedView>
