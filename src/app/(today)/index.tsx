@@ -3,9 +3,9 @@
 // Browsing other days is S-11, so this is always the current day.
 import {
   ActivityIndicator,
-  FlatList,
   KeyboardAvoidingView,
   Platform,
+  SectionList,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,11 +13,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DayTotal } from '@/components/day-total';
 import { MealComposer } from '@/components/meal-composer';
 import { MealEntryRow } from '@/components/meal-entry-row';
+import { SectionSubtotal } from '@/components/section-subtotal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import type { MealEntry, Section } from '@/data/types';
 import { useDayEntries, useDeleteMealEntry } from '@/data/use-meal-entries';
 import { useTargets } from '@/data/use-profile';
+import { groupEntriesBySection } from '@/lib/group-by-section';
+import type { MacroTotals } from '@/lib/sum-macros';
+
+/** One `SectionList` section: the five fixed groups from `groupEntriesBySection`. */
+type DaySection = {
+  title: string;
+  data: MealEntry[];
+  id: Section;
+  calories: number;
+  macros: MacroTotals;
+};
 
 export default function TodayScreen() {
   // `day` comes back from the hook so the header label and the query key are the
@@ -32,6 +45,25 @@ export default function TodayScreen() {
   // to the bare S-01 total.
   const { targets } = useTargets();
 
+  // All five sections, always — a section with no entries still gets its own
+  // group (FR-057), which SectionList renders as a header with no rows beneath.
+  //
+  // Gated to [] while pending/errored: VirtualizedSectionList counts +2 per
+  // section (header+footer slots) toward its item count regardless of that
+  // section's data length, so passing all 5 unconditionally would make
+  // `getItemCount` always >0 and ListEmptyComponent (the spinner/error state
+  // below) would never fire.
+  const sections: DaySection[] =
+    isPending || isError
+      ? []
+      : groupEntriesBySection(entries).map((group) => ({
+          title: group.section,
+          data: group.entries,
+          id: group.section,
+          calories: group.calories,
+          macros: group.macros,
+        }));
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView
@@ -45,12 +77,20 @@ export default function TodayScreen() {
           <ThemedView style={styles.composer}>
             <MealComposer />
           </ThemedView>
-          <FlatList
-            data={entries}
+          <SectionList
+            sections={sections}
             keyExtractor={(entry) => entry.id}
             renderItem={({ item }) => (
               <MealEntryRow entry={item} onLongPress={() => deleteEntry.mutate(item)} />
             )}
+            renderSectionHeader={({ section }) => (
+              <SectionSubtotal
+                section={section.id}
+                calories={section.calories}
+                macros={section.macros}
+              />
+            )}
+            stickySectionHeadersEnabled={false}
             ListHeaderComponent={
               <>
                 <DayTotal entries={entries} date={day} targets={targets} />
@@ -63,9 +103,7 @@ export default function TodayScreen() {
                 ) : null}
               </>
             }
-            ListEmptyComponent={
-              <EmptyState isPending={isPending} isError={isError} />
-            }
+            ListEmptyComponent={<EmptyState isPending={isPending} />}
             contentContainerStyle={[styles.listContent, listPlatformStyle]}
             ItemSeparatorComponent={Separator}
             keyboardShouldPersistTaps="handled"
@@ -80,12 +118,15 @@ function Separator() {
   return <ThemedView style={styles.separator} />;
 }
 
-function EmptyState({ isPending, isError }: { isPending: boolean; isError: boolean }) {
+// `sections` is only ever [] while pending or on error (see above) — once the
+// query settles, it always carries all 5 groups, even on a genuinely empty
+// day, so there is no "nothing logged" case left for this component to render.
+function EmptyState({ isPending }: { isPending: boolean }) {
   if (isPending) return <ActivityIndicator style={styles.empty} />;
 
   return (
     <ThemedText themeColor="textSecondary" style={styles.empty}>
-      {isError ? "Couldn't load today's entries." : 'Nothing logged yet today.'}
+      Couldn&apos;t load today&apos;s entries.
     </ThemedText>
   );
 }
