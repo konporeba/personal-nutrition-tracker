@@ -410,11 +410,11 @@ Purely additive: one new table, no changes to `meal_entries` or any existing tab
 
 #### Automated
 
-- [x] 5.1 Saved-meals smoke passes: `npm run smoke:saved-meals`
-- [x] 5.2 Type checking passes: `npx tsc --noEmit`
-- [x] 5.3 Linting passes: `npm run lint`
-- [x] 5.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:estimate`, `npm run smoke:log`, `npm run smoke:profile`, `npm run smoke:icon`, `npm run smoke:day-view`
+- [x] 5.1 Saved-meals smoke passes: `npm run smoke:saved-meals` — 59b0af6
+- [x] 5.2 Type checking passes: `npx tsc --noEmit` — 59b0af6
+- [x] 5.3 Linting passes: `npm run lint` — 59b0af6
+- [x] 5.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:estimate`, `npm run smoke:log`, `npm run smoke:profile`, `npm run smoke:icon`, `npm run smoke:day-view` — 59b0af6
 
 #### Manual
 
-- [x] 5.5 Full walkthrough: log a meal and save it to the library, re-log it from the library to today, edit the saved meal and confirm the earlier-logged entry is unchanged, log it to a past day via "Log to another day…", then delete the saved meal and confirm all previously-logged entries remain untouched
+- [x] 5.5 Full walkthrough: log a meal and save it to the library, re-log it from the library to today, edit the saved meal and confirm the earlier-logged entry is unchanged, log it to a past day via "Log to another day…", then delete the saved meal and confirm all previously-logged entries remain untouched — 59b0af6
