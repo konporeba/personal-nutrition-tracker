@@ -370,13 +370,13 @@ No database schema changes — `implied_weight_g` lives only in the wire contrac
 
 #### Automated
 
-- [x] 5.1 Type checking passes: `npx tsc --noEmit`
-- [x] 5.2 Linting passes: `npm run lint`
-- [x] 5.3 `npm run smoke:estimate` passes with the stale plate case removed
-- [x] 5.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:log`, `npm run smoke:profile`, `npm run smoke:icon`, `npm run smoke:day-view`, `npm run smoke:saved-meals`
+- [x] 5.1 Type checking passes: `npx tsc --noEmit` — 7003b42
+- [x] 5.2 Linting passes: `npm run lint` — 7003b42
+- [x] 5.3 `npm run smoke:estimate` passes with the stale plate case removed — 7003b42
+- [x] 5.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:log`, `npm run smoke:profile`, `npm run smoke:icon`, `npm run smoke:day-view`, `npm run smoke:saved-meals` — 7003b42
 
 #### Manual
 
-- [x] 5.5 Full walkthrough: log a plate, confirm implied weight + macros, rescale by actual weight, commit, confirm it appears on Today correctly
-- [x] 5.6 Non-food photo comes back unrecognized with no fabricated numbers
-- [x] 5.7 Multi-item plate surfaces an assumptions note about the aggregate being rougher
+- [x] 5.5 Full walkthrough: log a plate, confirm implied weight + macros, rescale by actual weight, commit, confirm it appears on Today correctly — 7003b42
+- [x] 5.6 Non-food photo comes back unrecognized with no fabricated numbers — 7003b42
+- [x] 5.7 Multi-item plate surfaces an assumptions note about the aggregate being rougher — 7003b42
