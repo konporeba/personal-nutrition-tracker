@@ -333,22 +333,22 @@ No database schema changes — `implied_weight_g` lives only in the wire contrac
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npx tsc --noEmit` (shows the expected transitional errors in meal-composer.tsx/review.tsx — resolved by end of Phase 4)
-- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit` (shows the expected transitional errors in meal-composer.tsx/review.tsx — resolved by end of Phase 4) — 24974a6
+- [x] 2.2 Linting passes: `npm run lint` — 24974a6
 
 ### Phase 3: Composer affordance
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit` (meal-composer.tsx errors resolved; review.tsx's remaining errors are Phase 4's job, as expected)
+- [x] 3.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 3.3 Today shows both "Scan a label" and "Log a plate" buttons, laid out without overlap on a phone-width screen
-- [ ] 3.4 Tapping "Log a plate" opens the same camera/library choice as "Scan a label", with plate-specific copy
-- [ ] 3.5 A canceled picker (any step) leaves the composer's typed text and both buttons exactly as they were
-- [ ] 3.6 Successfully capturing a plate photo navigates to `/review` with the estimate staged
+- [x] 3.3 Today shows both "Scan a label" and "Log a plate" buttons, laid out without overlap on a phone-width screen
+- [x] 3.4 Tapping "Log a plate" opens the same camera/library choice as "Scan a label", with plate-specific copy
+- [x] 3.5 A canceled picker (any step) leaves the composer's typed text and both buttons exactly as they were
+- [x] 3.6 Successfully capturing a plate photo navigates to `/review` with the estimate staged
 
 ### Phase 4: Review-screen integration
 

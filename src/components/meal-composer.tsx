@@ -15,7 +15,7 @@ import { Spacing } from '@/constants/theme';
 import { queryKeys } from '@/data/query-keys';
 import { estimateErrorMessage, useEstimateMeal } from '@/data/use-estimate';
 import { useTheme } from '@/hooks/use-theme';
-import { captureLabel } from '@/lib/capture-label';
+import { capturePhoto } from '@/lib/capture-photo';
 
 export function MealComposer() {
   const theme = useTheme();
@@ -58,7 +58,7 @@ export function MealComposer() {
     let captured;
     try {
       // A canceled picker leaves the composer exactly as it was — no AI call spent.
-      captured = await captureLabel();
+      captured = await capturePhoto('label');
     } catch (err) {
       // A picker/downscale failure (e.g. an unreadable photo) must surface the
       // same way a failed estimate does — never fail silently.
@@ -75,9 +75,42 @@ export function MealComposer() {
       {
         onSuccess: ({ runId }) => {
           // The photo bytes are staged here for the review-time evidence upload
-          // (Phase 3) — kept out of the URL, same as the estimate itself.
-          queryClient.setQueryData(queryKeys.labelPhoto(runId), captured);
+          // — kept out of the URL, same as the estimate itself.
+          queryClient.setQueryData(queryKeys.capturedPhoto(runId), captured);
           router.push({ pathname: '/review', params: { runId, source: 'label_scan' } });
+        },
+      }
+    );
+  }
+
+  async function scanPlate() {
+    if (!canScan) return;
+    setScanError(false);
+    setIsCapturing(true);
+
+    let captured;
+    try {
+      // A canceled picker leaves the composer exactly as it was — no AI call spent.
+      captured = await capturePhoto('plate');
+    } catch (err) {
+      // A picker/downscale failure (e.g. an unreadable photo) must surface the
+      // same way a failed estimate does — never fail silently.
+      console.error('[meal-composer] plate capture failed:', err);
+      setScanError(true);
+      setIsCapturing(false);
+      return;
+    }
+    setIsCapturing(false);
+    if (!captured) return;
+
+    estimate.mutate(
+      { kind: 'image', imageKind: 'plate', mediaType: captured.mediaType, data: captured.data },
+      {
+        onSuccess: ({ runId }) => {
+          // The photo bytes are staged here for the review-time evidence upload
+          // — kept out of the URL, same as the estimate itself.
+          queryClient.setQueryData(queryKeys.capturedPhoto(runId), captured);
+          router.push({ pathname: '/review', params: { runId, source: 'plate_photo' } });
         },
       }
     );
@@ -115,6 +148,19 @@ export function MealComposer() {
                 type="smallBold"
                 themeColor={canScan ? 'text' : 'textSecondary'}>
                 Scan a label
+              </ThemedText>
+            </ThemedView>
+          </Pressable>
+
+          <Pressable
+            onPress={scanPlate}
+            disabled={!canScan}
+            style={({ pressed }) => pressed && styles.pressed}>
+            <ThemedView type="backgroundElement" style={styles.submitInner}>
+              <ThemedText
+                type="smallBold"
+                themeColor={canScan ? 'text' : 'textSecondary'}>
+                Log a plate
               </ThemedText>
             </ThemedView>
           </Pressable>
@@ -172,6 +218,7 @@ const styles = StyleSheet.create({
   },
   actionsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'flex-end',
     gap: Spacing.two,
   },
