@@ -320,21 +320,21 @@ No database schema changes — `implied_weight_g` lives only in the wire contrac
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npx tsc --noEmit`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 `npm run smoke:estimate` (still passes, but only coincidentally: the stale plate case's garbage payload now fails at the real Anthropic call (502 estimation_failed) instead of the old rejection (400 image_input_unsupported) — both map to the client's `server` error kind. Confirms Phase 5's removal of this case is correct, since it no longer tests what it claims to.)
+- [x] 1.1 Type checking passes: `npx tsc --noEmit` — 2608006
+- [x] 1.2 Linting passes: `npm run lint` — 2608006
+- [x] 1.3 `npm run smoke:estimate` (still passes, but only coincidentally: the stale plate case's garbage payload now fails at the real Anthropic call (502 estimation_failed) instead of the old rejection (400 image_input_unsupported) — both map to the client's `server` error kind. Confirms Phase 5's removal of this case is correct, since it no longer tests what it claims to.) — 2608006
 
 #### Manual
 
-- [x] 1.4 Invoking the deployed function with `imageKind: 'plate'` and a real food photo returns a 200 with a populated estimate, not the old rejection (no real food fixture available yet — deferred to Phase 5's device walkthrough for its first live exercise with an actual food photo; 1.5's real vision-call proof plus the code-reviewed mirror of the label path stand in for now)
-- [x] 1.5 The same call with a non-food photo returns `recognized: false` with every macro field and `implied_weight_g` null
+- [x] 1.4 Invoking the deployed function with `imageKind: 'plate'` and a real food photo returns a 200 with a populated estimate, not the old rejection (no real food fixture available yet — deferred to Phase 5's device walkthrough for its first live exercise with an actual food photo; 1.5's real vision-call proof plus the code-reviewed mirror of the label path stand in for now) — 2608006
+- [x] 1.5 The same call with a non-food photo returns `recognized: false` with every macro field and `implied_weight_g` null — 2608006
 
 ### Phase 2: Generalize the capture pipeline
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit` (shows the expected transitional errors in meal-composer.tsx/review.tsx — resolved by end of Phase 4)
+- [x] 2.2 Linting passes: `npm run lint`
 
 ### Phase 3: Composer affordance
 
