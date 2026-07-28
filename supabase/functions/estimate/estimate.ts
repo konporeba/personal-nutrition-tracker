@@ -246,6 +246,30 @@ export async function estimateFromText(text: string): Promise<EstimateResult> {
 }
 
 /**
+ * The system prompt and per-request instruction text for a given image kind.
+ * An exhaustive switch (not a ternary) so a future third `imageKind` fails to
+ * compile here instead of silently reusing the plate prompt.
+ */
+function promptFor(imageKind: 'label' | 'plate'): { system: string; instruction: string } {
+  switch (imageKind) {
+    case 'label':
+      return {
+        system: LABEL_SYSTEM_PROMPT,
+        instruction: 'Read the nutrition facts label in this image and report the per-serving values.',
+      };
+    case 'plate':
+      return {
+        system: PLATE_SYSTEM_PROMPT,
+        instruction: 'Estimate the calories and macros for the meal shown in this photo.',
+      };
+    default: {
+      const _exhaustive: never = imageKind;
+      throw new Error(`unhandled imageKind: ${_exhaustive}`);
+    }
+  }
+}
+
+/**
  * Estimate a meal from a photographed label (S-03) or plate (S-04). Same
  * request shape either way — model, schema, and `sanitize` are shared —
  * with an image content block ahead of the instruction text and a
@@ -259,11 +283,7 @@ export async function estimateFromImage(
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
 
-  const system = imageKind === 'label' ? LABEL_SYSTEM_PROMPT : PLATE_SYSTEM_PROMPT;
-  const instruction =
-    imageKind === 'label'
-      ? 'Read the nutrition facts label in this image and report the per-serving values.'
-      : 'Estimate the calories and macros for the meal shown in this photo.';
+  const { system, instruction } = promptFor(imageKind);
 
   const res = await fetch(ANTHROPIC_URL, {
     method: 'POST',

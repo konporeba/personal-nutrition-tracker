@@ -427,7 +427,9 @@ function parseWeightMultiplier(value: string, impliedWeightG: number): number {
   const trimmed = value.trim();
   if (trimmed === '') return 1;
   const parsed = Number(trimmed);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed / impliedWeightG : 1;
+  return Number.isFinite(parsed) && parsed > 0 && impliedWeightG > 0
+    ? parsed / impliedWeightG
+    : 1;
 }
 
 const styles = StyleSheet.create({

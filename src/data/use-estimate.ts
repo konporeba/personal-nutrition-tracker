@@ -37,7 +37,8 @@ export function estimateErrorMessage(error: unknown): string {
 }
 
 /**
- * Estimate a meal — free-text (S-01) or a photographed label (S-03).
+ * Estimate a meal — free-text (S-01), a photographed label (S-03), or a
+ * photographed plate (S-04).
  *
  * Note `recognized: false` is *not* an error — it is a successful estimate with
  * null macros, and the review screen turns it into the manual-entry form (FR-008).

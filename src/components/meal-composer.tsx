@@ -27,10 +27,11 @@ export function MealComposer() {
   const estimate = useEstimateMeal();
 
   const trimmed = text.trim();
-  const canSubmit = trimmed.length > 0 && !estimate.isPending;
   // `isCapturing` covers the picker+downscale window, before `estimate.isPending`
-  // engages — without it a second tap during that window fires a second picker
-  // and a second billed AI call.
+  // engages — without it a tap during that window fires a second AI call on the
+  // same shared mutation (a second picker via canScan, or a competing text
+  // estimate via canSubmit).
+  const canSubmit = trimmed.length > 0 && !estimate.isPending && !isCapturing;
   const canScan = !estimate.isPending && !isCapturing;
 
   function submit() {

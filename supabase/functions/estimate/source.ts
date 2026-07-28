@@ -9,9 +9,18 @@ export function sourceForInput(input: EstimateInput): EntrySource {
     case 'text':
       return 'free_text';
     case 'image':
-      // Defaulting to plate_photo for any non-label image keeps the union
-      // exhaustive without a third branch — `imageKind` is only ever 'label'
-      // or 'plate' per the ImageInput contract.
-      return input.imageKind === 'label' ? 'label_scan' : 'plate_photo';
+      switch (input.imageKind) {
+        case 'label':
+          return 'label_scan';
+        case 'plate':
+          return 'plate_photo';
+        default: {
+          // Exhaustiveness check: a future third `imageKind` fails to
+          // compile here instead of silently falling through to a wrong
+          // source marker.
+          const _exhaustive: never = input.imageKind;
+          throw new Error(`unhandled imageKind: ${_exhaustive}`);
+        }
+      }
   }
 }

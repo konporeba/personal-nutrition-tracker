@@ -1,7 +1,7 @@
 ---
 change_id: plate-photo-logging
 title: Plate photo logging
-status: implemented
+status: impl_reviewed
 created: 2026-07-28
 updated: 2026-07-28
 archived_at: null
