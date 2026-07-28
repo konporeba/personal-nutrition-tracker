@@ -27,7 +27,10 @@ export type EntrySource =
  *
  * For a label-scan estimate (S-03), the macro fields and `serving_size` are
  * **per serving** — review multiplies by the owner-confirmed servings count
- * before committing totals to `meal_entries`.
+ * before committing totals to `meal_entries`. A plate-photo estimate (S-04)
+ * is already a full-plate total — no per-serving multiplication step — but
+ * can be rescaled by `implied_weight_g` if the owner supplies the plate's
+ * actual weight (FR-004).
  */
 export type Estimate = {
   /** Short human name for the meal, e.g. "Scrambled eggs and toast". */
@@ -48,6 +51,14 @@ export type Estimate = {
    * `null` for text/plate estimates and when a label had no legible serving size.
    */
   serving_size: string | null;
+  /**
+   * Plate-photo only (S-04): the model's implied total portion weight in
+   * grams — the base FR-004's weight rescale divides against. `null` for
+   * text/label estimates and when the model can't confidently judge portion
+   * size; review hides the weight-rescale field in that case, mirroring
+   * `serving_size`.
+   */
+  implied_weight_g: number | null;
 };
 
 /** Free-text capture path (S-01). */
@@ -56,7 +67,7 @@ export type TextInput = { kind: 'text'; text: string };
 /**
  * Photo capture path — `label` (S-03) and `plate` (S-04) share the wire shape;
  * `sourceForInput` maps `imageKind` onto the `label_scan` / `plate_photo` entry
- * source. The function rejects `imageKind: 'plate'` as unsupported until S-04.
+ * source.
  */
 export type ImageInput = {
   kind: 'image';

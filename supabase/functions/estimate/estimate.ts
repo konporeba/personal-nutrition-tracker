@@ -33,6 +33,7 @@ const SYSTEM_PROMPT = [
   '- Set `confidence` to reflect how sure you are about the estimate.',
   '- Keep `calories` roughly consistent with the macronutrient grams.',
   '- Set `serving_size` to null; it only applies to photographed labels.',
+  '- Set `implied_weight_g` to null; it only applies to photographed plates.',
 ].join('\n');
 
 // Label-scan (S-03) vision prompt. Per-serving extraction, not the package
@@ -58,6 +59,39 @@ const LABEL_SYSTEM_PROMPT = [
   '  every macro field and `serving_size` to null, and do NOT fabricate',
   '  numbers.',
   '- Set `confidence` to reflect how legible and complete the label was.',
+  '- Set `implied_weight_g` to null; it only applies to photographed plates.',
+].join('\n');
+
+// Plate-photo (S-04) vision prompt. Aggregate estimation only —
+// decomposition into per-component items is deferred (OQ-6) — with an
+// implied total portion weight the review screen can rescale against if the
+// owner supplies the plate's actual weight (FR-004).
+const PLATE_SYSTEM_PROMPT = [
+  'You are a nutrition estimation assistant for a personal calorie tracker.',
+  'You are given a photograph of a prepared meal on a plate. Estimate its',
+  'TOTAL calories and macronutrients as ONE aggregate figure for everything',
+  'visible, using a typical portion size for what you see.',
+  '',
+  'Rules:',
+  '- Set `calories`, `protein_g`, `carbs_g`, and `fat_g` to your best estimate',
+  '  for the entire plate as shown — sum every food visible into one figure,',
+  '  even if the plate holds multiple distinct foods (e.g. a burger with fries).',
+  '- Set `implied_weight_g` to your best estimate of the total plate weight in',
+  '  grams — this is the base the reviewer can rescale against if they supply',
+  "  the plate's actual weight. Set it to null only if you cannot judge portion",
+  '  size at all.',
+  '- If the plate holds more than one clearly distinct food, add a short',
+  '  assumption noting this (e.g. "multiple items — aggregate estimate") so',
+  '  the reviewer knows the figure is rougher than a single-food estimate.',
+  '- Set `name` to a short description of the meal (e.g. "Burger and fries").',
+  '- Set `food_category` to a short lowercase label for the primary/dominant',
+  '  food (e.g. "burger", "pasta", "salad").',
+  '- If the image is not a plate of food (wrong subject, too blurry, empty',
+  '  plate), set `recognized` to false, set every macro field and',
+  '  `implied_weight_g` to null, and do NOT fabricate numbers.',
+  '- Set `confidence` to reflect how sure you are about both the',
+  '  identification and the portion-size estimate.',
+  '- Set `serving_size` to null; it only applies to photographed labels.',
 ].join('\n');
 
 // Structured-output schema. Numeric sanity (non-negative, macro/calorie
@@ -76,6 +110,7 @@ const ESTIMATE_SCHEMA = {
     recognized: { type: 'boolean' },
     confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
     serving_size: { type: ['string', 'null'] },
+    implied_weight_g: { type: ['number', 'null'] },
   },
   required: [
     'name',
@@ -88,6 +123,7 @@ const ESTIMATE_SCHEMA = {
     'recognized',
     'confidence',
     'serving_size',
+    'implied_weight_g',
   ],
   additionalProperties: false,
 } as const;
@@ -146,6 +182,7 @@ function sanitize(raw: Estimate): Estimate {
       recognized: false,
       confidence,
       serving_size: null,
+      implied_weight_g: null,
     };
   }
 
@@ -160,6 +197,7 @@ function sanitize(raw: Estimate): Estimate {
     recognized: true,
     confidence,
     serving_size,
+    implied_weight_g: nonNeg(raw.implied_weight_g),
   };
 }
 
@@ -208,17 +246,24 @@ export async function estimateFromText(text: string): Promise<EstimateResult> {
 }
 
 /**
- * Estimate a meal from a photographed nutrition label (S-03). Same request
- * shape as `estimateFromText` — model, schema, and `sanitize` are shared —
- * with an image content block ahead of the instruction text and a label-OCR
- * system prompt in place of the free-text one. Throws on transport/model error.
+ * Estimate a meal from a photographed label (S-03) or plate (S-04). Same
+ * request shape either way — model, schema, and `sanitize` are shared —
+ * with an image content block ahead of the instruction text and a
+ * kind-specific system prompt. Throws on transport/model error.
  */
 export async function estimateFromImage(
   mediaType: string,
   data64: string,
+  imageKind: 'label' | 'plate',
 ): Promise<EstimateResult> {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
+
+  const system = imageKind === 'label' ? LABEL_SYSTEM_PROMPT : PLATE_SYSTEM_PROMPT;
+  const instruction =
+    imageKind === 'label'
+      ? 'Read the nutrition facts label in this image and report the per-serving values.'
+      : 'Estimate the calories and macros for the meal shown in this photo.';
 
   const res = await fetch(ANTHROPIC_URL, {
     method: 'POST',
@@ -231,17 +276,14 @@ export async function estimateFromImage(
       model: MODEL,
       max_tokens: MAX_TOKENS,
       thinking: { type: 'adaptive' },
-      system: LABEL_SYSTEM_PROMPT,
+      system,
       output_config: { format: { type: 'json_schema', schema: ESTIMATE_SCHEMA } },
       messages: [
         {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: mediaType, data: data64 } },
-            {
-              type: 'text',
-              text: 'Read the nutrition facts label in this image and report the per-serving values.',
-            },
+            { type: 'text', text: instruction },
           ],
         },
       ],

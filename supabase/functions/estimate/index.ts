@@ -1,9 +1,9 @@
 // Supabase Edge Function: `estimate` (F-02 — server-side AI estimation proxy).
 //
-// Requires an authenticated owner session, estimates a meal from text or a
-// photographed label via Claude Opus 4.8, records an immutable EstimationRun
-// under the caller's RLS, and returns `{ runId, estimate }`. Plate-photo input
-// (`imageKind: 'plate'`) is reserved for S-04. The AI key never leaves the server.
+// Requires an authenticated owner session, estimates a meal from text, a
+// photographed label (S-03), or a photographed plate (S-04) via Claude Opus
+// 4.8, records an immutable EstimationRun under the caller's RLS, and
+// returns `{ runId, estimate }`. The AI key never leaves the server.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { estimateFromImage, estimateFromText } from './estimate.ts';
@@ -77,8 +77,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (input.imageKind !== 'label' && input.imageKind !== 'plate') {
       return json({ error: 'invalid_input' }, 400);
     }
-    // Plate-photo estimation is S-04's; keep the branch reachable but unsupported.
-    if (input.imageKind === 'plate') return json({ error: 'image_input_unsupported' }, 400);
     if (typeof input.data !== 'string' || input.data.trim() === '') {
       return json({ error: 'invalid_input' }, 400);
     }
@@ -90,16 +88,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     try {
-      result = await estimateFromImage(input.mediaType, input.data);
+      result = await estimateFromImage(input.mediaType, input.data, input.imageKind);
     } catch (err) {
       console.error('[estimate] estimation failed:', err);
       return json({ error: 'estimation_failed' }, 502);
     }
 
     // No source text for an image run; fall back to a fixed marker when the
-    // model didn't produce a usable name (e.g. an unrecognized label).
+    // model didn't produce a usable name (e.g. an unrecognized label or plate).
     const name = result.estimate.name.trim();
-    inputSummary = name !== '' ? name.slice(0, 200) : 'label scan';
+    inputSummary =
+      name !== '' ? name.slice(0, 200) : input.imageKind === 'label' ? 'label scan' : 'plate photo';
   } else if (input.kind === 'text') {
     if (typeof input.text !== 'string' || input.text.trim() === '') {
       return json({ error: 'invalid_input' }, 400);

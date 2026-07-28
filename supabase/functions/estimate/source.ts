@@ -9,8 +9,9 @@ export function sourceForInput(input: EstimateInput): EntrySource {
     case 'text':
       return 'free_text';
     case 'image':
-      // The handler rejects `imageKind: 'plate'` until S-04; defaulting keeps
-      // the union exhaustive without a third branch for an unsupported input.
+      // Defaulting to plate_photo for any non-label image keeps the union
+      // exhaustive without a third branch — `imageKind` is only ever 'label'
+      // or 'plate' per the ImageInput contract.
       return input.imageKind === 'label' ? 'label_scan' : 'plate_photo';
   }
 }
