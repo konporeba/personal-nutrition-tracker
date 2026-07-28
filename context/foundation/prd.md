@@ -183,7 +183,7 @@ There is no secondary persona. This is a single-user tool: no multi-tenancy, no 
 
 - **Given** I did a hard session this morning
 - **When** I log that session
-- **Then** my available calories for the day increase by the estimated burn, and I can see intake, expenditure and net side by side
+- **Then** my available calories for the day increase by the burn I logged, and I can see intake, expenditure and net side by side
 
 #### Acceptance Criteria
 - The day's burned calories are added to that day's budget, per the selected expenditure model (FR-073, OQ-1)
@@ -197,7 +197,7 @@ There is no secondary persona. This is a single-user tool: no multi-tenancy, no 
 
 #### Acceptance Criteria
 - Frequently repeated sessions can be saved for one-tap logging (FR-074)
-- No manual calorie entry is required (FR-071)
+- Logging a saved session requires no typing — its duration and burn value come from what was saved, not re-entered (FR-074)
 
 ## Functional Requirements
 
@@ -263,8 +263,8 @@ There is no secondary persona. This is a single-user tool: no multi-tenancy, no 
 ### Exercise & expenditure
 
 - FR-070: User can log a training session with type, duration, and intensity. Priority: must-have
-- FR-071: System estimates calories burned for a logged session from session attributes and the user's body weight, without requiring manual calorie entry. Priority: must-have
-- FR-072: User can manually override an estimated burn. Priority: must-have
+- FR-071: User can enter the calorie burn for a logged session directly — typically the value a third-party tracker already computed — rather than the system estimating it (OQ-9). Priority: must-have
+- FR-072: User can edit a logged session's burn value after the fact. Priority: must-have
 - FR-073: System adds the day's total burned calories to that day's available calorie budget, per the sedentary-baseline model (Model A): resting target plus logged burns. Priority: must-have
 - FR-074: User can save frequently repeated sessions for one-tap logging, mirroring the saved-meals mechanism. Priority: nice-to-have
 - FR-075: System displays the day as a two-sided ledger: calories in, calories out, and net against budget. Priority: must-have
@@ -304,9 +304,9 @@ There is no secondary persona. This is a single-user tool: no multi-tenancy, no 
 
 This is not empty CRUD. The non-trivial logic lives in four places. **Estimation with correction:** a first-pass estimate is produced automatically, and any total or per-component weight the owner supplies rescales that estimate rather than replacing it. **Target derivation:** daily calorie and macro targets are computed from height, weight, age, sex, activity level, and goal via a BMR/TDEE-class formula — not typed by hand, though every derived target stays overridable. **Dynamic daily budget:** the day's available calories are not fixed but `derived target + calories burned today`, so a hard training day earns a larger budget and a rest day does not, making the day a genuine two-sided ledger rather than a one-directional intake log. **Trend scoring:** daily *net* totals roll up into moving averages and progress-versus-goal, because single days are noise.
 
-Every entry also carries a confidence/source marker (label scan, plate photo, free-text, saved meal, manual, exercise estimate) reflecting how trustworthy the number is — a printed label is near-exact, a plate photo is grounded in something visible, a free-text description is the weakest because the only evidence is the words, and a burn estimate is weaker still. Analytics use this marker to flag periods dominated by low-confidence guesses, so an unexpected trend can be checked against the source mix before anything about the diet is changed.
+Every entry also carries a confidence/source marker (label scan, plate photo, free-text, saved meal, manual, exercise estimate) reflecting how trustworthy the number is — a printed label is near-exact, a plate photo is grounded in something visible, and a free-text description is the weakest because the only evidence is the words. A logged training burn is owner-entered (OQ-9) — typically copied from a third-party tracker — so it's treated at face value like a manual entry, not as an AI guess. Analytics use this marker to flag periods dominated by low-confidence guesses, so an unexpected trend can be checked against the source mix before anything about the diet is changed.
 
-The expenditure model is resolved (2026-07-19): the system uses the **sedentary baseline (Model A)**. The profile's activity multiplier is fixed at sedentary/BMR, the derived daily target reflects that resting baseline only, and every logged training session adds its estimated burn to that day's budget explicitly. The alternative — baking training into the profile's activity multiplier and logging sessions for the record only — was rejected because it double-counts exercise calories. The UI states that the day's budget is a resting baseline plus logged training, so the model is visible to the owner.
+The expenditure model is resolved (2026-07-19): the system uses the **sedentary baseline (Model A)**. The profile's activity multiplier is fixed at sedentary/BMR, the derived daily target reflects that resting baseline only, and every logged training session adds its logged burn to that day's budget explicitly. The alternative — baking training into the profile's activity multiplier and logging sessions for the record only — was rejected because it double-counts exercise calories. The UI states that the day's budget is a resting baseline plus logged training, so the model is visible to the owner.
 
 ## Access Control
 
@@ -333,15 +333,15 @@ Cloud synchronisation is required because there are two clients (phone and deskt
 ### Resolved
 - **OQ-1 — Expenditure model.** ✓ Resolved 2026-07-19 — **Model A (sedentary baseline).** Profile activity multiplier fixed at sedentary/BMR; every logged session adds its burn to the day's budget explicitly. Baked into Business Logic, the Success Criteria guardrail, and FR-073.
 - **OQ-5 — Success criteria.** ✓ Resolved 2026-07-19 — **Confirmed as stated.** Both primary criteria (log ≥ 80% of days for 8 consecutive weeks; accept the first estimate without editing in ≥ 70% of entries) are accepted, no longer candidates.
+- **OQ-6 — Multi-item plates.** ✓ Resolved 2026-07-28 — **Aggregate only for v1.** One number per plate; a total-weight rescale satisfies FR-004, but per-component decomposition (FR-083), per-component weight correction, and per-component icons (FR-054) are deferred. Unblocks S-04 and S-07, both scoped to the aggregate model.
+- **OQ-8 — PIN scope.** ✓ Resolved 2026-07-28 — **Gates both clients.** The PIN is required on mobile and desktop, matching FR-041's full desktop parity. Recovery if forgotten is re-authenticating with the underlying owner Supabase credentials — the PIN is a convenience gate, not the root secret, so no separate recovery flow is needed. Unblocks S-12.
+- **OQ-9 — Burn estimation method.** ✓ Resolved 2026-07-28 — **Manual entry, not a computed estimate.** The owner enters a session's calorie burn directly — typically the value a third-party tracker already computed — rather than the system deriving one from a MET table or AI. Consistent with the existing non-goal of no wearable/third-party integration. FR-071 and FR-072 rewritten accordingly. Unblocks S-09.
 
 ### Open
 1. **OQ-2 — Icon set & taxonomy.** Which icon library or custom set, and how many food categories (starting estimate 25–40) must the taxonomy cover before the generic fallback becomes conspicuous? Owner: user. Block: implementation, not PRD.
 2. **OQ-10 — Section defaults.** What time boundaries drive the section inferred in FR-058 (e.g. anything before 10:30 is breakfast)? Should match the owner's actual eating pattern. Owner: user. Block: implementation, not PRD.
-3. **OQ-6 — Multi-item plates.** One aggregate number per plate, or a per-component breakdown? Per-component enables per-item weight correction (FR-004) and a richer detail view (FR-062) but is materially harder; it also gates FR-083 and FR-054. Owner: user.
-4. **OQ-11 — Text ambiguity floor.** How vague is too vague? When confidence is low, should the system push back and ask for a count/size (protects data quality) or silently assume and rely on the review step (protects the minimal-input principle)? Owner: user.
-5. **OQ-3 — Barcode.** Many packaged products are easier to identify by barcode than by label reading. Currently a non-goal — confirm, or promote? Owner: user.
-6. **OQ-4 — Offline behaviour.** With no connectivity, queue the entry locally and estimate later, or block? Materially affects the sync design. Owner: user.
-7. **OQ-7 — Photo retention.** Source photos are evidence-only and never displayed — discard after N days to keep storage flat, or retain indefinitely for possible re-estimation? Owner: user.
-8. **OQ-12 — Voice input scope.** FR-085 assumes native on-device dictation (free) rather than a transcription service — confirm, since it affects both cost and offline behaviour. Owner: user.
-9. **OQ-8 — PIN scope.** Does the PIN gate the desktop client too, and is there any recovery path if it is forgotten? Owner: user.
-10. **OQ-9 — Burn estimation method.** MET-table lookup from type/duration/weight (deterministic, free) or an AI estimate from a free-text session description (more convenient, fits minimal-input)? Owner: user.
+3. **OQ-11 — Text ambiguity floor.** How vague is too vague? When confidence is low, should the system push back and ask for a count/size (protects data quality) or silently assume and rely on the review step (protects the minimal-input principle)? Owner: user.
+4. **OQ-3 — Barcode.** Many packaged products are easier to identify by barcode than by label reading. Currently a non-goal — confirm, or promote? Owner: user.
+5. **OQ-4 — Offline behaviour.** With no connectivity, queue the entry locally and estimate later, or block? Materially affects the sync design. Owner: user.
+6. **OQ-7 — Photo retention.** Source photos are evidence-only and never displayed — discard after N days to keep storage flat, or retain indefinitely for possible re-estimation? Owner: user.
+7. **OQ-12 — Voice input scope.** FR-085 assumes native on-device dictation (free) rather than a transcription service — confirm, since it affects both cost and offline behaviour. Owner: user.

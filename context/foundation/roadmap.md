@@ -3,7 +3,7 @@ project: "Personal Nutrition Tracker"
 version: 1
 status: draft
 created: 2026-07-19
-updated: 2026-07-27
+updated: 2026-07-28
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -37,10 +37,10 @@ Existing diet trackers make logging so manual that the owner abandons it after a
 | S-03 | label-scan-logging           | log a packaged product by photographing its nutrition label      | F-01, F-02, S-01| US-03, FR-001/002, FR-005/006/007/008, FR-040 | done     |
 | S-06 | structured-day-view          | see the day as five sections with subtotals and a running total  | S-01, S-05      | US-10, FR-056/057/058/059/060/061/064, FR-030 | done     |
 | S-08 | saved-meals-library          | save a meal and re-log it in one tap                             | S-01, S-05      | US-04, FR-010/011/012, FR-055         | done     |
-| S-04 | plate-photo-logging          | log a plate by photo and correct it with a weight                | F-01, F-02, S-03| US-01, US-02, FR-003/004, FR-005/006/007/008 | blocked  |
-| S-07 | meal-detail-view             | inspect a meal's full breakdown and edit/re-section/delete it    | S-05, S-06      | US-09, FR-062/063                     | blocked  |
-| S-09 | training-and-dynamic-budget  | log training and earn calories back as a two-sided ledger        | S-02, S-06      | US-14, US-15, FR-070/071/072/073/075  | blocked  |
-| S-12 | pin-access-gate              | gate the app behind a PIN on both clients                        | F-01            | FR-042                                | blocked  |
+| S-04 | plate-photo-logging          | log a plate by photo and correct it with a weight                | F-01, F-02, S-03| US-01, US-02, FR-003/004, FR-005/006/007/008 | proposed |
+| S-07 | meal-detail-view             | inspect a meal's full breakdown and edit/re-section/delete it    | S-05, S-06      | US-09, FR-062/063                     | proposed |
+| S-09 | training-and-dynamic-budget  | log training and earn calories back as a two-sided ledger        | S-02, S-06      | US-14, US-15, FR-070/071/072/073/075  | proposed |
+| S-12 | pin-access-gate              | gate the app behind a PIN on both clients                        | F-01            | FR-042                                | proposed |
 | S-11 | analytics-and-trends         | see intake/expenditure/net trends and weight-vs-goal over time   | S-02, S-06, S-09| US-06, FR-031/032/033/034             | proposed |
 
 ## Streams
@@ -49,11 +49,11 @@ Navigation aid — groups items that share a Prerequisites chain. Canonical orde
 
 | Stream | Theme                    | Chain                                    | Note                                                                        |
 | ------ | ------------------------ | ---------------------------------------- | --------------------------------------------------------------------------- |
-| A      | AI capture & log         | `F-02` → `S-01` → `S-03` → `S-04`        | Holds the north star (`S-01`); `S-04` blocked on OQ-6. Joins Stream B via `F-01`. |
-| B      | Day container & detail   | `F-01` → `S-06` → `S-07`                 | `F-01` also unlocks Streams A/D/E; `S-06` needs `S-05` from Stream C; `S-07` blocked on OQ-6. |
+| A      | AI capture & log         | `F-02` → `S-01` → `S-03` → `S-04`        | Holds the north star (`S-01`); `S-04` scoped to aggregate-only (OQ-6 resolved). Joins Stream B via `F-01`. |
+| B      | Day container & detail   | `F-01` → `S-06` → `S-07`                 | `F-01` also unlocks Streams A/D/E; `S-06` needs `S-05` from Stream C; `S-07` scoped to aggregate-only (OQ-6 resolved). |
 | C      | Visual identity & reuse  | `S-05` → `S-08`                          | Joins Stream A at `S-01` (both need it) and feeds `S-06`.                    |
-| D      | Budget & trends          | `S-02` → `S-09` → `S-11`                 | `S-09` blocked on OQ-9; joins Stream B at `S-06`. Sequenced last (needs accumulated data). |
-| E      | Access gate              | `S-12`                                   | Standalone (needs only `F-01`); blocked on OQ-8.                            |
+| D      | Budget & trends          | `S-02` → `S-09` → `S-11`                 | `S-09` uses owner-entered burn (OQ-9 resolved); joins Stream B at `S-06`. Sequenced last (needs accumulated data). |
+| E      | Access gate              | `S-12`                                   | Standalone (needs only `F-01`); PIN gates both clients (OQ-8 resolved).      |
 
 ## Baseline
 
@@ -147,7 +147,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:**
   - Discard source photos after N days or retain indefinitely (OQ-7) — Owner: user. Block: no (default retain-as-evidence; a retention policy can be added later).
-- **Risk:** this establishes the photo-capture pipeline (camera + gallery + evidence-only retention) that S-04 reuses. Chosen as the first photo path because label OCR is near-exact and does NOT need the per-component decision (OQ-6) that blocks the plate path — so a capture path ships while OQ-6 is still open.
+- **Risk:** this establishes the photo-capture pipeline (camera + gallery + evidence-only retention) that S-04 reuses. Chosen as the first photo path because label OCR is near-exact and did NOT need the per-component decision (OQ-6) that was blocking the plate path at the time — so a capture path shipped while OQ-6 was still open (OQ-6 has since been resolved as aggregate-only for v1).
 - **Status:** done
 
 ### S-06: See the structured day
@@ -177,55 +177,51 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 ### S-04: Log a plate by photo
 
-- **Outcome:** the owner photographs a prepared meal, the system estimates calories/macros with an implied portion, and supplying a total (or per-component) weight rescales the estimate before commit — marked as a plate photo, with the photo retained as evidence only.
+- **Outcome:** the owner photographs a prepared meal, the system estimates calories/macros with an implied portion, and supplying a total weight rescales the estimate before commit — marked as a plate photo, with the photo retained as evidence only.
 - **Change ID:** plate-photo-logging
 - **PRD refs:** US-01, US-02, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008
 - **Prerequisites:** F-01, F-02, S-03 (reuses the photo-capture pipeline)
 - **Parallel with:** S-07
 - **Blockers:** —
-- **Unknowns:**
-  - One aggregate number per plate, or a per-component breakdown (OQ-6) — Owner: user. Block: yes. Per-component enables per-item weight correction (FR-004) and reshapes the Meal/MealComponent model; the plate slice's scope cannot be fixed until this is decided.
-- **Risk:** building against the wrong model risks reworking the meal schema and the detail view. Deferred behind S-03 (which needs no per-component decision) precisely so a photo capture path can ship while OQ-6 is still open.
-- **Status:** blocked
+- **Unknowns:** —
+- **Risk:** OQ-6 resolved 2026-07-28 as aggregate-only for v1 — the plate estimate is a single number per photo, with total-weight rescale (FR-004) but no per-component decomposition. Reworking to per-component later (FR-083, FR-054) is a distinct, larger follow-up if ever pursued.
+- **Status:** proposed
 
 ### S-07: Inspect and edit a single meal
 
-- **Outcome:** the owner taps an entry to see its full macro breakdown, icon, source marker, and per-component breakdown (each component with its own icon), and can edit, re-section, or delete it — with section subtotals and the daily total recalculating.
+- **Outcome:** the owner taps an entry to see its full macro breakdown, icon, and source marker, and can edit, re-section, or delete it — with section subtotals and the daily total recalculating.
 - **Change ID:** meal-detail-view
 - **PRD refs:** US-09, FR-062, FR-063
 - **Prerequisites:** S-05, S-06
 - **Parallel with:** S-04
 - **Blockers:** —
-- **Unknowns:**
-  - Per-component breakdown vs aggregate (OQ-6) — Owner: user. Block: yes. FR-062 (must-have) requires displaying a per-component breakdown with each component's icon; whether components are first-class is exactly OQ-6.
-- **Risk:** the edit/re-section/delete core (FR-063) is ready to plan, but FR-062's component display depends on OQ-6, so the slice as written is blocked. Resolving OQ-6 unblocks both this and S-04.
-- **Status:** blocked
+- **Unknowns:** —
+- **Risk:** OQ-6 resolved 2026-07-28 as aggregate-only for v1 — FR-062's per-component display has nothing to show until a later per-component slice exists, so the detail view ships against the aggregate model (macros, icon, source marker, edit/re-section/delete) with no component sub-list for now.
+- **Status:** proposed
 
 ### S-09: Log training and earn calories back
 
-- **Outcome:** the owner logs a training session (type, duration, intensity), the system estimates the burn from those attributes and body weight (overridable), that burn is added to the day's budget per Model A, and the day is shown as a two-sided ledger — in, out, net.
+- **Outcome:** the owner logs a training session (type, duration, intensity) and enters its calorie burn directly (typically the value a third-party tracker already computed), that burn is added to the day's budget per Model A, and the day is shown as a two-sided ledger — in, out, net.
 - **Change ID:** training-and-dynamic-budget
 - **PRD refs:** US-14, US-15, FR-070, FR-071, FR-072, FR-073, FR-075 (FR-074 saved sessions — optional, nice-to-have)
 - **Prerequisites:** S-02 (body weight + budget target), S-06 (a day to adjust)
 - **Parallel with:** S-04, S-07
 - **Blockers:** —
-- **Unknowns:**
-  - MET-table lookup vs AI estimate from a free-text session description (OQ-9) — Owner: user. Block: yes. The two approaches differ materially (deterministic/free vs reuses the F-02 proxy) and change the slice's implementation and cost.
-- **Risk:** this closes the dynamic-budget loop that makes FR-030's "adjusted budget" real; until OQ-9 is decided the burn-estimation path can't be planned. The double-counting hazard is already resolved (Model A), so the budget arithmetic itself is settled.
-- **Status:** blocked
+- **Unknowns:** —
+- **Risk:** OQ-9 resolved 2026-07-28: burn is owner-entered, not computed — no MET table, no AI call — consistent with the PRD's existing non-goal of no wearable/third-party integration. This closes the dynamic-budget loop that makes FR-030's "adjusted budget" real. The double-counting hazard is already resolved (Model A), so the budget arithmetic itself is settled.
+- **Status:** proposed
 
 ### S-12: Gate access behind a PIN
 
-- **Outcome:** the owner sets a PIN that gates access to the app; opening it requires the PIN.
+- **Outcome:** the owner sets a PIN that gates access to the app on both mobile and desktop; opening either client requires the PIN, and losing it is recovered via the underlying owner login.
 - **Change ID:** pin-access-gate
 - **PRD refs:** FR-042
 - **Prerequisites:** F-01
 - **Parallel with:** S-02, S-05, S-06, S-08
 - **Blockers:** —
-- **Unknowns:**
-  - Does the PIN gate the desktop client too, and is there any recovery path if forgotten (OQ-8) — Owner: user. Block: yes. Both the scope and the recovery flow must be decided before this can be planned.
-- **Risk:** a deliberately weak single-owner gate, not an auth stack — low structural risk, but the desktop-scope and recovery questions (OQ-8) are genuine product decisions. Orthogonal to the capture slices, so its position is late only because it is not on the validation path.
-- **Status:** blocked
+- **Unknowns:** —
+- **Risk:** OQ-8 resolved 2026-07-28: the PIN gates both clients for a consistent privacy posture (matching FR-041's full desktop parity); losing the PIN is recovered by re-authenticating with the underlying owner Supabase credentials, since the PIN is a convenience gate, not the root secret. A deliberately weak single-owner gate, not an auth stack — low structural risk. Orthogonal to the capture slices, so its position is late only because it is not on the validation path.
+- **Status:** proposed
 
 ### S-11: See whether I am on track
 
@@ -236,7 +232,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Parallel with:** —
 - **Blockers:** —
 - **Unknowns:** —
-- **Risk:** analytics needs accumulated days before it shows anything meaningful, so it is sequenced last regardless of goal; net trends depend on S-09's expenditure data, which is itself blocked on OQ-9. No new unknowns of its own.
+- **Risk:** analytics needs accumulated days before it shows anything meaningful, so it is sequenced last regardless of goal; net trends depend on S-09's expenditure data. No new unknowns of its own.
 - **Status:** proposed
 
 ## Backlog Handoff
@@ -251,23 +247,22 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-03       | label-scan-logging           | Label-scan logging + photo-capture pipeline            | no                    | Plan after S-01 |
 | S-06       | structured-day-view          | Five-section structured day view with subtotals        | no                    | Plan after S-01 + S-05 |
 | S-08       | saved-meals-library          | Saved-meals library with one-tap re-log                | no                    | Plan after S-01 + S-05 |
-| S-04       | plate-photo-logging          | Plate-photo logging with weight correction             | no                    | Blocked on OQ-6 |
-| S-07       | meal-detail-view             | Meal detail view with edit/re-section/delete           | no                    | Blocked on OQ-6 |
-| S-09       | training-and-dynamic-budget  | Training log + dynamic calorie budget ledger           | no                    | Blocked on OQ-9 |
-| S-12       | pin-access-gate              | PIN access gate                                        | no                    | Blocked on OQ-8 |
+| S-04       | plate-photo-logging          | Plate-photo logging with weight correction             | yes                   | Unblocked — OQ-6 resolved (aggregate-only for v1), S-03 ✅. Run `/10x-plan plate-photo-logging` |
+| S-07       | meal-detail-view             | Meal detail view with edit/re-section/delete           | yes                   | Unblocked — OQ-6 resolved (aggregate-only for v1), S-05 ✅ + S-06 ✅. Run `/10x-plan meal-detail-view` |
+| S-09       | training-and-dynamic-budget  | Training log + dynamic calorie budget ledger           | yes                   | Unblocked — OQ-9 resolved (owner-entered burn), S-02 ✅ + S-06 ✅. Run `/10x-plan training-and-dynamic-budget` |
+| S-12       | pin-access-gate              | PIN access gate                                        | yes                   | Unblocked — OQ-8 resolved (PIN gates both clients), F-01 ✅. Run `/10x-plan pin-access-gate` |
 | S-11       | analytics-and-trends         | Intake/expenditure/net trends and weight-vs-goal       | no                    | Plan after S-02 + S-06 + S-09 |
 
 This table is the clean handoff to Jira/Linear or any MCP-backed backlog.
 
 ## Open Roadmap Questions
 
-1. **OQ-6 — Per-component plates vs one aggregate number.** Owner: user. Block: S-04, S-07 (and shapes the Meal/MealComponent data model, so effectively roadmap-wide). Resolving this promotes 2 slices and settles the model F-01 seeded. Highest-leverage question in the roadmap.
-2. **OQ-9 — Burn estimation method.** MET-table lookup (deterministic, free) vs AI estimate from a free-text session description (reuses F-02). Owner: user. Block: S-09.
-3. **OQ-8 — PIN scope & recovery.** Does the PIN gate desktop too, and is there a recovery path if forgotten? Owner: user. Block: S-12.
-4. **OQ-4 — Offline capture behaviour.** Queue-and-estimate-later vs block. Owner: user. Block: roadmap-wide (informs F-01 sync design), but Non-Goal for MVP → default online-only.
-5. **OQ-11 — Text ambiguity floor.** Push back for a count/size vs assume-and-surface. Owner: user. Block: none (S-01 defaults to assume-and-surface); resolve to tune data quality vs minimal-input.
-6. **OQ-7 — Photo retention.** Discard after N days vs retain indefinitely. Owner: user. Block: none (S-03 defaults to retain-as-evidence).
-7. **OQ-2 — Icon set & taxonomy** and **OQ-10 — Section time boundaries.** Owner: user. Block: none (implementation-level; chosen inside `/10x-plan` for S-05 and S-06 respectively).
+As of 2026-07-28, OQ-6, OQ-8, and OQ-9 are resolved (see PRD § Open Questions → Resolved) — S-04, S-07, S-09, and S-12 are unblocked. No open question currently blocks any roadmap slice.
+
+1. **OQ-4 — Offline capture behaviour.** Queue-and-estimate-later vs block. Owner: user. Block: roadmap-wide (informs F-01 sync design), but Non-Goal for MVP → default online-only.
+2. **OQ-11 — Text ambiguity floor.** Push back for a count/size vs assume-and-surface. Owner: user. Block: none (S-01 defaults to assume-and-surface); resolve to tune data quality vs minimal-input.
+3. **OQ-7 — Photo retention.** Discard after N days vs retain indefinitely. Owner: user. Block: none (S-03 defaults to retain-as-evidence).
+4. **OQ-2 — Icon set & taxonomy** and **OQ-10 — Section time boundaries.** Owner: user. Block: none (implementation-level; chosen inside `/10x-plan` for S-05 and S-06 respectively).
 
 ## Parked
 
@@ -283,7 +278,7 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog.
 - **Export beyond a trivial data dump** — Why parked: PRD §Non-Goals.
 - **Lab-grade macro precision** — Why parked: PRD §Non-Goals; rough-but-consistent is the accepted stance.
 - **Nice-to-have capture/reuse extras** — voice dictation (FR-085), saved-meal match suggestion (FR-086), saved-meal scaling (FR-013), manual icon override (FR-053). Why parked: nice-to-have priority; fold into the relevant slice later if wanted.
-- **Per-component icons & multi-item decomposition (FR-054, FR-083)** — Why parked: nice-to-have and gated by OQ-6; revisit with S-04/S-07 once the per-component decision lands.
+- **Per-component icons & multi-item decomposition (FR-054, FR-083)** — Why parked: nice-to-have; OQ-6 resolved as aggregate-only for v1, so per-component stays deferred to a future slice.
 
 ## Done
 
