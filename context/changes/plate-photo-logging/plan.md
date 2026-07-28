@@ -340,31 +340,31 @@ No database schema changes — `implied_weight_g` lives only in the wire contrac
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npx tsc --noEmit` (meal-composer.tsx errors resolved; review.tsx's remaining errors are Phase 4's job, as expected)
-- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit` (meal-composer.tsx errors resolved; review.tsx's remaining errors are Phase 4's job, as expected) — a84595e
+- [x] 3.2 Linting passes: `npm run lint` — a84595e
 
 #### Manual
 
-- [x] 3.3 Today shows both "Scan a label" and "Log a plate" buttons, laid out without overlap on a phone-width screen
-- [x] 3.4 Tapping "Log a plate" opens the same camera/library choice as "Scan a label", with plate-specific copy
-- [x] 3.5 A canceled picker (any step) leaves the composer's typed text and both buttons exactly as they were
-- [x] 3.6 Successfully capturing a plate photo navigates to `/review` with the estimate staged
+- [x] 3.3 Today shows both "Scan a label" and "Log a plate" buttons, laid out without overlap on a phone-width screen — a84595e
+- [x] 3.4 Tapping "Log a plate" opens the same camera/library choice as "Scan a label", with plate-specific copy — a84595e
+- [x] 3.5 A canceled picker (any step) leaves the composer's typed text and both buttons exactly as they were — a84595e
+- [x] 3.6 Successfully capturing a plate photo navigates to `/review` with the estimate staged — a84595e
 
 ### Phase 4: Review-screen integration
 
 #### Automated
 
-- [ ] 4.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 4.2 Linting passes: `npm run lint`
+- [x] 4.1 Type checking passes: `npx tsc --noEmit`
+- [x] 4.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 4.3 Reviewing a recognized plate-photo estimate shows "Estimated portion: ~X g" and an "Actual weight (g)" field, not a servings field
-- [ ] 4.4 Leaving the weight field blank and committing logs the AI's raw estimate unchanged
-- [ ] 4.5 Entering a weight different from the implied weight rescales every macro proportionally before commit
-- [ ] 4.6 A plate estimate with no `implied_weight_g` shows no weight field at all
-- [ ] 4.7 The committed entry shows `source: 'plate_photo'` and the evidence photo uploads best-effort without blocking the log
-- [ ] 4.8 An unrecognized plate photo shows the same manual-entry notice as any other unrecognized capture, with no fabricated numbers
+- [x] 4.3 Reviewing a recognized plate-photo estimate shows "Estimated portion: ~X g" and an "Actual weight (g)" field, not a servings field
+- [x] 4.4 Leaving the weight field blank and committing logs the AI's raw estimate unchanged
+- [x] 4.5 Entering a weight different from the implied weight rescales every macro proportionally before commit
+- [x] 4.6 A plate estimate with no `implied_weight_g` shows no weight field at all
+- [x] 4.7 The committed entry shows `source: 'plate_photo'` and the evidence photo uploads best-effort without blocking the log
+- [x] 4.8 An unrecognized plate photo shows the same manual-entry notice as any other unrecognized capture, with no fabricated numbers
 
 ### Phase 5: Smoke adjustment and manual verification
 

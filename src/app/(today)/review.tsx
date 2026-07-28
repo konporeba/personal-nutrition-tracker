@@ -25,7 +25,7 @@ import { queryKeys } from '@/data/query-keys';
 import { useCreateMealEntry } from '@/data/use-meal-entries';
 import { useCreateSavedMeal } from '@/data/use-saved-meals';
 import { useTheme } from '@/hooks/use-theme';
-import type { CapturedLabel } from '@/lib/capture-label';
+import type { CapturedPhoto } from '@/lib/capture-photo';
 import { sectionForTime } from '@/lib/section-for-time';
 
 export default function ReviewScreen() {
@@ -41,7 +41,7 @@ export default function ReviewScreen() {
     : undefined;
   // Staged by the composer's scan affordance; undefined for the text path.
   const photo = runId
-    ? queryClient.getQueryData<CapturedLabel>(queryKeys.labelPhoto(runId))
+    ? queryClient.getQueryData<CapturedPhoto>(queryKeys.capturedPhoto(runId))
     : undefined;
 
   return (
@@ -55,6 +55,7 @@ export default function ReviewScreen() {
               runId={runId}
               typedText={text ?? ''}
               isLabelScan={source === 'label_scan'}
+              isPlatePhoto={source === 'plate_photo'}
               photo={photo}
             />
           ) : (
@@ -71,13 +72,15 @@ function ReviewForm({
   runId,
   typedText,
   isLabelScan,
+  isPlatePhoto,
   photo,
 }: {
   estimate: Estimate;
   runId: string;
   typedText: string;
   isLabelScan: boolean;
-  photo: CapturedLabel | undefined;
+  isPlatePhoto: boolean;
+  photo: CapturedPhoto | undefined;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -88,6 +91,9 @@ function ReviewForm({
   // size; an unrecognized label has none and falls through to the plain manual
   // form below, same as any other unrecognized input.
   const showServings = recognized && estimate.serving_size !== null;
+  // Mirrors showServings: a plate photo only gets the weight-rescale field
+  // when the model could confidently judge portion size.
+  const showWeightRescale = recognized && isPlatePhoto && estimate.implied_weight_g !== null;
 
   // Seeded once. An unrecognized input contributes no numbers at all — the
   // owner's own text is the only thing worth carrying over.
@@ -99,6 +105,9 @@ function ReviewForm({
   const [carbs, setCarbs] = useState(() => seedField(estimate.carbs_g));
   const [fat, setFat] = useState(() => seedField(estimate.fat_g));
   const [servings, setServings] = useState('1');
+  // Empty by default — there's no neutral non-empty value for a weight the
+  // owner hasn't measured, unlike servings' default of '1'.
+  const [weight, setWeight] = useState('');
   const [saveToLibrary, setSaveToLibrary] = useState(false);
 
   // `isSuccess` matters as much as `isPending`: between onSuccess firing and the
@@ -106,8 +115,13 @@ function ReviewForm({
   // otherwise be live again, and a second tap would commit a duplicate entry.
   const canSave = name.trim().length > 0 && !create.isPending && !create.isSuccess;
 
-  // 1× for every non-label path, so their totals are unaffected.
-  const multiplier = showServings ? parseServings(servings) : 1;
+  // 1× for every path with nothing to rescale against, so their totals are
+  // unaffected.
+  const multiplier = showServings
+    ? parseServings(servings)
+    : showWeightRescale
+      ? parseWeightMultiplier(weight, estimate.implied_weight_g!)
+      : 1;
   function total(perServing: string): number | null {
     const value = toNumberOrNull(perServing);
     return value === null ? null : value * multiplier;
@@ -121,10 +135,16 @@ function ReviewForm({
       {
         logged_at: loggedAt.toISOString(),
         section: sectionForTime(loggedAt),
-        // A label capture that came back unrecognized is filled in by hand, same
+        // A photo capture that came back unrecognized is filled in by hand, same
         // as any other unrecognized input — the capture path alone doesn't make
-        // it a label_scan entry (FR-006).
-        source: recognized ? (isLabelScan ? 'label_scan' : 'free_text') : 'manual',
+        // it a label_scan/plate_photo entry (FR-006).
+        source: recognized
+          ? isLabelScan
+            ? 'label_scan'
+            : isPlatePhoto
+              ? 'plate_photo'
+              : 'free_text'
+          : 'manual',
         name: name.trim(),
         calories: total(calories),
         protein_g: total(protein),
@@ -143,8 +163,8 @@ function ReviewForm({
         onSuccess: (entry) => {
           // Best-effort, after the entry already exists: the photo is evidence
           // only, so a failed upload must never block the log or surface to the
-          // owner (FR-007's privacy model, extended by S-03).
-          if (isLabelScan && photo) {
+          // owner (FR-007's privacy model, extended by S-03/S-04).
+          if ((isLabelScan || isPlatePhoto) && photo) {
             uploadMealPhoto(entry.id, photo.data).catch((err) => {
               console.error('[review] evidence photo upload failed:', err);
             });
@@ -169,11 +189,11 @@ function ReviewForm({
               }
             );
           }
-          // The staged estimate (and, for a label scan, the captured photo
+          // The staged estimate (and, for a photo capture, the captured photo
           // bytes) have served their purpose — drop them rather than letting
           // them sit in the persisted cache for up to the default gcTime.
           queryClient.removeQueries({ queryKey: queryKeys.estimate(runId) });
-          queryClient.removeQueries({ queryKey: queryKeys.labelPhoto(runId) });
+          queryClient.removeQueries({ queryKey: queryKeys.capturedPhoto(runId) });
           backToToday(router);
         },
       }
@@ -197,6 +217,12 @@ function ReviewForm({
         </ThemedText>
       ) : null}
 
+      {showWeightRescale ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Estimated portion: ~{estimate.implied_weight_g} g
+        </ThemedText>
+      ) : null}
+
       <Field label="Meal" value={name} onChangeText={setName} placeholder="What was it?" />
       <NumericField label="Calories" unit="kcal" value={calories} onChangeText={setCalories} />
       <NumericField label="Protein" unit="g" value={protein} onChangeText={setProtein} />
@@ -207,10 +233,16 @@ function ReviewForm({
         <NumericField label="Servings" unit="×" value={servings} onChangeText={setServings} />
       ) : null}
 
+      {showWeightRescale ? (
+        <NumericField label="Actual weight" unit="g" value={weight} onChangeText={setWeight} />
+      ) : null}
+
       <ThemedText type="small" themeColor="textSecondary">
         {showServings
           ? 'Values above are per serving; totals are multiplied by servings before saving.'
-          : 'Leave a field empty to log it as unknown rather than zero.'}
+          : showWeightRescale
+            ? "Values above are the AI's estimate; enter the plate's actual weight to rescale them proportionally, or leave blank to use the estimate as-is."
+            : 'Leave a field empty to log it as unknown rather than zero.'}
       </ThemedText>
 
       {estimate.assumptions.length > 0 ? (
@@ -383,6 +415,19 @@ function toNumberOrNull(value: string): number | null {
 function parseServings(value: string): number {
   const parsed = Number(value.trim());
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
+/**
+ * A ratio, not a raw count: the owner's entered weight divided by the
+ * model's implied weight. An empty or invalid entry means "don't rescale"
+ * (multiplier 1) — the same *meaning* as servings' empty-means-neutral
+ * default, computed differently.
+ */
+function parseWeightMultiplier(value: string, impliedWeightG: number): number {
+  const trimmed = value.trim();
+  if (trimmed === '') return 1;
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed / impliedWeightG : 1;
 }
 
 const styles = StyleSheet.create({
