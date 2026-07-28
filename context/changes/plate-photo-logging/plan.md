@@ -354,29 +354,29 @@ No database schema changes — `implied_weight_g` lives only in the wire contrac
 
 #### Automated
 
-- [x] 4.1 Type checking passes: `npx tsc --noEmit`
-- [x] 4.2 Linting passes: `npm run lint`
+- [x] 4.1 Type checking passes: `npx tsc --noEmit` — ec26295
+- [x] 4.2 Linting passes: `npm run lint` — ec26295
 
 #### Manual
 
-- [x] 4.3 Reviewing a recognized plate-photo estimate shows "Estimated portion: ~X g" and an "Actual weight (g)" field, not a servings field
-- [x] 4.4 Leaving the weight field blank and committing logs the AI's raw estimate unchanged
-- [x] 4.5 Entering a weight different from the implied weight rescales every macro proportionally before commit
-- [x] 4.6 A plate estimate with no `implied_weight_g` shows no weight field at all
-- [x] 4.7 The committed entry shows `source: 'plate_photo'` and the evidence photo uploads best-effort without blocking the log
-- [x] 4.8 An unrecognized plate photo shows the same manual-entry notice as any other unrecognized capture, with no fabricated numbers
+- [x] 4.3 Reviewing a recognized plate-photo estimate shows "Estimated portion: ~X g" and an "Actual weight (g)" field, not a servings field — ec26295
+- [x] 4.4 Leaving the weight field blank and committing logs the AI's raw estimate unchanged — ec26295
+- [x] 4.5 Entering a weight different from the implied weight rescales every macro proportionally before commit — ec26295
+- [x] 4.6 A plate estimate with no `implied_weight_g` shows no weight field at all — ec26295
+- [x] 4.7 The committed entry shows `source: 'plate_photo'` and the evidence photo uploads best-effort without blocking the log — ec26295
+- [x] 4.8 An unrecognized plate photo shows the same manual-entry notice as any other unrecognized capture, with no fabricated numbers — ec26295
 
 ### Phase 5: Smoke adjustment and manual verification
 
 #### Automated
 
-- [ ] 5.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 5.2 Linting passes: `npm run lint`
-- [ ] 5.3 `npm run smoke:estimate` passes with the stale plate case removed
-- [ ] 5.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:log`, `npm run smoke:profile`, `npm run smoke:icon`, `npm run smoke:day-view`, `npm run smoke:saved-meals`
+- [x] 5.1 Type checking passes: `npx tsc --noEmit`
+- [x] 5.2 Linting passes: `npm run lint`
+- [x] 5.3 `npm run smoke:estimate` passes with the stale plate case removed
+- [x] 5.4 Prior smokes still pass: `npm run smoke`, `npm run smoke:log`, `npm run smoke:profile`, `npm run smoke:icon`, `npm run smoke:day-view`, `npm run smoke:saved-meals`
 
 #### Manual
 
-- [ ] 5.5 Full walkthrough: log a plate, confirm implied weight + macros, rescale by actual weight, commit, confirm it appears on Today correctly
-- [ ] 5.6 Non-food photo comes back unrecognized with no fabricated numbers
-- [ ] 5.7 Multi-item plate surfaces an assumptions note about the aggregate being rougher
+- [x] 5.5 Full walkthrough: log a plate, confirm implied weight + macros, rescale by actual weight, commit, confirm it appears on Today correctly
+- [x] 5.6 Non-food photo comes back unrecognized with no fabricated numbers
+- [x] 5.7 Multi-item plate surfaces an assumptions note about the aggregate being rougher

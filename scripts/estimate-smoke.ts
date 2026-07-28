@@ -11,6 +11,11 @@
 // a value either. Also asserts the recorded run is owner-scoped and invisible
 // to an anonymous client (RLS).
 //
+// Plate-photo (S-04) vision correctness is verified manually only — no
+// fixture image is checked in for it yet, unlike the label-scan fixtures
+// (scripts/fixtures/label.jpg, not-a-label.jpg). See
+// context/changes/plate-photo-logging/plan.md for the testing decision.
+//
 // This is what keeps the two copies of the wire contract honest — the Deno one
 // in supabase/functions/estimate/types.ts and the client one in
 // src/data/estimation-types.ts — because it exercises the real wire shape.
@@ -171,18 +176,6 @@ async function main() {
     assert(notLabel.estimate.calories === null, 'non-label image returned a calorie number (fabricated!)');
     assert(notLabel.estimate.serving_size === null, 'non-label image returned a serving_size (fabricated!)');
     console.log('✓ non-label image: recognized=false, null macros, null serving_size');
-
-    // 8. Plate-photo estimation is reserved for S-04 — the function rejects it
-    //    today, and the seam must surface that as an error, not a throw.
-    const plate = await estimateMeal({
-      kind: 'image',
-      imageKind: 'plate',
-      mediaType: 'image/jpeg',
-      data: 'not-an-image',
-    });
-    assert(!plate.ok, 'reserved plate-photo variant unexpectedly succeeded');
-    assert(plate.error === 'server', `plate-photo variant mapped to ${plate.error}, want server`);
-    console.log('✓ reserved plate-photo variant rejected as { ok: false, error: "server" }');
 
     console.log('\nESTIMATE SMOKE PASSED ✅');
   } finally {
