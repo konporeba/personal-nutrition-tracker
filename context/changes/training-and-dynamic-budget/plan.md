@@ -356,30 +356,30 @@ None — this is a net-new table with no existing data to migrate.
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npx tsc --noEmit`
-- [x] 2.2 Linting passes: `npm run lint`
-- [x] 2.3 New smoke passes: `npm run smoke:training`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit` — e3094e9
+- [x] 2.2 Linting passes: `npm run lint` — e3094e9
+- [x] 2.3 New smoke passes: `npm run smoke:training` — e3094e9
 
 #### Manual
 
-- [x] 2.4 Smoke output confirms pure-math and live round-trip assertions pass, no leftover fixtures
+- [x] 2.4 Smoke output confirms pure-math and live round-trip assertions pass, no leftover fixtures — e3094e9
 
 ### Phase 3: Log and manage a training session
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 3.2 Linting passes: `npm run lint`
-- [ ] 3.3 Regression check passes: `npm run smoke:day-view`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit`
+- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.3 Regression check passes: `npm run smoke:day-view`
 
 #### Manual
 
-- [ ] 3.4 "Log training" opens the composer; submitting creates a session and returns to Today
-- [ ] 3.5 New session appears in the Training list with correct values
-- [ ] 3.6 Tapping a session opens its detail screen with current values
-- [ ] 3.7 Editing and saving persists the change and updates the list
-- [ ] 3.8 Deleting removes the session immediately with no confirmation
-- [ ] 3.9 Composer submit is disabled with an empty type or missing duration/burn
+- [x] 3.4 "Log training" opens the composer; submitting creates a session and returns to Today
+- [x] 3.5 New session appears in the Training list with correct values
+- [x] 3.6 Tapping a session opens its detail screen with current values
+- [x] 3.7 Editing and saving persists the change and updates the list
+- [x] 3.8 Deleting removes the session immediately with no confirmation
+- [x] 3.9 Composer submit is disabled with an empty type or missing duration/burn
 
 ### Phase 4: Day ledger display
 
