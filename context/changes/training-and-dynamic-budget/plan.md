@@ -385,13 +385,13 @@ None — this is a net-new table with no existing data to migrate.
 
 #### Automated
 
-- [x] 4.1 Type checking passes: `npx tsc --noEmit`
-- [x] 4.2 Linting passes: `npm run lint`
-- [x] 4.3 Regression check passes: `npm run smoke:training`
+- [x] 4.1 Type checking passes: `npx tsc --noEmit` — bbc6a76
+- [x] 4.2 Linting passes: `npm run lint` — bbc6a76
+- [x] 4.3 Regression check passes: `npm run smoke:training` — bbc6a76
 
 #### Manual
 
-- [x] 4.4 Logging a session increases visible net-calories headroom vs the resting target
-- [x] 4.5 Editing/deleting a session's burn recalculates the ledger after returning to Today
-- [x] 4.6 Profile-less state still shows burned/net numbers rather than hiding the ledger
-- [x] 4.7 A day with burned > consumed shows a negative net number, bar visually empty
+- [x] 4.4 Logging a session increases visible net-calories headroom vs the resting target — bbc6a76
+- [x] 4.5 Editing/deleting a session's burn recalculates the ledger after returning to Today — bbc6a76
+- [x] 4.6 Profile-less state still shows burned/net numbers rather than hiding the ledger — bbc6a76
+- [x] 4.7 A day with burned > consumed shows a negative net number, bar visually empty — bbc6a76
