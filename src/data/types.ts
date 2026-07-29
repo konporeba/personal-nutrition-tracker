@@ -206,6 +206,55 @@ export type ProfilePatch = Pick<
   fat_target_override?: number | null;
 };
 
+// Training-session rows (S-09). String-literal union mirrors the Postgres enum
+// `training_intensity`.
+
+/** `training_intensity` enum. */
+export type TrainingIntensity = 'low' | 'moderate' | 'high';
+
+/**
+ * A row of `public.training_sessions`. No section/source columns — a session
+ * isn't a meal (no section) and its burn is always owner-entered, never
+ * AI-estimated (OQ-9), so there's no confidence/source marker to carry.
+ */
+export type TrainingSession = {
+  id: string;
+  owner_id: string;
+  /** The instant the session counts toward; day-bucketed in the owner's local tz. */
+  logged_at: string;
+  session_type: string;
+  intensity: TrainingIntensity;
+  duration_minutes: number;
+  burn_kcal: number;
+  created_at: string;
+  /** Server-clock, set by a BEFORE UPDATE trigger — the last-write-wins key. */
+  updated_at: string;
+  /** Non-null once soft-deleted; every read path filters `deleted_at IS NULL`. */
+  deleted_at: string | null;
+};
+
+/**
+ * Insert input for a new training session. `owner_id` is filled by the repo
+ * from the session; `id` may be client-supplied for optimistic insert;
+ * `created_at` / `updated_at` / `deleted_at` are server-managed.
+ */
+export type NewTrainingSession = {
+  id?: string;
+  logged_at: string;
+  session_type: string;
+  intensity: TrainingIntensity;
+  duration_minutes: number;
+  burn_kcal: number;
+};
+
+/** Mutable fields for updating a training session. */
+export type TrainingSessionPatch = Partial<
+  Pick<
+    TrainingSession,
+    'logged_at' | 'session_type' | 'intensity' | 'duration_minutes' | 'burn_kcal'
+  >
+>;
+
 /** A row of `public.body_weights` — one logged reading in the series. */
 export type BodyWeight = {
   id: string;

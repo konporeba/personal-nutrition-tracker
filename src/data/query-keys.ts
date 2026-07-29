@@ -35,6 +35,11 @@ export const queryKeys = {
     /** The full saved-meals library — a flat list, no day bucketing. */
     all: () => ['saved-meals'] as const,
   },
+  trainingSessions: {
+    /** Prefix covering every training-session query — invalidate to refresh them all. */
+    all: () => ['training-sessions'] as const,
+    day: (date: Date) => ['training-sessions', 'day', localDayKey(date)] as const,
+  },
   /**
    * A staged estimate, seeded by the composer and read by the review screen.
    * Keyed by the recorded `runId`, so the review route is only reachable with a
