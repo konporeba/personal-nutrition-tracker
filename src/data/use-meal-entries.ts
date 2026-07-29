@@ -10,7 +10,7 @@ import {
   updateMealEntry,
 } from '@/data/meal-entries.repo';
 import { queryKeys } from '@/data/query-keys';
-import type { MealEntry, NewMealEntry, Section } from '@/data/types';
+import type { MealEntry, MealEntryPatch, NewMealEntry, Section } from '@/data/types';
 
 /**
  * The entries for one local calendar day, default today. Behind the shared
@@ -85,6 +85,26 @@ export function useUpdateMealEntrySection() {
   return useMutation({
     mutationFn: (input: Pick<MealEntry, 'id' | 'logged_at'> & { section: Section }) =>
       updateMealEntry(input.id, { section: input.section }),
+    onSuccess: (entry) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.mealEntries.day(new Date(entry.logged_at)),
+      });
+    },
+  });
+}
+
+/**
+ * Edit a committed entry's fields (S-07) — name, macros, food_category, or
+ * any other `MealEntryPatch` field. Same invalidate-by-`logged_at` pattern as
+ * `useUpdateMealEntrySection`. Callers must never include `source` in the
+ * patch: editing a value never erases how the entry was originally captured.
+ */
+export function useUpdateMealEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: Pick<MealEntry, 'id' | 'logged_at'> & { patch: MealEntryPatch }) =>
+      updateMealEntry(input.id, input.patch),
     onSuccess: (entry) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.mealEntries.day(new Date(entry.logged_at)),
