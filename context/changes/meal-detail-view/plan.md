@@ -212,13 +212,13 @@ None — no schema change; `updateMealEntry`/`softDeleteMealEntry` and their und
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npx tsc --noEmit`
-- [x] 2.2 Linting passes: `npm run lint`
-- [x] 2.3 Regression check passes: `npm run smoke:day-view`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit` — 443197c
+- [x] 2.2 Linting passes: `npm run lint` — 443197c
+- [x] 2.3 Regression check passes: `npm run smoke:day-view` — 443197c
 
 #### Manual
 
-- [x] 2.4 Tapping an entry opens the meal-detail screen
-- [x] 2.5 Long-pressing an entry does nothing
-- [x] 2.6 Subtotals and day total reflect edits/re-sections/deletes after returning to the list
-- [x] 2.7 No leftover "Couldn't move"/"Couldn't delete" banners remain
+- [x] 2.4 Tapping an entry opens the meal-detail screen — 443197c
+- [x] 2.5 Long-pressing an entry does nothing — 443197c
+- [x] 2.6 Subtotals and day total reflect edits/re-sections/deletes after returning to the list — 443197c
+- [x] 2.7 No leftover "Couldn't move"/"Couldn't delete" banners remain — 443197c
