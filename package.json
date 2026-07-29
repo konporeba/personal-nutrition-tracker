@@ -57,6 +57,7 @@
     "smoke:day-view": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-day-view-smoke.mjs",
     "smoke:saved-meals": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-saved-meals-smoke.mjs",
     "smoke:meal-detail": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-meal-detail-smoke.mjs",
+    "smoke:training": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-training-smoke.mjs",
     "parity": "node --env-file=.env --env-file-if-exists=.env.local scripts/parity-check.mjs"
   },
   "private": true

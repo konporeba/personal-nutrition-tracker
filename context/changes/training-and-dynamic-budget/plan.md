@@ -344,25 +344,25 @@ None — this is a net-new table with no existing data to migrate.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npx tsc --noEmit`
-- [x] 1.2 Linting passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npx tsc --noEmit` — b7ddffd
+- [x] 1.2 Linting passes: `npm run lint` — b7ddffd
 
 #### Manual
 
-- [x] 1.3 Migration applies cleanly with table, enum, index, trigger, and RLS all present
-- [x] 1.4 Check constraints reject non-positive `duration_minutes`/`burn_kcal`
+- [x] 1.3 Migration applies cleanly with table, enum, index, trigger, and RLS all present — b7ddffd
+- [x] 1.4 Check constraints reject non-positive `duration_minutes`/`burn_kcal` — b7ddffd
 
 ### Phase 2: Day-ledger math and smoke coverage
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.2 Linting passes: `npm run lint`
-- [ ] 2.3 New smoke passes: `npm run smoke:training`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit`
+- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.3 New smoke passes: `npm run smoke:training`
 
 #### Manual
 
-- [ ] 2.4 Smoke output confirms pure-math and live round-trip assertions pass, no leftover fixtures
+- [x] 2.4 Smoke output confirms pure-math and live round-trip assertions pass, no leftover fixtures
 
 ### Phase 3: Log and manage a training session
 
