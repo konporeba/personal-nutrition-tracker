@@ -194,31 +194,31 @@ None — no schema change; `updateMealEntry`/`softDeleteMealEntry` and their und
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npx tsc --noEmit`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 New smoke passes: `npm run smoke:meal-detail`
+- [x] 1.1 Type checking passes: `npx tsc --noEmit` — d43090a
+- [x] 1.2 Linting passes: `npm run lint` — d43090a
+- [x] 1.3 New smoke passes: `npm run smoke:meal-detail` — d43090a
 
 #### Manual
 
-- [x] 1.4 Direct navigation to `/(today)/meal-detail?id=<id>` shows icon, name, macros, source label
-- [x] 1.5 Editing the category field updates the icon preview live
-- [x] 1.6 Editing name/macros and Save persists and returns
-- [x] 1.7 "Change section" opens MoveSectionSheet and updates the section
-- [x] 1.8 Delete removes the entry immediately with no confirmation
-- [x] 1.9 Unknown/deleted id shows the "not found" fallback
-- [x] 1.10 Editing macros on a non-manual-source entry leaves its source unchanged
+- [x] 1.4 Direct navigation to `/(today)/meal-detail?id=<id>` shows icon, name, macros, source label — d43090a
+- [x] 1.5 Editing the category field updates the icon preview live — d43090a
+- [x] 1.6 Editing name/macros and Save persists and returns — d43090a
+- [x] 1.7 "Change section" opens MoveSectionSheet and updates the section — d43090a
+- [x] 1.8 Delete removes the entry immediately with no confirmation — d43090a
+- [x] 1.9 Unknown/deleted id shows the "not found" fallback — d43090a
+- [x] 1.10 Editing macros on a non-manual-source entry leaves its source unchanged — d43090a
 
 ### Phase 2: Wire the day list into the detail screen
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.2 Linting passes: `npm run lint`
-- [ ] 2.3 Regression check passes: `npm run smoke:day-view`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit`
+- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.3 Regression check passes: `npm run smoke:day-view`
 
 #### Manual
 
-- [ ] 2.4 Tapping an entry opens the meal-detail screen
-- [ ] 2.5 Long-pressing an entry does nothing
-- [ ] 2.6 Subtotals and day total reflect edits/re-sections/deletes after returning to the list
-- [ ] 2.7 No leftover "Couldn't move"/"Couldn't delete" banners remain
+- [x] 2.4 Tapping an entry opens the meal-detail screen
+- [x] 2.5 Long-pressing an entry does nothing
+- [x] 2.6 Subtotals and day total reflect edits/re-sections/deletes after returning to the list
+- [x] 2.7 No leftover "Couldn't move"/"Couldn't delete" banners remain
