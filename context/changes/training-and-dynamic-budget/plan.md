@@ -368,30 +368,30 @@ None — this is a net-new table with no existing data to migrate.
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npx tsc --noEmit`
-- [x] 3.2 Linting passes: `npm run lint`
-- [x] 3.3 Regression check passes: `npm run smoke:day-view`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit` — 63b7622
+- [x] 3.2 Linting passes: `npm run lint` — 63b7622
+- [x] 3.3 Regression check passes: `npm run smoke:day-view` — 63b7622
 
 #### Manual
 
-- [x] 3.4 "Log training" opens the composer; submitting creates a session and returns to Today
-- [x] 3.5 New session appears in the Training list with correct values
-- [x] 3.6 Tapping a session opens its detail screen with current values
-- [x] 3.7 Editing and saving persists the change and updates the list
-- [x] 3.8 Deleting removes the session immediately with no confirmation
-- [x] 3.9 Composer submit is disabled with an empty type or missing duration/burn
+- [x] 3.4 "Log training" opens the composer; submitting creates a session and returns to Today — 63b7622
+- [x] 3.5 New session appears in the Training list with correct values — 63b7622
+- [x] 3.6 Tapping a session opens its detail screen with current values — 63b7622
+- [x] 3.7 Editing and saving persists the change and updates the list — 63b7622
+- [x] 3.8 Deleting removes the session immediately with no confirmation — 63b7622
+- [x] 3.9 Composer submit is disabled with an empty type or missing duration/burn — 63b7622
 
 ### Phase 4: Day ledger display
 
 #### Automated
 
-- [ ] 4.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 4.2 Linting passes: `npm run lint`
-- [ ] 4.3 Regression check passes: `npm run smoke:training`
+- [x] 4.1 Type checking passes: `npx tsc --noEmit`
+- [x] 4.2 Linting passes: `npm run lint`
+- [x] 4.3 Regression check passes: `npm run smoke:training`
 
 #### Manual
 
-- [ ] 4.4 Logging a session increases visible net-calories headroom vs the resting target
-- [ ] 4.5 Editing/deleting a session's burn recalculates the ledger after returning to Today
-- [ ] 4.6 Profile-less state still shows burned/net numbers rather than hiding the ledger
-- [ ] 4.7 A day with burned > consumed shows a negative net number, bar visually empty
+- [x] 4.4 Logging a session increases visible net-calories headroom vs the resting target
+- [x] 4.5 Editing/deleting a session's burn recalculates the ledger after returning to Today
+- [x] 4.6 Profile-less state still shows burned/net numbers rather than hiding the ledger
+- [x] 4.7 A day with burned > consumed shows a negative net number, bar visually empty

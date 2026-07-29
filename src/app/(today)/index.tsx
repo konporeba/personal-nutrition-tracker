@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DayLedger } from '@/components/day-ledger';
 import { DayTotal } from '@/components/day-total';
 import { MealComposer } from '@/components/meal-composer';
 import { MealEntryRow } from '@/components/meal-entry-row';
@@ -125,6 +126,7 @@ export default function TodayScreen() {
             ListHeaderComponent={
               <>
                 <DayTotal entries={entries} date={day} targets={targets} />
+                <DayLedger entries={entries} sessions={sessions} target={targets?.calories ?? null} />
                 <TrainingSection sessions={sessions} />
               </>
             }
