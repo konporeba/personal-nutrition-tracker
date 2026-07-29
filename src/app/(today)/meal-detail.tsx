@@ -60,7 +60,11 @@ function DetailForm({ entry }: { entry: MealEntry }) {
   const [foodCategory, setFoodCategory] = useState(entry.food_category ?? '');
   const [movingSection, setMovingSection] = useState(false);
 
-  const canSave = name.trim().length > 0 && !update.isPending && !update.isSuccess;
+  // One row's three actions (save/re-section/delete) aren't mutually
+  // exclusive by construction — guard on the combined state so a second
+  // action can't fire while another is still in flight against this entry.
+  const anyPending = update.isPending || updateSection.isPending || deleteEntry.isPending;
+  const canSave = name.trim().length > 0 && !anyPending && !update.isSuccess;
 
   function save() {
     if (!canSave) return;
@@ -89,7 +93,7 @@ function DetailForm({ entry }: { entry: MealEntry }) {
   }
 
   function moveTo(section: Section) {
-    if (updateSection.isPending) return;
+    if (anyPending) return;
     if (section === entry.section) {
       setMovingSection(false);
       return;
@@ -103,7 +107,7 @@ function DetailForm({ entry }: { entry: MealEntry }) {
   // No confirmation step — tapping Delete IS the confirmation, matching
   // SavedMealActionsSheet's established convention.
   function remove() {
-    if (deleteEntry.isPending) return;
+    if (anyPending) return;
     deleteEntry.mutate(
       { id: entry.id, logged_at: entry.logged_at },
       {
@@ -169,9 +173,12 @@ function DetailForm({ entry }: { entry: MealEntry }) {
 
       <Pressable
         onPress={() => setMovingSection(true)}
+        disabled={anyPending}
         style={({ pressed }) => pressed && styles.pressed}>
         <ThemedView type="backgroundElement" style={styles.button}>
-          <ThemedText type="smallBold">Change section</ThemedText>
+          <ThemedText type="smallBold" themeColor={anyPending ? 'textSecondary' : 'text'}>
+            Change section
+          </ThemedText>
         </ThemedView>
       </Pressable>
 
@@ -184,9 +191,14 @@ function DetailForm({ entry }: { entry: MealEntry }) {
       {deleteEntry.isPending ? (
         <ActivityIndicator style={styles.saving} />
       ) : (
-        <Pressable onPress={remove} style={({ pressed }) => pressed && styles.pressed}>
+        <Pressable
+          onPress={remove}
+          disabled={anyPending}
+          style={({ pressed }) => pressed && styles.pressed}>
           <ThemedView type="backgroundElement" style={styles.button}>
-            <ThemedText type="smallBold">Delete</ThemedText>
+            <ThemedText type="smallBold" themeColor={anyPending ? 'textSecondary' : 'text'}>
+              Delete
+            </ThemedText>
           </ThemedView>
         </Pressable>
       )}

@@ -1,7 +1,7 @@
 ---
 change_id: meal-detail-view
 title: Meal detail view
-status: implemented
+status: impl_reviewed
 created: 2026-07-29
 updated: 2026-07-29
 archived_at: null
