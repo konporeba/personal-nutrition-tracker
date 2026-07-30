@@ -15,6 +15,7 @@ import type { ActivityLevel, BodyGoal, Profile, ProfilePatch, Sex } from '@/data
 import { useProfile, useTargets, useUpsertProfile } from '@/data/use-profile';
 import { useLatestBodyWeight } from '@/data/use-body-weights';
 import { useTheme } from '@/hooks/use-theme';
+import { usePinGate } from '@/lib/pin-gate';
 
 const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string }[] = [
   { value: 'sedentary', label: 'Sedentary' },
@@ -142,6 +143,10 @@ function ProfileForm({ profile }: { profile: Profile | null }) {
 
       <ThemedView style={styles.divider} />
 
+      <SecuritySection />
+
+      <ThemedView style={styles.divider} />
+
       <ThemedText type="subtitle">Daily targets</ThemedText>
 
       {targetsView.needsProfile ? (
@@ -191,6 +196,32 @@ function ProfileForm({ profile }: { profile: Profile | null }) {
           </ThemedText>
         </ThemedView>
       ) : null}
+    </>
+  );
+}
+
+/** Change the device PIN or lock it immediately, mirroring the weight row's layout. */
+function SecuritySection() {
+  const router = useRouter();
+  const { lock } = usePinGate();
+
+  return (
+    <>
+      <ThemedText type="subtitle">Security</ThemedText>
+      <ThemedView style={styles.weightRow}>
+        <Pressable
+          onPress={() => router.push('/(profile)/pin-security')}
+          style={({ pressed }) => pressed && styles.pressed}>
+          <ThemedView type="backgroundSelected" style={styles.smallButton}>
+            <ThemedText type="smallBold">Change PIN</ThemedText>
+          </ThemedView>
+        </Pressable>
+        <Pressable onPress={() => lock()} style={({ pressed }) => pressed && styles.pressed}>
+          <ThemedView type="backgroundElement" style={styles.smallButton}>
+            <ThemedText type="smallBold">Lock now</ThemedText>
+          </ThemedView>
+        </Pressable>
+      </ThemedView>
     </>
   );
 }

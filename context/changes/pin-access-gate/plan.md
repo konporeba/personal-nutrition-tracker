@@ -229,27 +229,27 @@ None — no schema or Supabase changes; this is entirely device-local state unde
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npx tsc --noEmit`
-- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit` — 47bcb53
+- [x] 2.2 Linting passes: `npm run lint` — 47bcb53
 
 #### Manual
 
-- [x] 2.3 Fresh device with valid Supabase session lands on PIN setup, not the tabs
-- [x] 2.4 Setting a matching 6-digit PIN + confirmation unlocks into the app
-- [x] 2.5 Non-matching confirmation shows an error and does not unlock
-- [x] 2.6 Unlock persists across force-quit/relaunch, on native and web
-- [x] 2.7 Wrong PIN shows an inline error, clears input, allows unlimited retries
-- [x] 2.8 "Forgot PIN?" returns to sign-in; re-authenticating lands on PIN setup again
+- [x] 2.3 Fresh device with valid Supabase session lands on PIN setup, not the tabs — 47bcb53
+- [x] 2.4 Setting a matching 6-digit PIN + confirmation unlocks into the app — 47bcb53
+- [x] 2.5 Non-matching confirmation shows an error and does not unlock — 47bcb53
+- [x] 2.6 Unlock persists across force-quit/relaunch, on native and web — 47bcb53
+- [x] 2.7 Wrong PIN shows an inline error, clears input, allows unlimited retries — 47bcb53
+- [x] 2.8 "Forgot PIN?" returns to sign-in; re-authenticating lands on PIN setup again — 47bcb53
 
 ### Phase 3: Profile Security section
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit`
+- [x] 3.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 3.3 "Lock now" immediately shows the PIN entry screen; correct PIN re-enters
-- [ ] 3.4 "Change PIN" with wrong current PIN shows an inline error, changes nothing
-- [ ] 3.5 "Change PIN" with correct current PIN + matching new PIN succeeds and takes effect
+- [x] 3.3 "Lock now" immediately shows the PIN entry screen; correct PIN re-enters
+- [x] 3.4 "Change PIN" with wrong current PIN shows an inline error, changes nothing
+- [x] 3.5 "Change PIN" with correct current PIN + matching new PIN succeeds and takes effect
