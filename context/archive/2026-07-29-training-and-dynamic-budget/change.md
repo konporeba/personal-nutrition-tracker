@@ -1,10 +1,10 @@
 ---
 change_id: training-and-dynamic-budget
 title: Training and dynamic budget
-status: impl_reviewed
+status: archived
 created: 2026-07-29
 updated: 2026-07-30
-archived_at: null
+archived_at: 2026-07-30T16:46:48Z
 ---
 
 ## Notes
