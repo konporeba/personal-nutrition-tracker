@@ -1,9 +1,9 @@
 ---
 change_id: training-and-dynamic-budget
 title: Training and dynamic budget
-status: implemented
+status: impl_reviewed
 created: 2026-07-29
-updated: 2026-07-29
+updated: 2026-07-30
 archived_at: null
 ---
 

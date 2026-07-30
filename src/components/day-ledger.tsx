@@ -40,7 +40,7 @@ export function DayLedger({
         <ThemedText type="smallBold">{Math.round(ledger.burned)} kcal</ThemedText>
       </ThemedView>
       {ledger.target !== null ? (
-        <MacroProgress label="Net" unit="kcal" consumed={ledger.net} target={ledger.target} />
+        <MacroProgress label="Net calories" unit="kcal" consumed={ledger.net} target={ledger.target} />
       ) : (
         <ThemedView style={styles.row}>
           <ThemedText type="small" themeColor="textSecondary">
