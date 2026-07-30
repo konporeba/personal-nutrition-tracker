@@ -222,24 +222,24 @@ None — no schema or Supabase changes; this is entirely device-local state unde
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npx tsc --noEmit`
-- [x] 1.2 Linting passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npx tsc --noEmit` — 08c3e09
+- [x] 1.2 Linting passes: `npm run lint` — 08c3e09
 
 ### Phase 2: Gate UI wired into root layout
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit`
+- [x] 2.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.3 Fresh device with valid Supabase session lands on PIN setup, not the tabs
-- [ ] 2.4 Setting a matching 6-digit PIN + confirmation unlocks into the app
-- [ ] 2.5 Non-matching confirmation shows an error and does not unlock
-- [ ] 2.6 Unlock persists across force-quit/relaunch, on native and web
-- [ ] 2.7 Wrong PIN shows an inline error, clears input, allows unlimited retries
-- [ ] 2.8 "Forgot PIN?" returns to sign-in; re-authenticating lands on PIN setup again
+- [x] 2.3 Fresh device with valid Supabase session lands on PIN setup, not the tabs
+- [x] 2.4 Setting a matching 6-digit PIN + confirmation unlocks into the app
+- [x] 2.5 Non-matching confirmation shows an error and does not unlock
+- [x] 2.6 Unlock persists across force-quit/relaunch, on native and web
+- [x] 2.7 Wrong PIN shows an inline error, clears input, allows unlimited retries
+- [x] 2.8 "Forgot PIN?" returns to sign-in; re-authenticating lands on PIN setup again
 
 ### Phase 3: Profile Security section
 

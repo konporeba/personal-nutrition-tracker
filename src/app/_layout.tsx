@@ -7,8 +7,10 @@ import { useColorScheme } from 'react-native';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import OwnerSignIn from '@/components/owner-sign-in';
+import PinGateScreen from '@/components/pin-gate-screen';
 import { asyncStoragePersister, queryClient } from '@/data/query-client';
 import { setupQueryRuntime } from '@/data/query-runtime';
+import { PinGateProvider, usePinGate } from '@/lib/pin-gate';
 import { useOwnerSession } from '@/lib/session';
 
 SplashScreen.preventAutoHideAsync();
@@ -28,9 +30,19 @@ export default function TabLayout() {
       persistOptions={{ persister: asyncStoragePersister }}
     >
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AnimatedSplashOverlay />
-        {!loading && (session ? <AppTabs /> : <OwnerSignIn />)}
+        <PinGateProvider>
+          <AnimatedSplashOverlay />
+          {!loading && (session ? <PinGatedApp /> : <OwnerSignIn />)}
+        </PinGateProvider>
       </ThemeProvider>
     </PersistQueryClientProvider>
   );
+}
+
+// Gate daily use behind the device-local PIN (S-12) on top of the owner
+// session above — same "wait for loading, then swap one component" idiom.
+function PinGatedApp() {
+  const { loading, unlocked } = usePinGate();
+  if (loading) return null;
+  return unlocked ? <AppTabs /> : <PinGateScreen />;
 }
