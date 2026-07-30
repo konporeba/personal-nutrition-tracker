@@ -15,6 +15,14 @@ import { generateSalt, hashPin } from '@/lib/pin-crypto';
 
 const STORAGE_KEY = '@caltracker/pin-gate';
 
+export const PIN_LENGTH = 6;
+const PIN_PATTERN = new RegExp(`^\\d{${PIN_LENGTH}}$`);
+
+/** Enforced here too, not just in the UI's maxLength/onlyDigits — the state layer shouldn't trust callers to have filtered input. */
+function isValidPin(pin: string): boolean {
+  return PIN_PATTERN.test(pin);
+}
+
 type PinRecord = {
   hash: string;
   salt: string;
@@ -77,6 +85,11 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function setPin(pin: string): Promise<void> {
+    // Guard against a caller racing the initial AsyncStorage read: writing
+    // here while `loading` is still true would get silently clobbered once
+    // that read resolves and calls setRecord with whatever was there before.
+    if (loading) throw new Error('PIN gate not ready yet');
+    if (!isValidPin(pin)) throw new Error(`PIN must be ${PIN_LENGTH} digits`);
     const salt = await generateSalt();
     const hash = await hashPin(pin, salt);
     const next: PinRecord = { hash, salt, unlocked: true };
@@ -85,7 +98,7 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
   }
 
   async function unlock(pin: string): Promise<boolean> {
-    if (!record) return false;
+    if (loading || !record || !isValidPin(pin)) return false;
     const candidate = await hashPin(pin, record.salt);
     if (candidate !== record.hash) return false;
     const next: PinRecord = { ...record, unlocked: true };
@@ -95,14 +108,15 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
   }
 
   async function lock(): Promise<void> {
-    if (!record) return;
+    if (loading || !record) return;
     const next: PinRecord = { ...record, unlocked: false };
     await writeRecord(next);
     setRecord(next);
   }
 
   async function changePin(currentPin: string, nextPin: string): Promise<boolean> {
-    if (!record) return false;
+    if (loading || !record) return false;
+    if (!isValidPin(nextPin)) throw new Error(`PIN must be ${PIN_LENGTH} digits`);
     const candidate = await hashPin(currentPin, record.salt);
     if (candidate !== record.hash) return false;
     const salt = await generateSalt();
@@ -114,6 +128,7 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
   }
 
   async function clearPin(): Promise<void> {
+    if (loading) return;
     await writeRecord(null);
     setRecord(null);
   }

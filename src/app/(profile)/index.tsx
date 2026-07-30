@@ -204,6 +204,16 @@ function ProfileForm({ profile }: { profile: Profile | null }) {
 function SecuritySection() {
   const router = useRouter();
   const { lock } = usePinGate();
+  const [error, setError] = useState<string | null>(null);
+
+  async function onLockNow() {
+    setError(null);
+    try {
+      await lock();
+    } catch {
+      setError("Couldn't lock. Try again.");
+    }
+  }
 
   return (
     <>
@@ -216,12 +226,17 @@ function SecuritySection() {
             <ThemedText type="smallBold">Change PIN</ThemedText>
           </ThemedView>
         </Pressable>
-        <Pressable onPress={() => lock()} style={({ pressed }) => pressed && styles.pressed}>
+        <Pressable onPress={onLockNow} style={({ pressed }) => pressed && styles.pressed}>
           <ThemedView type="backgroundElement" style={styles.smallButton}>
             <ThemedText type="smallBold">Lock now</ThemedText>
           </ThemedView>
         </Pressable>
       </ThemedView>
+      {error ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {error}
+        </ThemedText>
+      ) : null}
     </>
   );
 }

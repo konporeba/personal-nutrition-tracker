@@ -9,10 +9,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { usePinGate } from '@/lib/pin-gate';
+import { PIN_LENGTH, usePinGate } from '@/lib/pin-gate';
 import { signOutOwner } from '@/lib/session';
-
-const PIN_LENGTH = 6;
 
 export default function PinGateScreen() {
   const { hasPinSet } = usePinGate();
@@ -38,6 +36,8 @@ function PinSetup() {
     setError(null);
     try {
       await setPin(pin);
+    } catch {
+      setError("Couldn't save your PIN. Try again.");
     } finally {
       setSubmitting(false);
     }
@@ -105,6 +105,8 @@ function PinEntry() {
         setError('Wrong PIN');
         setPinValue('');
       }
+    } catch {
+      setError("Couldn't unlock. Try again.");
     } finally {
       setSubmitting(false);
     }
@@ -112,12 +114,16 @@ function PinEntry() {
 
   async function onForgotPin() {
     setRecovering(true);
+    setError(null);
     try {
-      // Both must happen: clearing only the local PIN still shows the app
-      // (nothing to check the PIN against); signing out only re-prompts
-      // sign-in but re-enters PIN entry with the same forgotten PIN.
-      await clearPin();
+      // Both must happen, in this order: signing out first means a failure
+      // here leaves the local PIN intact (fails closed). Only clear the PIN
+      // once sign-out has actually succeeded, so a partial failure never
+      // strands a live session with no PIN to check against.
       await signOutOwner();
+      await clearPin();
+    } catch {
+      setError("Couldn't sign out. Try again.");
     } finally {
       setRecovering(false);
     }

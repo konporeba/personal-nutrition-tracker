@@ -79,7 +79,7 @@ Add the storage, hashing, and shared state (`PinGateProvider`/`usePinGate()`) th
 - `loading: boolean`, `hasPinSet: boolean`, `unlocked: boolean`
 - `setPin(pin: string): Promise<void>` — first-run creation; hashes, persists with `unlocked: true`.
 - `unlock(pin: string): Promise<boolean>` — compares hash; on match persists `unlocked: true` and returns `true`, otherwise leaves state untouched and returns `false`.
-- `lock(): void` — persists `unlocked: false`.
+- `lock(): Promise<void>` — persists `unlocked: false`.
 - `changePin(currentPin: string, nextPin: string): Promise<boolean>` — verifies `currentPin` against the stored hash; on match, hashes and persists `nextPin` with `unlocked: true`, returns `true`; on mismatch, returns `false` without changing anything.
 - `clearPin(): Promise<void>` — wipes the stored record entirely (`hasPinSet` becomes `false`); used only by the forgot-PIN recovery path.
 
@@ -162,7 +162,7 @@ Give the owner an in-app way to change their PIN or lock the device immediately,
 
 **Intent**: A pushed screen (mirroring `src/app/(profile)/weight.tsx`'s `Stack.Screen` pattern) asking for the current PIN plus a new PIN and its confirmation, calling `changePin` from `usePinGate()`.
 
-**Contract**: `Stack.Screen options={{ title: 'Change PIN' }}`. On `changePin` returning `false` (wrong current PIN), show an inline error and keep the form. On success, navigate back (`router.back()`) to Profile. New-PIN and confirmation must match before submission is enabled, same validation shape as the setup flow in Phase 2.
+**Contract**: `Stack.Screen options={{ title: 'Change PIN' }}`. On `changePin` returning `false` (wrong current PIN), show an inline error and keep the form. On success, navigate back (`router.back()`) to Profile. The submit button enables once all three fields are the right length; new-PIN/confirmation equality is checked on submit, showing an inline error on mismatch — same validate-on-submit shape as the setup flow in Phase 2.
 
 ### Success Criteria:
 

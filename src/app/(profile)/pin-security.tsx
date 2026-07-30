@@ -8,9 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { usePinGate } from '@/lib/pin-gate';
-
-const PIN_LENGTH = 6;
+import { PIN_LENGTH, usePinGate } from '@/lib/pin-gate';
 
 export default function PinSecurityScreen() {
   const theme = useTheme();
@@ -44,6 +42,8 @@ export default function PinSecurityScreen() {
         setError('Current PIN is wrong');
         setCurrentPin('');
       }
+    } catch {
+      setError("Couldn't change your PIN. Try again.");
     } finally {
       setSubmitting(false);
     }

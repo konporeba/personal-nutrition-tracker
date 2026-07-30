@@ -11,7 +11,18 @@ export async function generateSalt(): Promise<string> {
     .join('');
 }
 
-/** SHA-256 hash of `salt + pin`, hex-encoded. Never store the raw PIN. */
+const HASH_ROUNDS = 1000;
+
+/**
+ * Salted, iterated SHA-256 hash of `pin`, hex-encoded. Never store the raw
+ * PIN. 1000 rounds is modest key-stretching, not a real KDF — acceptable
+ * given the PIN is a convenience gate layered on the Supabase credential,
+ * but cheap enough to stay imperceptible on unlock.
+ */
 export async function hashPin(pin: string, salt: string): Promise<string> {
-  return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, `${salt}${pin}`);
+  let digest = `${salt}${pin}`;
+  for (let round = 0; round < HASH_ROUNDS; round++) {
+    digest = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, digest);
+  }
+  return digest;
 }
