@@ -245,11 +245,11 @@ None — no schema or Supabase changes; this is entirely device-local state unde
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npx tsc --noEmit`
-- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit` — cdc16f4
+- [x] 3.2 Linting passes: `npm run lint` — cdc16f4
 
 #### Manual
 
-- [x] 3.3 "Lock now" immediately shows the PIN entry screen; correct PIN re-enters
-- [x] 3.4 "Change PIN" with wrong current PIN shows an inline error, changes nothing
-- [x] 3.5 "Change PIN" with correct current PIN + matching new PIN succeeds and takes effect
+- [x] 3.3 "Lock now" immediately shows the PIN entry screen; correct PIN re-enters — cdc16f4
+- [x] 3.4 "Change PIN" with wrong current PIN shows an inline error, changes nothing — cdc16f4
+- [x] 3.5 "Change PIN" with correct current PIN + matching new PIN succeeds and takes effect — cdc16f4
