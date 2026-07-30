@@ -53,3 +53,9 @@ export async function signInOwner(email: string, password: string): Promise<void
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
 }
+
+/** Signs out of the owner's Supabase session. Used by the PIN gate's forgot-PIN recovery. */
+export async function signOutOwner(): Promise<void> {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+}
