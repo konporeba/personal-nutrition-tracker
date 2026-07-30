@@ -40,7 +40,7 @@ Existing diet trackers make logging so manual that the owner abandons it after a
 | S-04 | plate-photo-logging          | log a plate by photo and correct it with a weight                | F-01, F-02, S-03| US-01, US-02, FR-003/004, FR-005/006/007/008 | done     |
 | S-07 | meal-detail-view             | inspect a meal's full breakdown and edit/re-section/delete it    | S-05, S-06      | US-09, FR-062/063                     | done     |
 | S-09 | training-and-dynamic-budget  | log training and earn calories back as a two-sided ledger        | S-02, S-06      | US-14, US-15, FR-070/071/072/073/075  | done |
-| S-12 | pin-access-gate              | gate the app behind a PIN on both clients                        | F-01            | FR-042                                | proposed |
+| S-12 | pin-access-gate              | gate the app behind a PIN on both clients                        | F-01            | FR-042                                | done |
 | S-11 | analytics-and-trends         | see intake/expenditure/net trends and weight-vs-goal over time   | S-02, S-06, S-09| US-06, FR-031/032/033/034             | proposed |
 
 ## Streams
@@ -221,7 +221,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** OQ-8 resolved 2026-07-28: the PIN gates both clients for a consistent privacy posture (matching FR-041's full desktop parity); losing the PIN is recovered by re-authenticating with the underlying owner Supabase credentials, since the PIN is a convenience gate, not the root secret. A deliberately weak single-owner gate, not an auth stack — low structural risk. Orthogonal to the capture slices, so its position is late only because it is not on the validation path.
-- **Status:** proposed
+- **Status:** done
 
 ### S-11: See whether I am on track
 
@@ -293,3 +293,4 @@ As of 2026-07-28, OQ-6, OQ-8, and OQ-9 are resolved (see PRD § Open Questions �
 - **S-04: the owner photographs a prepared meal, the system estimates calories/macros with an implied portion, and supplying a total weight rescales the estimate before commit — marked as a plate photo, with the photo retained as evidence only** — Archived 2026-07-28 → `context/archive/2026-07-28-plate-photo-logging/`. Lesson: —.
 - **S-07: the owner taps an entry to see its full macro breakdown, icon, and source marker, and can edit, re-section, or delete it — with section subtotals and the daily total recalculating** — Archived 2026-07-29 → `context/archive/2026-07-29-meal-detail-view/`. Lesson: —.
 - **S-09: the owner logs a training session (type, duration, intensity) and enters its calorie burn directly (typically the value a third-party tracker already computed), that burn is added to the day's budget per Model A, and the day is shown as a two-sided ledger — in, out, net** — Archived 2026-07-30 → `context/archive/2026-07-29-training-and-dynamic-budget/`. Lesson: —.
+- **S-12: the owner sets a PIN that gates access to the app on both mobile and desktop; opening either client requires the PIN, and losing it is recovered via the underlying owner login** — Archived 2026-07-30 → `context/archive/2026-07-30-pin-access-gate/`. Lesson: —.
