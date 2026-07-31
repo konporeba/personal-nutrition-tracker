@@ -14,6 +14,12 @@ export const Colors = {
     backgroundElement: '#F0F0F3',
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
+    // Adherence signal (S-11 FR-034): on/over/under a day's budget. Always
+    // paired with a non-color shape cue (trend-line-chart.tsx) — never the
+    // sole distinguishing signal.
+    adherenceOn: '#1E8E3E',
+    adherenceOver: '#D93025',
+    adherenceUnder: '#1A73E8',
   },
   dark: {
     text: '#ffffff',
@@ -21,6 +27,9 @@ export const Colors = {
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',
+    adherenceOn: '#4CAF6D',
+    adherenceOver: '#FF6E63',
+    adherenceUnder: '#6BA8FF',
   },
 } as const;
 

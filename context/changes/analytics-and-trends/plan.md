@@ -410,9 +410,9 @@ Both migrations in Phase 1 are additive (new table, new nullable column) — no 
 
 #### Automated
 
-- [x] 3.1 `movingAverage` matches a hand-computed series
-- [x] 3.2 `classifyDayAdherence` boundary cases at exactly the ±5% edges are correct
-- [x] 3.3 `npx tsc --noEmit` passes
+- [x] 3.1 `movingAverage` matches a hand-computed series — 10b248a
+- [x] 3.2 `classifyDayAdherence` boundary cases at exactly the ±5% edges are correct — 10b248a
+- [x] 3.3 `npx tsc --noEmit` passes — 10b248a
 
 ### Phase 4: Chart components
 
