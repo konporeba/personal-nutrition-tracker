@@ -163,6 +163,8 @@ export type Profile = {
   protein_target_override: number | null;
   carb_target_override: number | null;
   fat_target_override: number | null;
+  /** Numeric weight goal (S-11 FR-033) — null when the owner hasn't set one. */
+  target_weight_kg: number | null;
   created_at: string;
   /** Server-clock, set by a BEFORE UPDATE trigger — the last-write-wins key. */
   updated_at: string;
@@ -186,6 +188,7 @@ export type NewProfile = {
   protein_target_override?: number | null;
   carb_target_override?: number | null;
   fat_target_override?: number | null;
+  target_weight_kg?: number | null;
 };
 
 /**
@@ -204,6 +207,7 @@ export type ProfilePatch = Pick<
   protein_target_override?: number | null;
   carb_target_override?: number | null;
   fat_target_override?: number | null;
+  target_weight_kg?: number | null;
 };
 
 // Training-session rows (S-09). String-literal union mirrors the Postgres enum
@@ -274,4 +278,26 @@ export type NewBodyWeight = {
   id?: string;
   weight_kg: number;
   measured_at: string;
+};
+
+// Daily-target snapshot rows (S-11). Immutable per-day snapshot of the
+// effective target — written once via an insert-if-absent primitive, never
+// updated after.
+
+/**
+ * A row of `public.daily_targets` — the target snapshot in effect the first
+ * time a given local day was touched by a write or an analytics read.
+ */
+export type DailyTarget = {
+  id: string;
+  owner_id: string;
+  /** Local calendar day this snapshot answers for, `YYYY-MM-DD`. */
+  day: string;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
 };
