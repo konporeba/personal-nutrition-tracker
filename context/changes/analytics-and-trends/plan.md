@@ -450,12 +450,12 @@ Both migrations in Phase 1 are additive (new table, new nullable column) — no 
 
 #### Automated
 
-- [x] 7.1 `npm run smoke:analytics` passes
-- [x] 7.2 `npm run smoke` (full suite) still passes
-- [x] 7.3 `npm run lint` passes
-- [x] 7.4 `npx tsc --noEmit` passes
+- [x] 7.1 `npm run smoke:analytics` passes — a8baa61
+- [x] 7.2 `npm run smoke` (full suite) still passes — a8baa61
+- [x] 7.3 `npm run lint` passes — a8baa61
+- [x] 7.4 `npx tsc --noEmit` passes — a8baa61
 
 #### Manual
 
-- [x] 7.5 Full walkthrough across real days: all four panels populate, range toggle works, past-day edit reflected in chart
-- [x] 7.6 Cross-client parity confirmed after refetch-on-focus
+- [x] 7.5 Full walkthrough across real days: all four panels populate, range toggle works, past-day edit reflected in chart — a8baa61
+- [x] 7.6 Cross-client parity confirmed after refetch-on-focus — a8baa61
