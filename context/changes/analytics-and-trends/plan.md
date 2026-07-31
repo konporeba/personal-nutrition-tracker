@@ -399,8 +399,8 @@ Both migrations in Phase 1 are additive (new table, new nullable column) — no 
 
 #### Automated
 
-- [x] 2.1 Ranged repo queries return exactly the rows within range boundaries (stubbed smoke)
-- [x] 2.2 `npx tsc --noEmit` passes
+- [x] 2.1 Ranged repo queries return exactly the rows within range boundaries (stubbed smoke) — 48bca40
+- [x] 2.2 `npx tsc --noEmit` passes — 48bca40
 
 #### Manual
 
@@ -410,9 +410,9 @@ Both migrations in Phase 1 are additive (new table, new nullable column) — no 
 
 #### Automated
 
-- [ ] 3.1 `movingAverage` matches a hand-computed series
-- [ ] 3.2 `classifyDayAdherence` boundary cases at exactly the ±5% edges are correct
-- [ ] 3.3 `npx tsc --noEmit` passes
+- [x] 3.1 `movingAverage` matches a hand-computed series
+- [x] 3.2 `classifyDayAdherence` boundary cases at exactly the ±5% edges are correct
+- [x] 3.3 `npx tsc --noEmit` passes
 
 ### Phase 4: Chart components
 
