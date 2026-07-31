@@ -387,20 +387,20 @@ Both migrations in Phase 1 are additive (new table, new nullable column) — no 
 
 #### Automated
 
-- [x] 1.1 Migrations apply cleanly against the local/dev Supabase project
-- [x] 1.2 `npx tsc --noEmit` passes with the new types wired through
-- [x] 1.3 `npm run lint` passes
+- [x] 1.1 Migrations apply cleanly against the local/dev Supabase project — 790fb5e
+- [x] 1.2 `npx tsc --noEmit` passes with the new types wired through — 790fb5e
+- [x] 1.3 `npm run lint` passes — 790fb5e
 
 #### Manual
 
-- [x] 1.4 `ensureDailyTarget` called twice for the same day returns the first snapshot both times
+- [x] 1.4 `ensureDailyTarget` called twice for the same day returns the first snapshot both times — 790fb5e
 
 ### Phase 2: Range queries & grouping
 
 #### Automated
 
-- [ ] 2.1 Ranged repo queries return exactly the rows within range boundaries (stubbed smoke)
-- [ ] 2.2 `npx tsc --noEmit` passes
+- [x] 2.1 Ranged repo queries return exactly the rows within range boundaries (stubbed smoke)
+- [x] 2.2 `npx tsc --noEmit` passes
 
 #### Manual
 

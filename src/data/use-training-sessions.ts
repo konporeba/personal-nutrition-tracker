@@ -2,6 +2,7 @@
 // here and never from the repo directly, mirroring use-meal-entries.ts.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { ensureDailyTarget } from '@/data/daily-targets.repo';
 import {
   createTrainingSession,
   listTrainingSessionsForDay,
@@ -10,6 +11,7 @@ import {
 } from '@/data/training-sessions.repo';
 import { queryKeys } from '@/data/query-keys';
 import type { NewTrainingSession, TrainingSession, TrainingSessionPatch } from '@/data/types';
+import type { Targets } from '@/lib/derive-targets';
 
 /**
  * The sessions for one local calendar day, default today. Returns the resolved
@@ -32,16 +34,25 @@ export function useDaySessions(date?: Date) {
 /**
  * Log a new session. Invalidates the day it actually landed in (from
  * `logged_at`), not "today", matching `useCreateMealEntry`'s pattern.
+ *
+ * `targets` mirrors `useCreateMealEntry`'s forward-path daily-target snapshot
+ * capture (S-11) — see that function's doc comment for the full rationale.
  */
 export function useCreateTrainingSession() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: NewTrainingSession) => createTrainingSession(input),
-    onSuccess: (session) => {
+    mutationFn: (variables: { input: NewTrainingSession; targets: Targets | null }) =>
+      createTrainingSession(variables.input),
+    onSuccess: (session, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.trainingSessions.day(new Date(session.logged_at)),
       });
+      if (variables.targets) {
+        ensureDailyTarget(new Date(session.logged_at), variables.targets).catch((err) => {
+          console.error('[use-training-sessions] ensureDailyTarget failed:', err);
+        });
+      }
     },
   });
 }

@@ -62,6 +62,28 @@ export async function listTrainingSessionsForDay(date: Date): Promise<TrainingSe
   return (data ?? []) as TrainingSession[];
 }
 
+/**
+ * List every session across a whole date range in one query, rather than one
+ * query per day. Same `[start, end)` local-tz half-open convention as
+ * `listTrainingSessionsForDay`, applied once to the range's two edges.
+ */
+export async function listTrainingSessionsForRange(
+  startDate: Date,
+  endDate: Date,
+): Promise<TrainingSession[]> {
+  const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+  const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + 1);
+  const { data, error } = await supabase
+    .from('training_sessions')
+    .select('*')
+    .gte('logged_at', start.toISOString())
+    .lt('logged_at', end.toISOString())
+    .is('deleted_at', null)
+    .order('logged_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as TrainingSession[];
+}
+
 /** Update mutable fields. `updated_at` is advanced by the server trigger, not here. */
 export async function updateTrainingSession(
   id: string,

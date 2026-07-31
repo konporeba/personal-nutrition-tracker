@@ -16,12 +16,14 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import type { SavedMeal, Section } from '@/data/types';
 import { useCreateMealEntry } from '@/data/use-meal-entries';
 import { useDeleteSavedMeal, useSavedMeals } from '@/data/use-saved-meals';
+import { useTargets } from '@/data/use-profile';
 import { sectionForTime } from '@/lib/section-for-time';
 
 export default function LibraryScreen() {
   const router = useRouter();
   const { data, isPending, isError } = useSavedMeals();
   const createEntry = useCreateMealEntry();
+  const { targets } = useTargets();
   const deleteSavedMeal = useDeleteSavedMeal();
   const savedMeals = data ?? [];
 
@@ -40,17 +42,20 @@ export default function LibraryScreen() {
 
     createEntry.mutate(
       {
-        logged_at: loggedAt.toISOString(),
-        section: sectionForTime(loggedAt),
-        source: 'saved_meal',
-        name: savedMeal.name,
-        calories: savedMeal.calories,
-        protein_g: savedMeal.protein_g,
-        carbs_g: savedMeal.carbs_g,
-        fat_g: savedMeal.fat_g,
-        food_category: savedMeal.food_category,
-        // No AI call is involved in a re-log — there is no run to link.
-        estimation_run_id: null,
+        input: {
+          logged_at: loggedAt.toISOString(),
+          section: sectionForTime(loggedAt),
+          source: 'saved_meal',
+          name: savedMeal.name,
+          calories: savedMeal.calories,
+          protein_g: savedMeal.protein_g,
+          carbs_g: savedMeal.carbs_g,
+          fat_g: savedMeal.fat_g,
+          food_category: savedMeal.food_category,
+          // No AI call is involved in a re-log — there is no run to link.
+          estimation_run_id: null,
+        },
+        targets,
       },
       {
         onSuccess: () => {
@@ -80,16 +85,19 @@ export default function LibraryScreen() {
 
     createEntry.mutate(
       {
-        logged_at: loggedAt.toISOString(),
-        section,
-        source: 'saved_meal',
-        name: savedMeal.name,
-        calories: savedMeal.calories,
-        protein_g: savedMeal.protein_g,
-        carbs_g: savedMeal.carbs_g,
-        fat_g: savedMeal.fat_g,
-        food_category: savedMeal.food_category,
-        estimation_run_id: null,
+        input: {
+          logged_at: loggedAt.toISOString(),
+          section,
+          source: 'saved_meal',
+          name: savedMeal.name,
+          calories: savedMeal.calories,
+          protein_g: savedMeal.protein_g,
+          carbs_g: savedMeal.carbs_g,
+          fat_g: savedMeal.fat_g,
+          food_category: savedMeal.food_category,
+          estimation_run_id: null,
+        },
+        targets,
       },
       {
         onSuccess: () => {

@@ -3,6 +3,7 @@
 // intact one layer up and puts every cache invalidation in a single file.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { ensureDailyTarget } from '@/data/daily-targets.repo';
 import {
   createMealEntry,
   listMealEntriesForDay,
@@ -11,6 +12,7 @@ import {
 } from '@/data/meal-entries.repo';
 import { queryKeys } from '@/data/query-keys';
 import type { MealEntry, MealEntryPatch, NewMealEntry, Section } from '@/data/types';
+import type { Targets } from '@/lib/derive-targets';
 
 /**
  * The entries for one local calendar day, default today. Behind the shared
@@ -40,16 +42,33 @@ export function useDayEntries(date?: Date) {
  * Commit a reviewed estimate. Invalidates the day the entry actually landed in
  * (from `logged_at`), not "today", so the list and the total move together even
  * if the write straddles midnight.
+ *
+ * `targets` is the caller's current `useTargets().targets` (or `null` when
+ * none can be derived yet) — passed in as a mutation variable rather than
+ * read here because `onSuccess` is a plain callback, not a render context, so
+ * it cannot call the `useTargets()` hook itself. When present, it captures a
+ * `daily_targets` snapshot (S-11) for the day the entry landed in, using
+ * whatever the target was *at the moment of this write* — the forward half of
+ * `ensureDailyTarget`'s insert-if-absent immutability contract (the other
+ * half is `useAnalyticsRange`'s lazy backfill for pre-existing days). Fire-
+ * and-forget: a snapshot failure must never block or surface on the entry
+ * write itself.
  */
 export function useCreateMealEntry() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: NewMealEntry) => createMealEntry(input),
-    onSuccess: (entry) => {
+    mutationFn: (variables: { input: NewMealEntry; targets: Targets | null }) =>
+      createMealEntry(variables.input),
+    onSuccess: (entry, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.mealEntries.day(new Date(entry.logged_at)),
       });
+      if (variables.targets) {
+        ensureDailyTarget(new Date(entry.logged_at), variables.targets).catch((err) => {
+          console.error('[use-meal-entries] ensureDailyTarget failed:', err);
+        });
+      }
     },
   });
 }

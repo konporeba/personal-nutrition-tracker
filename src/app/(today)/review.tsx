@@ -24,6 +24,7 @@ import { uploadMealPhoto } from '@/data/meal-photos.repo';
 import { queryKeys } from '@/data/query-keys';
 import { useCreateMealEntry } from '@/data/use-meal-entries';
 import { useCreateSavedMeal } from '@/data/use-saved-meals';
+import { useTargets } from '@/data/use-profile';
 import { useTheme } from '@/hooks/use-theme';
 import type { CapturedPhoto } from '@/lib/capture-photo';
 import { sectionForTime } from '@/lib/section-for-time';
@@ -86,6 +87,7 @@ function ReviewForm({
   const queryClient = useQueryClient();
   const create = useCreateMealEntry();
   const createSavedMeal = useCreateSavedMeal();
+  const { targets } = useTargets();
   const recognized = estimate.recognized;
   // A label capture is only "per-serving" when it actually extracted a serving
   // size; an unrecognized label has none and falls through to the plain manual
@@ -133,31 +135,34 @@ function ReviewForm({
 
     create.mutate(
       {
-        logged_at: loggedAt.toISOString(),
-        section: sectionForTime(loggedAt),
-        // A photo capture that came back unrecognized is filled in by hand, same
-        // as any other unrecognized input — the capture path alone doesn't make
-        // it a label_scan/plate_photo entry (FR-006).
-        source: recognized
-          ? isLabelScan
-            ? 'label_scan'
-            : isPlatePhoto
-              ? 'plate_photo'
-              : 'free_text'
-          : 'manual',
-        name: name.trim(),
-        calories: total(calories),
-        protein_g: total(protein),
-        carbs_g: total(carbs),
-        fat_g: total(fat),
-        // The model's coarse label, stored so Today can show a specific icon
-        // (S-05). Null on the unrecognized/manual path — and an empty label
-        // normalizes to null too, so "no category" has one representation. The
-        // day view falls back to a name-derived or generic icon there.
-        food_category: recognized ? estimate.food_category || null : null,
-        // Linked in both modes: an unrecognized input still produced a real run,
-        // and the link is the audit trail of what the model was asked.
-        estimation_run_id: runId,
+        input: {
+          logged_at: loggedAt.toISOString(),
+          section: sectionForTime(loggedAt),
+          // A photo capture that came back unrecognized is filled in by hand, same
+          // as any other unrecognized input — the capture path alone doesn't make
+          // it a label_scan/plate_photo entry (FR-006).
+          source: recognized
+            ? isLabelScan
+              ? 'label_scan'
+              : isPlatePhoto
+                ? 'plate_photo'
+                : 'free_text'
+            : 'manual',
+          name: name.trim(),
+          calories: total(calories),
+          protein_g: total(protein),
+          carbs_g: total(carbs),
+          fat_g: total(fat),
+          // The model's coarse label, stored so Today can show a specific icon
+          // (S-05). Null on the unrecognized/manual path — and an empty label
+          // normalizes to null too, so "no category" has one representation. The
+          // day view falls back to a name-derived or generic icon there.
+          food_category: recognized ? estimate.food_category || null : null,
+          // Linked in both modes: an unrecognized input still produced a real run,
+          // and the link is the audit trail of what the model was asked.
+          estimation_run_id: runId,
+        },
+        targets,
       },
       {
         onSuccess: (entry) => {

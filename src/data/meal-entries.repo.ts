@@ -59,6 +59,29 @@ export async function listMealEntriesForDay(date: Date): Promise<MealEntry[]> {
   return (data ?? []) as MealEntry[];
 }
 
+/**
+ * List every entry across a whole date range in one query, rather than one
+ * query per day. Same `[start, end)` local-tz half-open convention as
+ * `listMealEntriesForDay`, applied once to the range's two edges: local-day
+ * start of `startDate` to local-day start of the day *after* `endDate`.
+ */
+export async function listMealEntriesForRange(
+  startDate: Date,
+  endDate: Date,
+): Promise<MealEntry[]> {
+  const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+  const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + 1);
+  const { data, error } = await supabase
+    .from('meal_entries')
+    .select('*')
+    .gte('logged_at', start.toISOString())
+    .lt('logged_at', end.toISOString())
+    .is('deleted_at', null)
+    .order('logged_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as MealEntry[];
+}
+
 /** Update mutable fields. `updated_at` is advanced by the server trigger, not here. */
 export async function updateMealEntry(id: string, patch: MealEntryPatch): Promise<MealEntry> {
   const { data, error } = await supabase

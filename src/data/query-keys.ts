@@ -40,6 +40,11 @@ export const queryKeys = {
     all: () => ['training-sessions'] as const,
     day: (date: Date) => ['training-sessions', 'day', localDayKey(date)] as const,
   },
+  analytics: {
+    /** One rolling window's combined range read (S-11) — entries, sessions, and target snapshots. */
+    range: (windowDays: number, startDay: Date, endDay: Date) =>
+      ['analytics', 'range', windowDays, localDayKey(startDay), localDayKey(endDay)] as const,
+  },
   /**
    * A staged estimate, seeded by the composer and read by the review screen.
    * Keyed by the recorded `runId`, so the review route is only reachable with a

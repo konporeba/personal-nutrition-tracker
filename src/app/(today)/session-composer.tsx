@@ -10,6 +10,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import type { TrainingIntensity } from '@/data/types';
+import { useTargets } from '@/data/use-profile';
 import { useCreateTrainingSession } from '@/data/use-training-sessions';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -22,6 +23,7 @@ const INTENSITY_OPTIONS: { value: TrainingIntensity; label: string }[] = [
 export default function SessionComposerScreen() {
   const router = useRouter();
   const create = useCreateTrainingSession();
+  const { targets } = useTargets();
 
   const [sessionType, setSessionType] = useState('');
   const [intensity, setIntensity] = useState<TrainingIntensity>('moderate');
@@ -41,11 +43,14 @@ export default function SessionComposerScreen() {
     if (!canSubmit || durationMinutes === null || burnKcal === null) return;
     create.mutate(
       {
-        logged_at: new Date().toISOString(),
-        session_type: sessionType.trim(),
-        intensity,
-        duration_minutes: durationMinutes,
-        burn_kcal: burnKcal,
+        input: {
+          logged_at: new Date().toISOString(),
+          session_type: sessionType.trim(),
+          intensity,
+          duration_minutes: durationMinutes,
+          burn_kcal: burnKcal,
+        },
+        targets,
       },
       {
         onSuccess: () => {
