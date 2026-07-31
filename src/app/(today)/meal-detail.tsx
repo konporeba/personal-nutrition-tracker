@@ -30,8 +30,10 @@ const SOURCE_LABELS: Record<EntrySource, string> = {
 };
 
 export default function MealDetailScreen() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
-  const { query } = useDayEntries();
+  // `date` is present when reached from a past day (S-11's analytics day
+  // route); absent from Today, which defaults to today exactly as before.
+  const { id, date } = useLocalSearchParams<{ id?: string; date?: string }>();
+  const { query } = useDayEntries(date ? new Date(date) : undefined);
   const entry = query.data?.find((candidate) => candidate.id === id) ?? null;
 
   return (

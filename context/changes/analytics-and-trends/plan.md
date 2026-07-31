@@ -404,7 +404,7 @@ Both migrations in Phase 1 are additive (new table, new nullable column) — no 
 
 #### Manual
 
-- [x] 2.3 `useAnalyticsRange(7)` returns exactly 7 day-buckets in order, including empty days
+- [x] 2.3 `useAnalyticsRange(7)` returns exactly 7 day-buckets in order, including empty days — 2b51dec
 
 ### Phase 3: Trend math
 
@@ -418,33 +418,33 @@ Both migrations in Phase 1 are additive (new table, new nullable column) — no 
 
 #### Manual
 
-- [x] 4.1 Chart renders correctly in both light and dark theme
-- [x] 4.2 Chart renders on web as well as iOS/Android
+- [x] 4.1 Chart renders correctly in both light and dark theme — 2b51dec
+- [x] 4.2 Chart renders on web as well as iOS/Android — 2b51dec
 
 ### Phase 5: Analytics screen & navigation
 
 #### Automated
 
-- [x] 5.1 `npx tsc --noEmit` passes
-- [x] 5.2 `npm run lint` passes
+- [x] 5.1 `npx tsc --noEmit` passes — 2b51dec
+- [x] 5.2 `npm run lint` passes — 2b51dec
 
 #### Manual
 
-- [x] 5.3 Analytics tab appears identically positioned on native and web builds
-- [x] 5.4 Toggling 7d/30d updates all four panels
-- [x] 5.5 Setting `target_weight_kg` in Profile shows the goal reference line
+- [x] 5.3 Analytics tab appears identically positioned on native and web builds — 2b51dec
+- [x] 5.4 Toggling 7d/30d updates all four panels — 2b51dec
+- [x] 5.5 Setting `target_weight_kg` in Profile shows the goal reference line — 2b51dec
 
 ### Phase 6: Past-day browse & edit
 
 #### Automated
 
-- [ ] 6.1 `npx tsc --noEmit` passes
+- [x] 6.1 `npx tsc --noEmit` passes
 
 #### Manual
 
-- [ ] 6.2 Tapping a past day opens its entries/sessions, editable
-- [ ] 6.3 Editing/deleting/re-sectioning on a past day updates its subtotal and the chart on return
-- [ ] 6.4 Cross-group navigation to meal-detail/session-detail resolves correctly from the past-day route
+- [x] 6.2 Tapping a past day opens its entries/sessions, editable
+- [x] 6.3 Editing/deleting/re-sectioning on a past day updates its subtotal and the chart on return
+- [x] 6.4 Cross-group navigation to meal-detail/session-detail resolves correctly from the past-day route
 
 ### Phase 7: Verification
 

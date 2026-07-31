@@ -23,8 +23,10 @@ const INTENSITY_OPTIONS: { value: TrainingIntensity; label: string }[] = [
 ];
 
 export default function SessionDetailScreen() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
-  const { query } = useDaySessions();
+  // `date` is present when reached from a past day (S-11's analytics day
+  // route); absent from Today, which defaults to today exactly as before.
+  const { id, date } = useLocalSearchParams<{ id?: string; date?: string }>();
+  const { query } = useDaySessions(date ? new Date(date) : undefined);
   const session = query.data?.find((candidate) => candidate.id === id) ?? null;
 
   return (

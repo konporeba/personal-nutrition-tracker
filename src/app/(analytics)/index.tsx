@@ -5,6 +5,7 @@
 // functions Today and Profile already use (`effectiveTargets`,
 // `computeDayLedger`) via `useAnalyticsRange` — this screen adds range
 // plumbing and presentation only, no new domain math.
+import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -32,6 +33,7 @@ const ADHERENCE_STYLE: Record<'on' | 'over' | 'under', TrendPointStyle> = {
 const NO_TARGET_STYLE: TrendPointStyle = { color: 'textSecondary', shape: 'circle' };
 
 export default function AnalyticsScreen() {
+  const router = useRouter();
   const [windowDays, setWindowDays] = useState<7 | 30>(7);
   const { days, isPending, isError } = useAnalyticsRange(windowDays);
   const { data: profile } = useProfile();
@@ -125,6 +127,12 @@ export default function AnalyticsScreen() {
                     const status = adherence[index];
                     return status ? ADHERENCE_STYLE[status] : NO_TARGET_STYLE;
                   }}
+                  onPointPress={(point) =>
+                    router.push({
+                      pathname: '/(analytics)/day',
+                      params: { date: point.x.toISOString() },
+                    })
+                  }
                 />
               </Panel>
 
