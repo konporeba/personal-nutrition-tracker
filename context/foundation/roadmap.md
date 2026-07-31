@@ -3,7 +3,7 @@ project: "Personal Nutrition Tracker"
 version: 1
 status: draft
 created: 2026-07-19
-updated: 2026-07-30
+updated: 2026-07-31
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -41,7 +41,7 @@ Existing diet trackers make logging so manual that the owner abandons it after a
 | S-07 | meal-detail-view             | inspect a meal's full breakdown and edit/re-section/delete it    | S-05, S-06      | US-09, FR-062/063                     | done     |
 | S-09 | training-and-dynamic-budget  | log training and earn calories back as a two-sided ledger        | S-02, S-06      | US-14, US-15, FR-070/071/072/073/075  | done |
 | S-12 | pin-access-gate              | gate the app behind a PIN on both clients                        | F-01            | FR-042                                | done |
-| S-11 | analytics-and-trends         | see intake/expenditure/net trends and weight-vs-goal over time   | S-02, S-06, S-09| US-06, FR-031/032/033/034             | proposed |
+| S-11 | analytics-and-trends         | see intake/expenditure/net trends and weight-vs-goal over time   | S-02, S-06, S-09| US-06, FR-031/032/033/034             | done     |
 
 ## Streams
 
@@ -233,7 +233,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** analytics needs accumulated days before it shows anything meaningful, so it is sequenced last regardless of goal; net trends depend on S-09's expenditure data. No new unknowns of its own.
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -294,3 +294,4 @@ As of 2026-07-28, OQ-6, OQ-8, and OQ-9 are resolved (see PRD § Open Questions �
 - **S-07: the owner taps an entry to see its full macro breakdown, icon, and source marker, and can edit, re-section, or delete it — with section subtotals and the daily total recalculating** — Archived 2026-07-29 → `context/archive/2026-07-29-meal-detail-view/`. Lesson: —.
 - **S-09: the owner logs a training session (type, duration, intensity) and enters its calorie burn directly (typically the value a third-party tracker already computed), that burn is added to the day's budget per Model A, and the day is shown as a two-sided ledger — in, out, net** — Archived 2026-07-30 → `context/archive/2026-07-29-training-and-dynamic-budget/`. Lesson: —.
 - **S-12: the owner sets a PIN that gates access to the app on both mobile and desktop; opening either client requires the PIN, and losing it is recovered via the underlying owner login** — Archived 2026-07-30 → `context/archive/2026-07-30-pin-access-gate/`. Lesson: —.
+- **S-11: the owner sees weekly/monthly intake, expenditure, and net trends with moving averages, body weight plotted against goal over time, and an adherence signal — and can browse and edit any past day** — Archived 2026-07-31 → `context/archive/2026-07-30-analytics-and-trends/`. Lesson: —.
