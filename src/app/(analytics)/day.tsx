@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DayView } from '@/components/day-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth } from '@/constants/theme';
+import { MaxContentWidth, Spacing } from '@/constants/theme';
 
 const dayFormat = new Intl.DateTimeFormat(undefined, {
   weekday: 'long',
@@ -65,6 +65,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: Spacing.two,
   },
 });
