@@ -77,6 +77,9 @@ function ProfileForm({ profile }: { profile: Profile | null }) {
   const [proteinOverride, setProteinOverride] = useState(() => seed(profile?.protein_target_override));
   const [carbOverride, setCarbOverride] = useState(() => seed(profile?.carb_target_override));
   const [fatOverride, setFatOverride] = useState(() => seed(profile?.fat_target_override));
+  // The Weight-vs-Goal panel's reference line (S-11 FR-033) — same "empty means
+  // unset" convention as the overrides above.
+  const [targetWeightKg, setTargetWeightKg] = useState(() => seed(profile?.target_weight_kg));
 
   const heightNum = toNumberOrNull(heightCm);
   const ageNum = toNumberOrNull(age);
@@ -93,6 +96,7 @@ function ProfileForm({ profile }: { profile: Profile | null }) {
       protein_target_override: toNumberOrNull(proteinOverride),
       carb_target_override: toNumberOrNull(carbOverride),
       fat_target_override: toNumberOrNull(fatOverride),
+      target_weight_kg: toNumberOrNull(targetWeightKg),
     };
   }
 
@@ -140,6 +144,16 @@ function ProfileForm({ profile }: { profile: Profile | null }) {
           </ThemedView>
         </Pressable>
       </ThemedView>
+
+      <NumericField
+        label="Weight goal"
+        unit="kg"
+        value={targetWeightKg}
+        onChangeText={setTargetWeightKg}
+      />
+      <ThemedText type="small" themeColor="textSecondary">
+        Sets the reference line on Analytics&apos; Weight-vs-Goal panel. Leave empty for none.
+      </ThemedText>
 
       <ThemedView style={styles.divider} />
 

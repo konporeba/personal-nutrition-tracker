@@ -22,6 +22,14 @@ export default function AppTabs() {
           renderingMode="template"
         />
       </NativeTabs.Trigger>
+      {/* The group segment is the route name: `src/app/(analytics)/`. */}
+      <NativeTabs.Trigger name="(analytics)">
+        <NativeTabs.Trigger.Label>Analytics</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          src={require('@/assets/images/tabIcons/explore.png')}
+          renderingMode="template"
+        />
+      </NativeTabs.Trigger>
       {/* The group segment is the route name: `src/app/(profile)/`. */}
       <NativeTabs.Trigger name="(profile)">
         <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
