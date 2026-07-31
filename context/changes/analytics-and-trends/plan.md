@@ -438,24 +438,24 @@ Both migrations in Phase 1 are additive (new table, new nullable column) — no 
 
 #### Automated
 
-- [x] 6.1 `npx tsc --noEmit` passes
+- [x] 6.1 `npx tsc --noEmit` passes — 5627e2a
 
 #### Manual
 
-- [x] 6.2 Tapping a past day opens its entries/sessions, editable
-- [x] 6.3 Editing/deleting/re-sectioning on a past day updates its subtotal and the chart on return
-- [x] 6.4 Cross-group navigation to meal-detail/session-detail resolves correctly from the past-day route
+- [x] 6.2 Tapping a past day opens its entries/sessions, editable — 5627e2a
+- [x] 6.3 Editing/deleting/re-sectioning on a past day updates its subtotal and the chart on return — 5627e2a
+- [x] 6.4 Cross-group navigation to meal-detail/session-detail resolves correctly from the past-day route — 5627e2a
 
 ### Phase 7: Verification
 
 #### Automated
 
-- [ ] 7.1 `npm run smoke:analytics` passes
-- [ ] 7.2 `npm run smoke` (full suite) still passes
-- [ ] 7.3 `npm run lint` passes
-- [ ] 7.4 `npx tsc --noEmit` passes
+- [x] 7.1 `npm run smoke:analytics` passes
+- [x] 7.2 `npm run smoke` (full suite) still passes
+- [x] 7.3 `npm run lint` passes
+- [x] 7.4 `npx tsc --noEmit` passes
 
 #### Manual
 
-- [ ] 7.5 Full walkthrough across real days: all four panels populate, range toggle works, past-day edit reflected in chart
-- [ ] 7.6 Cross-client parity confirmed after refetch-on-focus
+- [x] 7.5 Full walkthrough across real days: all four panels populate, range toggle works, past-day edit reflected in chart
+- [x] 7.6 Cross-client parity confirmed after refetch-on-focus

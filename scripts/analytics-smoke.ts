@@ -1,18 +1,20 @@
 // Smoke test for the analytics-and-trends (S-11) data layer — machine-checked
-// coverage for what a single manual pass can't easily prove.
-//
-// Phase 2 stub: covers the ranged repo queries' boundary correctness only
-// (listMealEntriesForRange/listTrainingSessionsForRange). Phase 7 fills in
-// ensureDailyTarget immutability, groupByLocalDay, movingAverage, and
-// classifyDayAdherence coverage alongside this.
+// coverage for what a single manual pass can't easily prove: the range
+// queries' boundary correctness, the daily-target snapshot's write-once
+// immutability, the day-grouping helper's gap-free bucketing, and the trend
+// math's exact output at its boundary cases.
 //
 // Authenticates as the owner (creds from the git-ignored .env.local) and
 // drives the same seams `useAnalyticsRange` drives, against the **deployed**
 // backend — the `training-smoke.ts` pattern, one slice over.
 //
 // Run: `npm run smoke:analytics` (bundles + runs via scripts/run-analytics-smoke.mjs).
+import { ensureDailyTarget } from '@/data/daily-targets.repo';
 import { listMealEntriesForRange } from '@/data/meal-entries.repo';
 import { listTrainingSessionsForRange } from '@/data/training-sessions.repo';
+import { classifyDayAdherence } from '@/lib/adherence';
+import { groupByLocalDay } from '@/lib/group-by-local-day';
+import { movingAverage } from '@/lib/moving-average';
 import { supabase } from '@/lib/supabase';
 
 function assert(cond: unknown, msg: string): asserts cond {
@@ -32,6 +34,10 @@ const RANGE_START = new Date(2099, 5, 1); // 2099-06-01
 const RANGE_MID = new Date(2099, 5, 2); // 2099-06-02
 const RANGE_END = new Date(2099, 5, 3); // 2099-06-03
 const AFTER_RANGE = new Date(2099, 5, 4); // 2099-06-04
+// A separate day, far from the range above, dedicated to the
+// ensureDailyTarget immutability test so its writes can't collide with
+// anything else this script touches.
+const SNAPSHOT_DAY = new Date(2099, 6, 1); // 2099-07-01
 
 async function main() {
   assert(url && anonKey, 'EXPO_PUBLIC_SUPABASE_URL / _ANON_KEY must be set (.env)');
@@ -40,6 +46,48 @@ async function main() {
     'OWNER_EMAIL / OWNER_PASSWORD must be set in .env.local',
   );
 
+  // 0. Pure math first — check it before touching the network.
+
+  // 0a. groupByLocalDay: one bucket per requested day, in order, including a
+  //     day with zero matching rows.
+  const day1 = new Date(2020, 0, 1);
+  const day2 = new Date(2020, 0, 2);
+  const day3 = new Date(2020, 0, 3);
+  const rows = [
+    { at: new Date(2020, 0, 1, 9), label: 'a' },
+    { at: new Date(2020, 0, 1, 20), label: 'b' },
+    { at: new Date(2020, 0, 3, 12), label: 'c' },
+  ];
+  const buckets = groupByLocalDay(rows, (row) => row.at, [day1, day2, day3]);
+  assert(buckets.length === 3, `groupByLocalDay returned ${buckets.length} buckets, want 3`);
+  assert(
+    buckets[0].map((r) => r.label).join(',') === 'a,b',
+    `day1 bucket was ${JSON.stringify(buckets[0])}, want [a, b]`,
+  );
+  assert(buckets[1].length === 0, `day2 bucket was ${JSON.stringify(buckets[1])}, want empty`);
+  assert(
+    buckets[2].map((r) => r.label).join(',') === 'c',
+    `day3 bucket was ${JSON.stringify(buckets[2])}, want [c]`,
+  );
+  console.log('✓ groupByLocalDay: one bucket per requested day, in order, empty days included');
+
+  // 0b. movingAverage: a trailing window with a partial window at the start.
+  const series = movingAverage([1, 2, 3, 4, 5], 3);
+  assert(
+    JSON.stringify(series) === JSON.stringify([1, 1.5, 2, 3, 4]),
+    `movingAverage([1,2,3,4,5], 3) was ${JSON.stringify(series)}, want [1, 1.5, 2, 3, 4]`,
+  );
+  console.log('✓ movingAverage: matches a hand-computed series, partial window at the start');
+
+  // 0c. classifyDayAdherence: exact ±5% boundary of a 2000-target day.
+  assert(classifyDayAdherence(2100, 2000) === 'on', 'net 2100 vs target 2000 (+5% exactly) should be on');
+  assert(classifyDayAdherence(2101, 2000) === 'over', 'net 2101 vs target 2000 (just past +5%) should be over');
+  assert(classifyDayAdherence(1900, 2000) === 'on', 'net 1900 vs target 2000 (-5% exactly) should be on');
+  assert(classifyDayAdherence(1899, 2000) === 'under', 'net 1899 vs target 2000 (just past -5%) should be under');
+  assert(classifyDayAdherence(1500, null) === null, 'a null target should classify as null');
+  console.log('✓ classifyDayAdherence: correct at the exact ±5% boundary, null target passes through');
+
+  // 1. Authenticate as the owner. The live round trips below rely on this session.
   const signIn = await supabase.auth.signInWithPassword({
     email: ownerEmail,
     password: ownerPassword,
@@ -54,7 +102,7 @@ async function main() {
   const beforeDay = new Date(2099, 4, 31); // 2099-05-31 — the day before RANGE_START
 
   try {
-    // 1. Meal entries: one before, one at each edge, one in the middle, one after.
+    // 2. Meal entries: one before, one at each edge, one in the middle, one after.
     for (const day of [beforeDay, RANGE_START, RANGE_MID, RANGE_END, AFTER_RANGE]) {
       const { data, error } = await supabase
         .from('meal_entries')
@@ -84,7 +132,7 @@ async function main() {
     );
     console.log('✓ listMealEntriesForRange: exact [start, end] boundary, none outside it');
 
-    // 2. Training sessions: same boundary shape.
+    // 3. Training sessions: same boundary shape.
     for (const day of [beforeDay, RANGE_START, RANGE_MID, RANGE_END, AFTER_RANGE]) {
       const { data, error } = await supabase
         .from('training_sessions')
@@ -116,7 +164,29 @@ async function main() {
     );
     console.log('✓ listTrainingSessionsForRange: exact [start, end] boundary, none outside it');
 
-    console.log('\nANALYTICS SMOKE (Phase 2 stub) PASSED ✅');
+    // 4. ensureDailyTarget: insert-if-absent, never-update. A second call with
+    //    different values must return the *first* call's stored snapshot.
+    await supabase.from('daily_targets').delete().eq('owner_id', ownerId).eq('day', '2099-07-01');
+    const first = await ensureDailyTarget(SNAPSHOT_DAY, {
+      calories: 1111,
+      protein_g: 111,
+      carbs_g: 111,
+      fat_g: 11,
+    });
+    assert(first.calories === 1111, `first ensureDailyTarget call returned calories ${first.calories}, want 1111`);
+    const second = await ensureDailyTarget(SNAPSHOT_DAY, {
+      calories: 2222,
+      protein_g: 222,
+      carbs_g: 222,
+      fat_g: 22,
+    });
+    assert(
+      second.calories === 1111 && second.id === first.id,
+      `second ensureDailyTarget call returned ${JSON.stringify(second)}, want the first snapshot (1111 kcal, same id) unchanged`,
+    );
+    console.log('✓ ensureDailyTarget: insert-if-absent — a second call with different values returns the first snapshot');
+
+    console.log('\nANALYTICS SMOKE PASSED ✅');
   } finally {
     for (const id of entryIds) {
       await supabase.from('meal_entries').delete().eq('id', id);
@@ -124,9 +194,10 @@ async function main() {
     for (const id of sessionIds) {
       await supabase.from('training_sessions').delete().eq('id', id);
     }
+    await supabase.from('daily_targets').delete().eq('owner_id', ownerId).eq('day', '2099-07-01');
     if (entryIds.length || sessionIds.length) {
       console.log(
-        `(cleanup) hard-deleted ${entryIds.length} entr${entryIds.length === 1 ? 'y' : 'ies'} and ${sessionIds.length} session(s)`,
+        `(cleanup) hard-deleted ${entryIds.length} entr${entryIds.length === 1 ? 'y' : 'ies'}, ${sessionIds.length} session(s), and the snapshot fixture`,
       );
     }
   }
