@@ -1,0 +1,59 @@
+# Netlify deploy config for the Expo web export.
+#
+# The app is exported with `web.output: "static"` (app.json), so expo-router
+# pre-renders one real HTML file per route. That means NO catch-all SPA
+# rewrite here — a `/*  ->  /index.html` rule would shadow every route with
+# the home page. Netlify resolves `/library` to `library.html` and
+# `/profile` to `profile/index.html` on its own.
+#
+# The build reads EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY
+# from the committed .env (they are public by design — privacy is enforced by
+# Supabase RLS). Setting them in the Netlify UI overrides the file.
+
+[build]
+  # Expo has no 404.html convention; Netlify has no +not-found convention.
+  # Copy the router's not-found page onto the name Netlify looks for.
+  command = "npx expo export --platform web && cp dist/+not-found.html dist/404.html"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Fingerprinted bundles and assets — safe to cache forever.
+[[headers]]
+  for = "/_expo/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# HTML is not fingerprinted: always revalidate so a redeploy is picked up on
+# the next load rather than whenever the browser feels like it.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# The owner's Supabase session lives in this origin's localStorage, so keep
+# the site out of frames and out of search results.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=()"
+    X-Robots-Tag = "noindex, nofollow"

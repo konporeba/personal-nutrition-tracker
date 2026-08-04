@@ -6,6 +6,7 @@ import {
 } from '@expo-google-fonts/elms-sans';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { DarkTheme, ThemeProvider } from 'expo-router';
+import Head from 'expo-router/head';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -67,18 +68,33 @@ export default function RootLayout() {
     ElmsSans_300Light,
     ElmsSans_700Bold,
   });
-  if (!fontsLoaded && !fontError) return null;
+  const ready = fontsLoaded || fontError;
 
   return (
-    // Gesture Handler has to wrap the whole tree, above navigation, for the
-    // swipe gestures on list rows to receive touches.
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={{ persister: asyncStoragePersister }}>
-        <ThemedRoot />
-      </PersistQueryClientProvider>
-    </GestureHandlerRootView>
+    <>
+      {/* Document title/description for the web export. `web.name` in app.json
+          does not reach the rendered <title> under static rendering — helmet
+          owns it, and <Head> is the documented way in. It sits *above* the font
+          gate on purpose: static rendering runs in Node, where the fonts never
+          resolve, so anything below that gate renders to an empty document.
+          Set once here so every route inherits it; a screen can override with
+          its own <Head>. Renders nothing on native. */}
+      <Head>
+        <title>CalTracker</title>
+        <meta name="description" content="Personal calorie and macro tracker." />
+      </Head>
+      {/* Gesture Handler has to wrap the whole tree, above navigation, for the
+          swipe gestures on list rows to receive touches. */}
+      {ready && (
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <PersistQueryClientProvider
+            client={queryClient}
+            persistOptions={{ persister: asyncStoragePersister }}>
+            <ThemedRoot />
+          </PersistQueryClientProvider>
+        </GestureHandlerRootView>
+      )}
+    </>
   );
 }
 
