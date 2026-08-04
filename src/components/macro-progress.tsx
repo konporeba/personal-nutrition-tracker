@@ -1,13 +1,21 @@
-// One consumed-vs-target row on Today: a label, `consumed / target unit`, and a
-// bar filled to how much of the target is used. Shared by calories and each of
-// the three macros. The bar clamps at full — going over target reads as "done",
-// not as an overflowing bar — and a null/absent target degrades to consumed with
-// no bar rather than dividing by zero or fabricating a denominator.
+// One consumed-vs-target bar: a label, `consumed / target unit`, and a track
+// filled to how much of the target is used.
+//
+// The bar clamps at full — going over target reads as "done", not as an
+// overflowing bar — and a null/absent target degrades to the consumed value
+// with no bar, rather than dividing by zero or fabricating a denominator.
+//
+// The fill's color is `classifyDayAdherence`'s verdict, the same ±5% band the
+// week rail and the hero ring use. It used to be a strict `consumed > target`
+// test of its own, which is how this bar could read red on a day the calendar
+// called on-target.
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { ADHERENCE_COLOR } from '@/components/ui/adherence-color';
+import { Radius, Spacing } from '@/constants/theme';
+import { classifyDayAdherence } from '@/lib/adherence';
 import { useTheme } from '@/hooks/use-theme';
 
 export function MacroProgress({
@@ -29,24 +37,32 @@ export function MacroProgress({
   // consumed number alone rather than a bar filled against nothing.
   const hasBar = target !== null && target > 0;
   const fraction = hasBar ? clamp(consumed / target, 0, 1) : 0;
+  const status = hasBar ? classifyDayAdherence(consumed, target) : null;
 
   return (
-    <ThemedView style={styles.row}>
-      <ThemedView style={styles.header}>
-        <ThemedText type="smallBold">{label}</ThemedText>
-        <ThemedView style={styles.valueRow}>
-          <ThemedText type="smallBold">{Math.round(consumed)}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            {hasBar ? `/ ${Math.round(target)} ${unit}` : unit}
+    <ThemedView type="transparent" style={styles.row}>
+      <ThemedView type="transparent" style={styles.header}>
+        <ThemedText type="small" themeColor="textMuted">
+          {label}
+        </ThemedText>
+        <ThemedView type="transparent" style={styles.valueRow}>
+          <ThemedText type="smallBold">{Math.round(consumed).toLocaleString()}</ThemedText>
+          <ThemedText type="small" themeColor="textMuted">
+            {hasBar ? `/ ${Math.round(target).toLocaleString()} ${unit}` : unit}
           </ThemedText>
         </ThemedView>
       </ThemedView>
       {hasBar ? (
-        <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
+        <View style={[styles.track, { backgroundColor: theme.track }]}>
           <View
             style={[
               styles.fill,
-              { backgroundColor: theme.text, width: `${fraction * 100}%` },
+              {
+                // The adherence signal, shared with the hero ring and the week
+                // rail — never a new color for the same meaning.
+                backgroundColor: status ? theme[ADHERENCE_COLOR[status]] : theme.accent,
+                width: `${fraction * 100}%`,
+              },
             ]}
           />
         </View>
@@ -62,7 +78,7 @@ function clamp(value: number, min: number, max: number): number {
 
 const styles = StyleSheet.create({
   row: {
-    gap: Spacing.one,
+    gap: Spacing.one + 2,
   },
   header: {
     flexDirection: 'row',
@@ -77,11 +93,11 @@ const styles = StyleSheet.create({
   },
   track: {
     height: Spacing.two,
-    borderRadius: Spacing.one,
+    borderRadius: Radius.pill,
     overflow: 'hidden',
   },
   fill: {
     height: '100%',
-    borderRadius: Spacing.one,
+    borderRadius: Radius.pill,
   },
 });

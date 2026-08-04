@@ -63,12 +63,18 @@ export function AnimatedSplashOverlay() {
 
 const styles = StyleSheet.create({
   image: {
+    // Matches `expo-splash-screen`'s `imageWidth: 76` in app.json — the logo
+    // is square, so height follows width 1:1.
     width: 76,
-    height: 71,
+    height: 76,
   },
   splashOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: '#208AEF',
+    // The dark canvas, matching `expo-splash-screen`'s `backgroundColor` in
+    // app.json — the overlay has to be indistinguishable from the native
+    // splash it takes over from, or the hand-off flashes. Not a theme token:
+    // this paints before the theme module is guaranteed to be loaded.
+    backgroundColor: '#0F1120',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,

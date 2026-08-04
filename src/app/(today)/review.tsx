@@ -11,36 +11,63 @@
 // fields start blank, the typed text seeds the name, and the entry commits as
 // `manual` (FR-008). Structurally the same code path, so there is no separate
 // manual-entry branch that can silently rot.
+//
+// Design rule this screen enforces: nothing here may read as final. Every
+// number is an editable field, every model-derived value carries an "Estimated"
+// tag, and the confidence the model reported is stated rather than implied.
 import { useQueryClient } from '@tanstack/react-query';
+import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
-import type { Estimate } from '@/data/estimation-types';
+import { AppButton } from '@/components/ui/app-button';
+import { Card } from '@/components/ui/card';
+import { Chip } from '@/components/ui/chip';
+import { Field, seedField, toNumberOrNull } from '@/components/ui/field';
+import { useTabBarClearance } from '@/components/ui/screen';
+import { SECTION_LABELS } from '@/components/section-subtotal';
+import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import type { Confidence, Estimate } from '@/data/estimation-types';
 import { uploadMealPhoto } from '@/data/meal-photos.repo';
 import { queryKeys } from '@/data/query-keys';
+import type { Section } from '@/data/types';
 import { useCreateMealEntry } from '@/data/use-meal-entries';
-import { useCreateSavedMeal } from '@/data/use-saved-meals';
 import { useTargets } from '@/data/use-profile';
+import { useCreateSavedMeal } from '@/data/use-saved-meals';
 import { useTheme } from '@/hooks/use-theme';
 import type { CapturedPhoto } from '@/lib/capture-photo';
 import { sectionForTime } from '@/lib/section-for-time';
 
+/** `section` only ever arrives from our own add-meal popup (`add-meal-sheet.tsx`)
+ *  or capture flow, but it comes in as an untyped route param — validate
+ *  membership rather than trusting the cast. */
+function parseSection(value: string | undefined): Section | undefined {
+  return value !== undefined && value in SECTION_LABELS ? (value as Section) : undefined;
+}
+
+const CONFIDENCE_COPY: Record<Confidence, string> = {
+  high: 'High confidence — still worth a glance.',
+  medium: 'Medium confidence — check the portion.',
+  low: 'Low confidence — these numbers are a rough guess.',
+};
+
 export default function ReviewScreen() {
-  const { runId, text, source } = useLocalSearchParams<{
+  const { runId, text, source, section } = useLocalSearchParams<{
     runId?: string;
     text?: string;
     source?: string;
+    section?: string;
   }>();
   const queryClient = useQueryClient();
+  // "Log it" is the last thing on this page and the point of the whole screen —
+  // it must not end up under the floating tab bar.
+  const tabBarClearance = useTabBarClearance();
 
-  const estimate = runId
-    ? queryClient.getQueryData<Estimate>(queryKeys.estimate(runId))
-    : undefined;
-  // Staged by the composer's scan affordance; undefined for the text path.
+  const estimate = runId ? queryClient.getQueryData<Estimate>(queryKeys.estimate(runId)) : undefined;
+  // Staged by the capture flow; undefined for the text path.
   const photo = runId
     ? queryClient.getQueryData<CapturedPhoto>(queryKeys.capturedPhoto(runId))
     : undefined;
@@ -48,8 +75,10 @@ export default function ReviewScreen() {
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ title: 'Review' }} />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <ThemedView style={styles.inner}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
+        keyboardShouldPersistTaps="handled">
+        <ThemedView type="transparent" style={styles.inner}>
           {estimate && runId ? (
             <ReviewForm
               estimate={estimate}
@@ -58,6 +87,7 @@ export default function ReviewScreen() {
               isLabelScan={source === 'label_scan'}
               isPlatePhoto={source === 'plate_photo'}
               photo={photo}
+              section={parseSection(section)}
             />
           ) : (
             <MissingEstimate />
@@ -75,6 +105,7 @@ function ReviewForm({
   isLabelScan,
   isPlatePhoto,
   photo,
+  section,
 }: {
   estimate: Estimate;
   runId: string;
@@ -82,6 +113,10 @@ function ReviewForm({
   isLabelScan: boolean;
   isPlatePhoto: boolean;
   photo: CapturedPhoto | undefined;
+  /** Chosen up front in the add-meal popup; falls back to the time-of-day
+   *  guess for every other capture path (native FAB, mobile composer, mobile
+   *  web's quick-capture button), which never sets this. */
+  section: Section | undefined;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -99,9 +134,7 @@ function ReviewForm({
 
   // Seeded once. An unrecognized input contributes no numbers at all — the
   // owner's own text is the only thing worth carrying over.
-  const [name, setName] = useState(() =>
-    recognized ? estimate.name : typedText || estimate.name
-  );
+  const [name, setName] = useState(() => (recognized ? estimate.name : typedText || estimate.name));
   const [calories, setCalories] = useState(() => seedField(estimate.calories));
   const [protein, setProtein] = useState(() => seedField(estimate.protein_g));
   const [carbs, setCarbs] = useState(() => seedField(estimate.carbs_g));
@@ -137,7 +170,7 @@ function ReviewForm({
       {
         input: {
           logged_at: loggedAt.toISOString(),
-          section: sectionForTime(loggedAt),
+          section: section ?? sectionForTime(loggedAt),
           // A photo capture that came back unrecognized is filled in by hand, same
           // as any other unrecognized input — the capture path alone doesn't make
           // it a label_scan/plate_photo entry (FR-006).
@@ -207,160 +240,209 @@ function ReviewForm({
 
   return (
     <>
-      {!recognized ? (
-        <ThemedView type="backgroundElement" style={styles.notice}>
-          <ThemedText type="small">
-            We couldn&apos;t identify this as a food, so nothing has been filled in. Enter
-            the values yourself to log it, or go back.
+      {photo ? (
+        <Image
+          source={{ uri: `data:${photo.mediaType};base64,${photo.data}` }}
+          style={styles.photo}
+          contentFit="cover"
+          accessibilityLabel="The photo you captured"
+        />
+      ) : null}
+
+      {recognized ? (
+        <Card style={styles.headCard}>
+          <ThemedView type="transparent" style={styles.chipRow}>
+            <Chip label="Estimated" tone="accent" />
+            <Chip label={`${estimate.confidence} confidence`} />
+            {showServings ? <Chip label={`Serving: ${estimate.serving_size}`} /> : null}
+            {showWeightRescale ? <Chip label={`~${estimate.implied_weight_g} g`} /> : null}
+          </ThemedView>
+          <ThemedText type="small" themeColor="textMuted">
+            {CONFIDENCE_COPY[estimate.confidence]} Every field below is yours to change before
+            anything is logged.
           </ThemedText>
+        </Card>
+      ) : (
+        <UnrecognizedNotice />
+      )}
+
+      <Card style={styles.card}>
+        <Field label="Meal" value={name} onChangeText={setName} placeholder="What was it?" />
+        <ThemedView type="transparent" style={styles.pairRow}>
+          <ThemedView type="transparent" style={styles.pairItem}>
+            <Field
+              label="Calories"
+              unit="kcal"
+              numeric
+              value={calories}
+              onChangeText={setCalories}
+              badge={recognized ? <AiBadge /> : undefined}
+            />
+          </ThemedView>
+          <ThemedView type="transparent" style={styles.pairItem}>
+            <Field
+              label="Protein"
+              unit="g"
+              numeric
+              value={protein}
+              onChangeText={setProtein}
+              badge={recognized ? <AiBadge /> : undefined}
+            />
+          </ThemedView>
         </ThemedView>
-      ) : null}
+        <ThemedView type="transparent" style={styles.pairRow}>
+          <ThemedView type="transparent" style={styles.pairItem}>
+            <Field
+              label="Carbs"
+              unit="g"
+              numeric
+              value={carbs}
+              onChangeText={setCarbs}
+              badge={recognized ? <AiBadge /> : undefined}
+            />
+          </ThemedView>
+          <ThemedView type="transparent" style={styles.pairItem}>
+            <Field
+              label="Fat"
+              unit="g"
+              numeric
+              value={fat}
+              onChangeText={setFat}
+              badge={recognized ? <AiBadge /> : undefined}
+            />
+          </ThemedView>
+        </ThemedView>
 
-      {showServings ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          Serving size: {estimate.serving_size}
-        </ThemedText>
-      ) : null}
+        {showServings ? (
+          <Field
+            label="Servings"
+            unit="×"
+            numeric
+            value={servings}
+            onChangeText={setServings}
+            hint="Values above are per serving; totals are multiplied by this before saving."
+          />
+        ) : null}
 
-      {showWeightRescale ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          Estimated portion: ~{estimate.implied_weight_g} g
-        </ThemedText>
-      ) : null}
+        {showWeightRescale ? (
+          <Field
+            label="Actual weight"
+            unit="g"
+            numeric
+            value={weight}
+            onChangeText={setWeight}
+            hint="Enter the plate's real weight to rescale the estimate proportionally, or leave blank to use it as-is."
+          />
+        ) : null}
 
-      <Field label="Meal" value={name} onChangeText={setName} placeholder="What was it?" />
-      <NumericField label="Calories" unit="kcal" value={calories} onChangeText={setCalories} />
-      <NumericField label="Protein" unit="g" value={protein} onChangeText={setProtein} />
-      <NumericField label="Carbs" unit="g" value={carbs} onChangeText={setCarbs} />
-      <NumericField label="Fat" unit="g" value={fat} onChangeText={setFat} />
-
-      {showServings ? (
-        <NumericField label="Servings" unit="×" value={servings} onChangeText={setServings} />
-      ) : null}
-
-      {showWeightRescale ? (
-        <NumericField label="Actual weight" unit="g" value={weight} onChangeText={setWeight} />
-      ) : null}
-
-      <ThemedText type="small" themeColor="textSecondary">
-        {showServings
-          ? 'Values above are per serving; totals are multiplied by servings before saving.'
-          : showWeightRescale
-            ? "Values above are the AI's estimate; enter the plate's actual weight to rescale them proportionally, or leave blank to use the estimate as-is."
-            : 'Leave a field empty to log it as unknown rather than zero.'}
-      </ThemedText>
+        {!showServings && !showWeightRescale ? (
+          <ThemedText type="micro" themeColor="textMuted">
+            Leave a field empty to log it as unknown rather than zero.
+          </ThemedText>
+        ) : null}
+      </Card>
 
       {estimate.assumptions.length > 0 ? (
-        <ThemedView style={styles.assumptions}>
-          <ThemedText type="smallBold">Assumptions</ThemedText>
+        <Card tone="soft" elevated={false} style={styles.card}>
+          <ThemedText type="smallBold">What the model assumed</ThemedText>
           {estimate.assumptions.map((assumption) => (
-            <ThemedText key={assumption} type="small" themeColor="textSecondary">
+            <ThemedText key={assumption} type="small" themeColor="textMuted">
               • {assumption}
             </ThemedText>
           ))}
-        </ThemedView>
+        </Card>
       ) : null}
 
-      <Pressable
-        onPress={() => setSaveToLibrary((prev) => !prev)}
-        style={({ pressed }) => pressed && styles.pressed}>
-        <ThemedView style={styles.checkboxRow}>
-          <ThemedView
-            type={saveToLibrary ? 'backgroundSelected' : 'backgroundElement'}
-            style={styles.checkbox}>
-            {saveToLibrary ? <ThemedText type="smallBold">✓</ThemedText> : null}
-          </ThemedView>
-          <ThemedText type="small">Save to library</ThemedText>
-        </ThemedView>
-      </Pressable>
+      <SaveToLibraryToggle checked={saveToLibrary} onToggle={() => setSaveToLibrary((p) => !p)} />
 
       {create.isError ? (
-        <ThemedText type="small" themeColor="textSecondary">
+        <ThemedText type="small" themeColor="danger">
           Couldn&apos;t save that. Try again.
         </ThemedText>
       ) : null}
 
-      {create.isPending ? (
-        <ActivityIndicator style={styles.saving} />
-      ) : (
-        <Pressable
-          onPress={save}
-          disabled={!canSave}
-          style={({ pressed }) => pressed && styles.pressed}>
-          <ThemedView
-            type={canSave ? 'backgroundSelected' : 'backgroundElement'}
-            style={styles.button}>
-            <ThemedText type="smallBold" themeColor={canSave ? 'text' : 'textSecondary'}>
-              Log it
-            </ThemedText>
-          </ThemedView>
-        </Pressable>
-      )}
+      {/* `soft` + `strong` + ☑️ — the same shape and mark every commit action
+          in the app wears, from the headers' "Log a meal" to the popups' "Save
+          changes". This is the one that finally writes the entry, so it keeps
+          `large`. */}
+      <AppButton
+        label="Log it"
+        icon="☑️"
+        variant="soft"
+        strong
+        size="large"
+        full
+        onPress={save}
+        disabled={!canSave}
+        pending={create.isPending}
+      />
     </>
   );
 }
 
-function Field({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChangeText: (next: string) => void;
-  placeholder?: string;
-}) {
-  const theme = useTheme();
-
+/** "Estimated", not the "AI est." this used to read. The abbreviation saved
+ *  four characters and cost the meaning: it named the *machine* where what the
+ *  owner needs to know is the *status of the number* — that it is a guess they
+ *  are free to overwrite. One plain word says that. */
+function AiBadge() {
   return (
-    <ThemedView style={styles.field}>
-      <ThemedText type="small" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <TextInput
-        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={theme.textSecondary}
-      />
-    </ThemedView>
+    <ThemedText type="micro" themeColor="accentText">
+      Estimated
+    </ThemedText>
   );
 }
 
-/**
- * A macro field. Non-numeric characters are dropped as they are typed, so the
- * value can never become something `toNumberOrNull` has to guess at.
- */
-function NumericField({
-  label,
-  unit,
-  value,
-  onChangeText,
-}: {
-  label: string;
-  unit: string;
-  value: string;
-  onChangeText: (next: string) => void;
-}) {
+/** The manual-entry fallback (FR-008). Framed as a normal path, not an error:
+ *  the owner can still log the meal, they just supply the numbers. */
+function UnrecognizedNotice() {
   const theme = useTheme();
 
   return (
-    <ThemedView style={styles.field}>
-      <ThemedText type="small" themeColor="textSecondary">
-        {label} ({unit})
+    <Card style={[styles.headCard, { borderColor: theme.warning }]}>
+      <ThemedText type="smallBold">Not recognized as a food</ThemedText>
+      <ThemedText type="small" themeColor="textMuted">
+        Nothing has been filled in — we won&apos;t invent numbers. Type what you know below and log
+        it by hand, or go back and describe it differently.
       </ThemedText>
-      <TextInput
-        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-        value={value}
-        onChangeText={(next) => onChangeText(onlyNumeric(next))}
-        keyboardType="decimal-pad"
-        inputMode="decimal"
-        placeholder="—"
-        placeholderTextColor={theme.textSecondary}
+    </Card>
+  );
+}
+
+function SaveToLibraryToggle({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
+  return (
+    <Card tone="soft" elevated={false} style={styles.toggleCard}>
+      <ThemedView type="transparent" style={styles.toggleText}>
+        <ThemedText type="smallBold">Save to library</ThemedText>
+        <ThemedText type="micro" themeColor="textMuted">
+          Re-log it later in one tap.
+        </ThemedText>
+      </ThemedView>
+      {/* "Saved", not "Saving": nothing is in flight here. The toggle only
+          records what will happen when "Log it" is pressed, and a progressive
+          tense read as a spinner that never resolved.
+
+          🔖 in both states, deliberately. The icon names the *subject* — the
+          saved-meal library — which does not change when the toggle flips;
+          swapping it for a ☑️ made the two states look like two different
+          controls rather than one control that is on or off.
+
+          `ghost` → `soft`, the design's own outlined pair, rather than
+          `secondary` → `soft`: `secondary` fills with `surfaceSoft`, which is
+          the exact color of the soft card this sits on, so the off state had no
+          edge, no contrast and nothing that read as a button. (It carried a
+          `borderColor` override, but `secondary` never sets a border width, so
+          that line had never drawn anything.) With the icon now constant, this
+          pairing is what carries the state: outlined off, filled and bold on. */}
+      <AppButton
+        label={checked ? 'Saved' : 'Save'}
+        icon="🔖"
+        variant={checked ? 'soft' : 'ghost'}
+        strong={checked}
+        size="small"
+        onPress={onToggle}
+        accessibilityLabel={checked ? 'Do not save to library' : 'Save to library'}
       />
-    </ThemedView>
+    </Card>
   );
 }
 
@@ -372,48 +454,19 @@ function MissingEstimate() {
   const router = useRouter();
 
   return (
-    <>
+    <Card style={styles.card}>
       <ThemedText type="subtitle">Nothing to review</ThemedText>
-      <ThemedText themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textMuted">
         This estimate is no longer available. Describe the meal again to get a new one.
       </ThemedText>
-      <Pressable
-        onPress={() => backToToday(router)}
-        style={({ pressed }) => pressed && styles.pressed}>
-        <ThemedView type="backgroundSelected" style={styles.button}>
-          <ThemedText type="smallBold">Back to Today</ThemedText>
-        </ThemedView>
-      </Pressable>
-    </>
+      <AppButton label="Back to today" variant="primary" onPress={() => backToToday(router)} />
+    </Card>
   );
 }
 
 function backToToday(router: ReturnType<typeof useRouter>) {
   if (router.canGoBack()) router.back();
   else router.replace('/');
-}
-
-/** Seed a field from an estimate. Null becomes empty, never a fabricated `0`. */
-function seedField(value: number | null): string {
-  return value === null ? '' : String(value);
-}
-
-/** Keep digits and a single decimal point; drop everything else. */
-function onlyNumeric(raw: string): string {
-  const cleaned = raw.replace(/[^0-9.]/g, '');
-  const [head, ...rest] = cleaned.split('.');
-  return rest.length > 0 ? `${head}.${rest.join('')}` : head;
-}
-
-/**
- * An empty field means "unknown", which is `null` — not `0`. Zero is a real
- * measurement and must only be stored when the owner actually typed it.
- */
-function toNumberOrNull(value: string): number | null {
-  const trimmed = value.trim();
-  if (trimmed === '' || trimmed === '.') return null;
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
 /** An invalid or non-positive servings count falls back to 1 (the seeded default). */
@@ -432,9 +485,7 @@ function parseWeightMultiplier(value: string, impliedWeightG: number): number {
   const trimmed = value.trim();
   if (trimmed === '') return 1;
   const parsed = Number(trimmed);
-  return Number.isFinite(parsed) && parsed > 0 && impliedWeightG > 0
-    ? parsed / impliedWeightG
-    : 1;
+  return Number.isFinite(parsed) && parsed > 0 && impliedWeightG > 0 ? parsed / impliedWeightG : 1;
 }
 
 const styles = StyleSheet.create({
@@ -444,53 +495,57 @@ const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
     justifyContent: 'center',
-    padding: Spacing.four,
+    // `three`, not `four`: this screen is a form, and on a phone those 16pt of
+    // gutter are worth more inside the fields than outside them.
+    padding: Spacing.three,
   },
   inner: {
     width: '100%',
     maxWidth: MaxContentWidth,
     gap: Spacing.three,
   },
-  notice: {
-    padding: Spacing.three,
-    borderRadius: Spacing.three,
+  photo: {
+    width: '100%',
+    height: 220,
+    borderRadius: Radius.card,
   },
-  field: {
-    gap: Spacing.one,
-  },
-  input: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    fontSize: 16,
-  },
-  assumptions: {
-    gap: Spacing.one,
-    paddingTop: Spacing.two,
-  },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  headCard: {
     gap: Spacing.two,
   },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: Spacing.one,
+  card: {
+    gap: Spacing.three,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  pairRow: {
+    flexDirection: 'row',
+    // Wraps rather than squeezing. Two numeric fields side by side need ~200pt
+    // each once the label row carries an "Estimated" badge beside "Calories
+    // (kcal)"; below that the label and the badge collided and the whole form
+    // overflowed the screen horizontally. This is a self-adjusting rule, not a
+    // breakpoint: the pair stacks on a phone and stays two-up from about a
+    // 460pt content width, wherever that happens to fall.
+    flexWrap: 'wrap',
+    gap: Spacing.three,
+  },
+  pairItem: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 200,
+    minWidth: 0,
+  },
+  toggleCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+    padding: Spacing.three,
   },
-  button: {
-    alignSelf: 'flex-start',
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.four,
-    borderRadius: Spacing.three,
-  },
-  saving: {
-    alignSelf: 'flex-start',
-    paddingVertical: Spacing.two,
-  },
-  pressed: {
-    opacity: 0.7,
+  toggleText: {
+    flexShrink: 1,
+    gap: 1,
   },
 });

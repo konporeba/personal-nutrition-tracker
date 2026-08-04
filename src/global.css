@@ -1,9 +1,43 @@
 :root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
+  /* The first name in each stack is the family `expo-font` registers on web
+     once the webfont loads; the rest is the pre-load fallback. */
+  --font-display-main:
+    ElmsSans_500Medium, 'Elms Sans', ui-sans-serif, system-ui, sans-serif, Apple Color Emoji,
+    Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  --font-display-other:
+    ElmsSans_300Light, 'Elms Sans', ui-sans-serif, system-ui, sans-serif, Apple Color Emoji,
+    Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  --font-display-strong:
+    ElmsSans_700Bold, 'Elms Sans', ui-sans-serif, system-ui, sans-serif, Apple Color Emoji,
+    Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
   --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
   --font-serif: Georgia, 'Times New Roman', serif;
+}
+
+/*
+ * Web only: drop the browser's focus ring on text fields.
+ *
+ * React Native has no `:focus`, so this cannot live in `constants/theme.ts`
+ * with the rest of the visual language — and the equivalent `outlineWidth: 0`
+ * in a style object does not survive the trip through react-native-web. A rule
+ * here is the only thing that actually reaches the rendered `<input>` /
+ * `<textarea>`.
+ *
+ * The UA ring is drawn in the browser's own color, not ours: it lands as a
+ * white slab on desktop and an amber one on Android, neither of which exists in
+ * the palette, and it sits on top of the field's own rounded corners rather
+ * than following them. A focused text field is already unmistakable — it holds
+ * the caret and, on a phone, the keyboard.
+ *
+ * Scoped to text fields on purpose: buttons and links keep their focus ring,
+ * which is the one that actually matters for keyboard navigation. Do not widen
+ * this selector.
+ */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+  outline: none;
 }

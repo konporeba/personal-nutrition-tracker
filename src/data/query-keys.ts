@@ -40,7 +40,21 @@ export const queryKeys = {
     all: () => ['training-sessions'] as const,
     day: (date: Date) => ['training-sessions', 'day', localDayKey(date)] as const,
   },
+  /**
+   * The logging streak — every day the owner recorded anything, across all of
+   * history. Not day-scoped: one key for the whole app, invalidated by any
+   * write that could extend the run (see `use-streak.ts`).
+   */
+  streak: () => ['streak'] as const,
   analytics: {
+    /**
+     * Prefix covering every rolling window — invalidate to refresh them all.
+     * Any write that changes a day's intake or burn has to hit this, not just
+     * that day's own key: the Today week rail's adherence rings and the
+     * Analytics charts both read through here, and they were the last thing
+     * still showing yesterday's answer after a meal was logged.
+     */
+    all: () => ['analytics'] as const,
     /** One rolling window's combined range read (S-11) — entries, sessions, and target snapshots. */
     range: (windowDays: number, startDay: Date, endDay: Date) =>
       ['analytics', 'range', windowDays, localDayKey(startDay), localDayKey(endDay)] as const,

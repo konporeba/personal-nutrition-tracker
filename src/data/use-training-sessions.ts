@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ensureDailyTarget } from '@/data/daily-targets.repo';
 import {
   createTrainingSession,
+  listAllTrainingSessions,
   listTrainingSessionsForDay,
   softDeleteTrainingSession,
   updateTrainingSession,
@@ -31,9 +32,20 @@ export function useDaySessions(date?: Date) {
   return { query, day };
 }
 
+/** The full session history, most-recent first — the Training tab's list. */
+export function useAllTrainingSessions() {
+  return useQuery({
+    queryKey: queryKeys.trainingSessions.all(),
+    queryFn: () => listAllTrainingSessions(),
+  });
+}
+
 /**
- * Log a new session. Invalidates the day it actually landed in (from
- * `logged_at`), not "today", matching `useCreateMealEntry`'s pattern.
+ * Log a new session. Invalidates the whole `training-sessions` prefix — which
+ * covers both the all-time history list and any day-specific query, since
+ * every `.day(...)` key is nested under `.all()` — rather than just the day it
+ * landed in, matching `useCreateMealEntry`'s pattern but broadened for the
+ * history list.
  *
  * `targets` mirrors `useCreateMealEntry`'s forward-path daily-target snapshot
  * capture (S-11) — see that function's doc comment for the full rationale.
@@ -45,9 +57,11 @@ export function useCreateTrainingSession() {
     mutationFn: (variables: { input: NewTrainingSession; targets: Targets | null }) =>
       createTrainingSession(variables.input),
     onSuccess: (session, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.trainingSessions.day(new Date(session.logged_at)),
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.trainingSessions.all() });
+      // A session is "something logged" too, so it can extend the streak on a
+      // day with no meals on it — see `use-streak.ts`.
+      queryClient.invalidateQueries({ queryKey: queryKeys.streak() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all() });
       if (variables.targets) {
         ensureDailyTarget(new Date(session.logged_at), variables.targets).catch((err) => {
           console.error('[use-training-sessions] ensureDailyTarget failed:', err);
@@ -57,25 +71,23 @@ export function useCreateTrainingSession() {
   });
 }
 
-/** Edit a committed session's fields. Same invalidate-by-`logged_at` pattern. */
+/** Edit a committed session's fields. Same broad-invalidate pattern. */
 export function useUpdateTrainingSession() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (input: Pick<TrainingSession, 'id' | 'logged_at'> & { patch: TrainingSessionPatch }) =>
       updateTrainingSession(input.id, input.patch),
-    onSuccess: (session) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.trainingSessions.day(new Date(session.logged_at)),
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trainingSessions.all() });
+      // An edited burn moves the day's net, so the rail and the charts are as
+      // stale as the session list is.
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all() });
     },
   });
 }
 
-/**
- * Soft-delete a session. Takes the whole session rather than an id so the day
- * key to invalidate is derivable without a second read.
- */
+/** Soft-delete a session. Same broad-invalidate pattern. */
 export function useDeleteTrainingSession() {
   const queryClient = useQueryClient();
 
@@ -84,10 +96,11 @@ export function useDeleteTrainingSession() {
       await softDeleteTrainingSession(session.id);
       return session;
     },
-    onSuccess: (session) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.trainingSessions.day(new Date(session.logged_at)),
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trainingSessions.all() });
+      // Deleting the only thing logged on a day can shorten the streak.
+      queryClient.invalidateQueries({ queryKey: queryKeys.streak() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all() });
     },
   });
 }

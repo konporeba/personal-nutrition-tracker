@@ -9,7 +9,8 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from 
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useTabBarClearance } from '@/components/ui/screen';
+import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import type { SavedMeal } from '@/data/types';
 import { useSavedMeals, useUpdateSavedMeal } from '@/data/use-saved-meals';
 import { useTheme } from '@/hooks/use-theme';
@@ -18,11 +19,16 @@ export default function SavedMealEditScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { data } = useSavedMeals();
   const savedMeal = data?.find((meal) => meal.id === id) ?? null;
+  // Clears the floating tab bar, which this screen's Save button would
+  // otherwise end up under.
+  const tabBarClearance = useTabBarClearance();
 
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ title: 'Edit saved meal' }} />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
+        keyboardShouldPersistTaps="handled">
         <ThemedView style={styles.inner}>
           {savedMeal ? <EditForm savedMeal={savedMeal} /> : <MissingSavedMeal />}
         </ThemedView>
@@ -80,12 +86,12 @@ function EditForm({ savedMeal }: { savedMeal: SavedMeal }) {
         placeholder="e.g. pizza"
       />
 
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textMuted">
         Changes here never affect meals already logged from this saved meal.
       </ThemedText>
 
       {update.isError ? (
-        <ThemedText type="small" themeColor="textSecondary">
+        <ThemedText type="small" themeColor="danger">
           Couldn&apos;t save your changes. Try again.
         </ThemedText>
       ) : null}
@@ -98,9 +104,9 @@ function EditForm({ savedMeal }: { savedMeal: SavedMeal }) {
           disabled={!canSave}
           style={({ pressed }) => pressed && styles.pressed}>
           <ThemedView
-            type={canSave ? 'backgroundSelected' : 'backgroundElement'}
+            type={canSave ? 'accent' : 'surfaceSoft'}
             style={styles.button}>
-            <ThemedText type="smallBold" themeColor={canSave ? 'text' : 'textSecondary'}>
+            <ThemedText type="smallBold" themeColor={canSave ? 'onAccent' : 'textMuted'}>
               Save changes
             </ThemedText>
           </ThemedView>
@@ -125,15 +131,15 @@ function Field({
 
   return (
     <ThemedView style={styles.field}>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textMuted">
         {label}
       </ThemedText>
       <TextInput
-        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+        style={[styles.input, { color: theme.text, backgroundColor: theme.surfaceSoft, borderColor: theme.border }]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={theme.textMuted}
       />
     </ThemedView>
   );
@@ -158,17 +164,17 @@ function NumericField({
 
   return (
     <ThemedView style={styles.field}>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textMuted">
         {label} ({unit})
       </ThemedText>
       <TextInput
-        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+        style={[styles.input, { color: theme.text, backgroundColor: theme.surfaceSoft, borderColor: theme.border }]}
         value={value}
         onChangeText={(next) => onChangeText(onlyNumeric(next))}
         keyboardType="decimal-pad"
         inputMode="decimal"
         placeholder="—"
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={theme.textMuted}
       />
     </ThemedView>
   );
@@ -184,13 +190,13 @@ function MissingSavedMeal() {
   return (
     <>
       <ThemedText type="subtitle">Not found</ThemedText>
-      <ThemedText themeColor="textSecondary">
+      <ThemedText themeColor="textMuted">
         This saved meal is no longer available.
       </ThemedText>
       <Pressable
         onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
         style={({ pressed }) => pressed && styles.pressed}>
-        <ThemedView type="backgroundSelected" style={styles.button}>
+        <ThemedView type="surfaceSoft" style={styles.button}>
           <ThemedText type="smallBold">Back</ThemedText>
         </ThemedView>
       </Pressable>
@@ -239,16 +245,22 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   input: {
-    borderRadius: Spacing.two,
+    borderRadius: Radius.control,
+    borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
+    paddingVertical: Spacing.two + 2,
     fontSize: 16,
+    lineHeight: 22,
+    minHeight: 46,
   },
   button: {
     alignSelf: 'flex-start',
-    paddingVertical: Spacing.two,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingVertical: Spacing.two + 2,
     paddingHorizontal: Spacing.four,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.control,
   },
   saving: {
     alignSelf: 'flex-start',

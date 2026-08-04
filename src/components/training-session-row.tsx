@@ -1,12 +1,14 @@
 // One row of the Training list: type + intensity on the left, burn on the
-// right — the `MealEntryRow` layout convention, one slice over. Tapping opens
-// the session detail screen (edit/delete); there is no long-press gesture.
-import { Pressable, StyleSheet } from 'react-native';
-
+// right — the shared `ListRow` shape, one slice over. The accent-tinted icon
+// tile is what distinguishes a session from a meal at a glance; the emoji
+// inside it names the activity (`training-emoji.ts`), which is what a row of
+// ten identical flames never did.
+//
+// Tapping opens the session popup (edit/delete); there is no long-press gesture.
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { ListRow, RowValue } from '@/components/ui/list-row';
 import type { TrainingIntensity, TrainingSession } from '@/data/types';
+import { emojiForTraining } from '@/lib/training-emoji';
 
 const INTENSITY_LABELS: Record<TrainingIntensity, string> = {
   low: 'Low',
@@ -14,48 +16,32 @@ const INTENSITY_LABELS: Record<TrainingIntensity, string> = {
   high: 'High',
 };
 
+const dateFormat = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
+
 export function TrainingSessionRow({
   session,
+  /** The session's day, spelled out in the subtitle — for a cross-day list
+   *  (the Training tab's history) where the date isn't otherwise implied. */
+  date,
   onPress,
 }: {
   session: TrainingSession;
+  date?: Date;
   onPress?: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView type="backgroundElement" style={styles.row}>
-        <ThemedView type="backgroundElement" style={styles.left}>
-          <ThemedText style={styles.type} numberOfLines={1}>
-            {session.session_type}
-          </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            {INTENSITY_LABELS[session.intensity]} · {session.duration_minutes} min
-          </ThemedText>
-        </ThemedView>
-        <ThemedText type="smallBold">{Math.round(session.burn_kcal)} kcal</ThemedText>
-      </ThemedView>
-    </Pressable>
+    <ListRow
+      icon={emojiForTraining(session.session_type)}
+      accentIcon
+      title={session.session_type}
+      subtitle={
+        <ThemedText type="micro" themeColor="textMuted">
+          {date ? `${dateFormat.format(date)} · ` : ''}
+          {INTENSITY_LABELS[session.intensity]} · {session.duration_minutes} min
+        </ThemedText>
+      }
+      trailing={<RowValue value={session.burn_kcal} />}
+      onPress={onPress}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    borderRadius: Spacing.three,
-  },
-  left: {
-    flexShrink: 1,
-    gap: Spacing.half,
-  },
-  type: {
-    flexShrink: 1,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-});

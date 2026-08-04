@@ -11,7 +11,7 @@ import {
   updateMealEntry,
 } from '@/data/meal-entries.repo';
 import { queryKeys } from '@/data/query-keys';
-import type { MealEntry, MealEntryPatch, NewMealEntry, Section } from '@/data/types';
+import type { MealEntry, MealEntryPatch, NewMealEntry } from '@/data/types';
 import type { Targets } from '@/lib/derive-targets';
 
 /**
@@ -64,6 +64,10 @@ export function useCreateMealEntry() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.mealEntries.day(new Date(entry.logged_at)),
       });
+      // The first entry on a fresh day extends the logging streak; nothing
+      // else this hook invalidates would tell the header's streak pill.
+      queryClient.invalidateQueries({ queryKey: queryKeys.streak() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all() });
       if (variables.targets) {
         ensureDailyTarget(new Date(entry.logged_at), variables.targets).catch((err) => {
           console.error('[use-meal-entries] ensureDailyTarget failed:', err);
@@ -89,34 +93,21 @@ export function useDeleteMealEntry() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.mealEntries.day(new Date(entry.logged_at)),
       });
+      // Deleting the only thing logged on a day can shorten the streak.
+      queryClient.invalidateQueries({ queryKey: queryKeys.streak() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all() });
     },
   });
 }
 
 /**
- * Move an entry into a different section (FR-064). Same invalidation pattern
- * as `useDeleteMealEntry` — the day key comes from the entry's own
- * `logged_at`, so the move is reflected wherever it actually landed.
- */
-export function useUpdateMealEntrySection() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (input: Pick<MealEntry, 'id' | 'logged_at'> & { section: Section }) =>
-      updateMealEntry(input.id, { section: input.section }),
-    onSuccess: (entry) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.mealEntries.day(new Date(entry.logged_at)),
-      });
-    },
-  });
-}
-
-/**
- * Edit a committed entry's fields (S-07) — name, macros, food_category, or
- * any other `MealEntryPatch` field. Same invalidate-by-`logged_at` pattern as
- * `useUpdateMealEntrySection`. Callers must never include `source` in the
- * patch: editing a value never erases how the entry was originally captured.
+ * Edit a committed entry's fields (S-07) — name, macros, `section`, or any
+ * other `MealEntryPatch` field. Re-sectioning used to have its own hook; it
+ * folded into this one when the detail popup started saving the section
+ * alongside everything else, since the patch always carried it.
+ *
+ * Callers must never include `source` in the patch: editing a value never
+ * erases how the entry was originally captured.
  */
 export function useUpdateMealEntry() {
   const queryClient = useQueryClient();
@@ -128,6 +119,9 @@ export function useUpdateMealEntry() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.mealEntries.day(new Date(entry.logged_at)),
       });
+      // An edited calorie figure moves the day's totals, so the week rail's
+      // rings and the Analytics charts are as stale as the day list is.
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all() });
     },
   });
 }

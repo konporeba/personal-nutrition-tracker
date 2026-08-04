@@ -22,7 +22,13 @@ export type Confidence = 'low' | 'medium' | 'high';
  * actual weight (FR-004).
  */
 export type Estimate = {
-  /** Short human name for the meal, e.g. "Scrambled eggs and toast". */
+  /**
+   * A short *title* for the meal — at most four words, e.g. "Eggs and toast".
+   * Deliberately not a restatement of the input: it is what the day list's
+   * one-line rows and the entry popup's header have to fit, and the owner's
+   * own wording is already on screen wherever they typed it. Enforced by the
+   * prompts in `supabase/functions/estimate/estimate.ts`, not by the schema.
+   */
   name: string;
   calories: number | null;
   protein_g: number | null;

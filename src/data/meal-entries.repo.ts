@@ -82,6 +82,23 @@ export async function listMealEntriesForRange(
   return (data ?? []) as MealEntry[];
 }
 
+/**
+ * Every live entry's `logged_at`, and nothing else. This is the one read that
+ * has to span the owner's entire history — the logging streak (FR-030) can be
+ * arbitrarily long, so it cannot be bounded by a rolling window the way
+ * `listMealEntriesForRange` is. Selecting a single column keeps that
+ * affordable: it is one timestamp per entry, not a full row.
+ */
+export async function listMealEntryTimestamps(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('meal_entries')
+    .select('logged_at')
+    .is('deleted_at', null)
+    .order('logged_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((row) => row.logged_at as string);
+}
+
 /** Update mutable fields. `updated_at` is advanced by the server trigger, not here. */
 export async function updateMealEntry(id: string, patch: MealEntryPatch): Promise<MealEntry> {
   const { data, error } = await supabase

@@ -2,6 +2,18 @@
 // asks for (S-11), in one dependency-free place so the smoke script asserts
 // against the same code the UI runs.
 
+/** The verdict. `null` is a separate case: nothing to judge, not a fourth state. */
+export type DayAdherence = 'on' | 'over' | 'under';
+
+/**
+ * The default width of the on-target band, as a fraction of the target.
+ *
+ * Exported because it is drawn as well as computed: the Analytics net panel
+ * shades this exact range behind its line, and a band that disagreed with the
+ * classifier would put points visibly inside the zone while calling them over.
+ */
+export const ADHERENCE_TOLERANCE = 0.05;
+
 /**
  * `'on'` when `net` is within `tolerance` (±5% by default) of `target`,
  * otherwise `'over'`/`'under'` by sign of `net - target`. The tolerance band
@@ -13,8 +25,8 @@
 export function classifyDayAdherence(
   net: number,
   target: number | null,
-  tolerance = 0.05,
-): 'on' | 'over' | 'under' | null {
+  tolerance = ADHERENCE_TOLERANCE,
+): DayAdherence | null {
   if (target === null) return null;
   if (Math.abs(net - target) <= tolerance * target) return 'on';
   return net > target ? 'over' : 'under';

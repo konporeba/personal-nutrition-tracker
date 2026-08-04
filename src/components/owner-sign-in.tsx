@@ -3,16 +3,18 @@
 // is persisted, and this screen is never seen again during daily use. On success
 // the auth-state listener in `useOwnerSession` swaps this out for the app.
 import { useState } from 'react';
-import { ActivityIndicator, Button, StyleSheet, TextInput } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { AppButton } from '@/components/ui/app-button';
+import { BrandMark } from '@/components/ui/brand-mark';
+import { Card } from '@/components/ui/card';
+import { Field } from '@/components/ui/field';
+import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { signInOwner } from '@/lib/session';
 
 export default function OwnerSignIn() {
-  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -30,43 +32,61 @@ export default function OwnerSignIn() {
     }
   }
 
-  const inputStyle = [
-    styles.input,
-    { color: theme.text, backgroundColor: theme.backgroundElement },
-  ];
-
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="subtitle">Owner sign-in</ThemedText>
-      <ThemedText themeColor="textSecondary">One-time setup for this device.</ThemedText>
-      <TextInput
-        style={inputStyle}
-        placeholder="email"
-        placeholderTextColor={theme.textSecondary}
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="email-address"
-        textContentType="emailAddress"
-        value={email}
-        onChangeText={setEmail}
-        editable={!submitting}
-      />
-      <TextInput
-        style={inputStyle}
-        placeholder="password"
-        placeholderTextColor={theme.textSecondary}
-        secureTextEntry
-        textContentType="password"
-        value={password}
-        onChangeText={setPassword}
-        editable={!submitting}
-      />
-      {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
-      {submitting ? (
-        <ActivityIndicator />
-      ) : (
-        <Button title="Sign in" onPress={onSubmit} />
-      )}
+      <Card style={styles.card}>
+        <ThemedView type="transparent" style={styles.brand}>
+          <BrandMark size={44} />
+          <ThemedView type="transparent">
+            <ThemedText type="subtitle">Owner sign-in</ThemedText>
+            <ThemedText type="small" themeColor="textMuted">
+              One-time setup for this device.
+            </ThemedText>
+          </ThemedView>
+        </ThemedView>
+
+        <Field
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          textContentType="emailAddress"
+          editable={!submitting}
+        />
+        <Field
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          textContentType="password"
+          editable={!submitting}
+        />
+
+        {error ? (
+          <ThemedText type="small" themeColor="danger">
+            {error}
+          </ThemedText>
+        ) : null}
+
+        <AppButton
+          label="Sign in"
+          variant="primary"
+          size="large"
+          full
+          onPress={onSubmit}
+          pending={submitting}
+        />
+
+        {/* This screen is also where a signed-out owner lands, and from there
+            it looks like a dead end. It isn't — nothing lives on the device
+            that signing in doesn't bring straight back. */}
+        <ThemedText type="micro" themeColor="textMuted">
+          Everything you log lives in your account, not on this device. Signing in restores all of
+          it, and you&apos;ll be asked to choose a PIN for this device afterwards.
+        </ThemedText>
+      </Card>
     </ThemedView>
   );
 }
@@ -74,14 +94,19 @@ export default function OwnerSignIn() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.three,
     padding: Spacing.four,
   },
-  input: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    fontSize: 16,
+  card: {
+    width: '100%',
+    maxWidth: MaxContentWidth / 2,
+    gap: Spacing.three,
+  },
+  brand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    paddingBottom: Spacing.one,
   },
 });

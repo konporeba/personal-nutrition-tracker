@@ -1,25 +1,32 @@
 // "Log to another day…" sheet (S-08, FR-011): the one flow that genuinely
-// needs a day other than today. A minimal stepper, not a calendar — this app
-// has no day-browsing UI yet (that's S-11), so there's no bigger picker to
-// reuse. The next-day control disables once the selection reaches today:
-// there's no such thing as logging to a future day.
+// needs a day other than today. A minimal stepper, not a calendar — the
+// next-day control disables once the selection reaches today, because there is
+// no such thing as logging to a future day.
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { SECTION_LABELS } from '@/components/section-subtotal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { AppButton } from '@/components/ui/app-button';
+import { Segmented } from '@/components/ui/segmented';
+import { Sheet } from '@/components/ui/sheet';
+import { Radius, Spacing } from '@/constants/theme';
 import type { SavedMeal, Section } from '@/data/types';
+import { useTheme } from '@/hooks/use-theme';
 import { SECTION_ORDER } from '@/lib/group-by-section';
 import { sectionForTime } from '@/lib/section-for-time';
 
 const dateFormat = new Intl.DateTimeFormat(undefined, {
-  weekday: 'short',
+  weekday: 'long',
   month: 'short',
   day: 'numeric',
 });
+
+const SECTION_OPTIONS = SECTION_ORDER.map((section) => ({
+  value: section,
+  label: SECTION_LABELS[section],
+}));
 
 function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -34,142 +41,123 @@ function addDays(date: Date, delta: number): Date {
 export function LogToDaySheet({
   visible,
   savedMeal,
+  /** The section the owner already picked upstream (the add-meal popup), if
+   *  any. Absent, the picker opens on the time-of-day guess as before. */
+  initialSection,
   onLog,
   onRequestClose,
 }: {
   visible: boolean;
   savedMeal: SavedMeal | null;
+  initialSection?: Section;
   onLog: (day: Date, section: Section) => void;
   onRequestClose: () => void;
 }) {
   const today = startOfDay(new Date());
   const [day, setDay] = useState(today);
-  const [section, setSection] = useState<Section>(() => sectionForTime(new Date()));
+  const [section, setSection] = useState<Section>(
+    () => initialSection ?? sectionForTime(new Date())
+  );
   const isToday = day.getTime() === today.getTime();
 
   // Reset for the next time the sheet opens, so a prior pick doesn't linger.
   function close() {
     setDay(today);
-    setSection(sectionForTime(new Date()));
+    setSection(initialSection ?? sectionForTime(new Date()));
     onRequestClose();
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
-      <Pressable style={styles.backdrop} onPress={close}>
-        <Pressable onPress={() => {}}>
-          <ThemedView type="backgroundElement" style={styles.sheet}>
-            <SafeAreaView edges={['bottom']} style={styles.sheetInner}>
-              <ThemedText type="smallBold" style={styles.title} numberOfLines={1}>
-                Log {savedMeal?.name ?? 'this meal'} to…
-              </ThemedText>
+    <Sheet
+      visible={visible}
+      title={savedMeal?.name ?? 'This meal'}
+      subtitle="Log to another day"
+      onRequestClose={close}>
+      <ThemedView type="transparent" style={styles.stepper}>
+        <StepButton glyph="‹" label="Previous day" onPress={() => setDay((p) => addDays(p, -1))} />
+        <ThemedView type="transparent" style={styles.dayLabel}>
+          <ThemedText type="smallBold">{dateFormat.format(day)}</ThemedText>
+          {isToday ? (
+            <ThemedText type="micro" themeColor="textMuted">
+              Today
+            </ThemedText>
+          ) : null}
+        </ThemedView>
+        <StepButton
+          glyph="›"
+          label="Next day"
+          disabled={isToday}
+          onPress={() => setDay((p) => addDays(p, 1))}
+        />
+      </ThemedView>
 
-              <ThemedView style={styles.stepper}>
-                <Pressable
-                  onPress={() => setDay((prev) => addDays(prev, -1))}
-                  style={({ pressed }) => pressed && styles.pressed}>
-                  <ThemedView type="backgroundElement" style={styles.stepButton}>
-                    <ThemedText type="smallBold">◀</ThemedText>
-                  </ThemedView>
-                </Pressable>
-                <ThemedText type="smallBold">{dateFormat.format(day)}</ThemedText>
-                <Pressable
-                  onPress={() => !isToday && setDay((prev) => addDays(prev, 1))}
-                  disabled={isToday}
-                  style={({ pressed }) => pressed && !isToday && styles.pressed}>
-                  <ThemedView
-                    type={isToday ? 'backgroundElement' : 'backgroundSelected'}
-                    style={styles.stepButton}>
-                    <ThemedText type="smallBold" themeColor={isToday ? 'textSecondary' : 'text'}>
-                      ▶
-                    </ThemedText>
-                  </ThemedView>
-                </Pressable>
-              </ThemedView>
+      <Segmented options={SECTION_OPTIONS} value={section} onSelect={setSection} />
 
-              {SECTION_ORDER.map((option) => {
-                const isSelected = option === section;
-                return (
-                  <Pressable
-                    key={option}
-                    onPress={() => setSection(option)}
-                    style={({ pressed }) => pressed && styles.pressed}>
-                    <ThemedView
-                      type={isSelected ? 'backgroundSelected' : 'backgroundElement'}
-                      style={styles.option}>
-                      <ThemedText themeColor={isSelected ? 'text' : 'textSecondary'}>
-                        {SECTION_LABELS[option]}
-                      </ThemedText>
-                    </ThemedView>
-                  </Pressable>
-                );
-              })}
+      <AppButton
+        label="Log it"
+        variant="primary"
+        size="large"
+        full
+        onPress={() => onLog(day, section)}
+        style={styles.log}
+      />
+    </Sheet>
+  );
+}
 
-              <Pressable
-                onPress={() => onLog(day, section)}
-                style={({ pressed }) => pressed && styles.pressed}>
-                <ThemedView type="backgroundSelected" style={styles.logButton}>
-                  <ThemedText type="smallBold">Log</ThemedText>
-                </ThemedView>
-              </Pressable>
+function StepButton({
+  glyph,
+  label,
+  onPress,
+  disabled = false,
+}: {
+  glyph: string;
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  const theme = useTheme();
 
-              <Pressable onPress={close} style={({ pressed }) => pressed && styles.pressed}>
-                <ThemedView style={styles.cancel}>
-                  <ThemedText type="smallBold" themeColor="textSecondary">
-                    Cancel
-                  </ThemedText>
-                </ThemedView>
-              </Pressable>
-            </SafeAreaView>
-          </ThemedView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled }}
+      style={({ pressed }) => pressed && !disabled && styles.pressed}>
+      <ThemedView
+        type="transparent"
+        style={[styles.stepButton, { backgroundColor: theme.surfaceSoft }]}>
+        <ThemedText type="subtitle" themeColor={disabled ? 'textMuted' : 'text'}>
+          {glyph}
+        </ThemedText>
+      </ThemedView>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  sheet: {
-    padding: Spacing.four,
-    borderTopLeftRadius: Spacing.three,
-    borderTopRightRadius: Spacing.three,
-  },
-  sheetInner: {
-    gap: Spacing.two,
-  },
-  title: {
-    paddingBottom: Spacing.one,
-  },
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.two,
+    gap: Spacing.three,
+    paddingBottom: Spacing.two,
+  },
+  dayLabel: {
+    alignItems: 'center',
+    gap: 1,
   },
   stepButton: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
-  },
-  option: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
-  },
-  logButton: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
-    paddingVertical: Spacing.three,
-    borderRadius: Spacing.three,
-    marginTop: Spacing.one,
+    justifyContent: 'center',
+    borderRadius: Radius.pill,
   },
-  cancel: {
-    alignItems: 'center',
-    paddingVertical: Spacing.three,
+  log: {
+    marginTop: Spacing.two,
   },
   pressed: {
     opacity: 0.7,

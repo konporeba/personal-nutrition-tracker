@@ -3,15 +3,24 @@
 // path that satisfies FR-011's "at most two interactions" requirement (open
 // library, tap the row). Long-press opens a management sheet: Edit, Delete, or
 // "Log to another day…".
-import { Stack, useRouter } from 'expo-router';
+//
+// The `section` param is how the add-meal popup's picker survives the trip
+// here. Without it this screen fell back to the time-of-day guess, so tapping
+// the ＋ under Breakfast, choosing "From saved meals" and picking a row logged
+// the meal to whatever section the clock implied — supper, most evenings. The
+// owner had made the choice two screens earlier and watched it be ignored.
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet } from 'react-native';
 
 import { LogToDaySheet } from '@/components/log-to-day-sheet';
 import { SavedMealActionsSheet } from '@/components/saved-meal-actions-sheet';
 import { SavedMealRow } from '@/components/saved-meal-row';
+import { SECTION_LABELS } from '@/components/section-subtotal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Card } from '@/components/ui/card';
+import { useTabBarClearance } from '@/components/ui/screen';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import type { SavedMeal, Section } from '@/data/types';
 import { useCreateMealEntry } from '@/data/use-meal-entries';
@@ -19,8 +28,21 @@ import { useDeleteSavedMeal, useSavedMeals } from '@/data/use-saved-meals';
 import { useTargets } from '@/data/use-profile';
 import { sectionForTime } from '@/lib/section-for-time';
 
+/** `section` only ever arrives from our own add-meal popup, but it comes in as
+ *  an untyped route param — validate membership rather than trusting the cast.
+ *  Mirrors `review.tsx`'s parser, which guards the same hand-off. */
+function parseSection(value: string | undefined): Section | undefined {
+  return value !== undefined && value in SECTION_LABELS ? (value as Section) : undefined;
+}
+
 export default function LibraryScreen() {
   const router = useRouter();
+  const { section: sectionParam } = useLocalSearchParams<{ section?: string }>();
+  // Absent (reached any other way), every write below falls back to the
+  // time-of-day guess exactly as it always did.
+  const chosenSection = parseSection(sectionParam);
+  // The tab bar floats over this list; the last saved meal has to stay tappable.
+  const tabBarClearance = useTabBarClearance();
   const { data, isPending, isError } = useSavedMeals();
   const createEntry = useCreateMealEntry();
   const { targets } = useTargets();
@@ -44,7 +66,7 @@ export default function LibraryScreen() {
       {
         input: {
           logged_at: loggedAt.toISOString(),
-          section: sectionForTime(loggedAt),
+          section: chosenSection ?? sectionForTime(loggedAt),
           source: 'saved_meal',
           name: savedMeal.name,
           calories: savedMeal.calories,
@@ -124,23 +146,30 @@ export default function LibraryScreen() {
           )}
           ItemSeparatorComponent={Separator}
           ListEmptyComponent={
-            <ThemedText themeColor="textSecondary" style={styles.empty}>
-              {isPending
-                ? 'Loading…'
-                : isError
-                  ? "Couldn't load your saved meals."
-                  : 'No saved meals yet. Check "Save to library" when logging a meal.'}
-            </ThemedText>
+            isPending ? (
+              <ActivityIndicator style={styles.empty} />
+            ) : (
+              <Card style={styles.emptyCard}>
+                <ThemedText type="subtitle">
+                  {isError ? 'Couldn’t load your library' : 'Nothing saved yet'}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textMuted">
+                  {isError
+                    ? 'Check your connection and pull to try again.'
+                    : 'Tick “Save to library” when you log a meal, and it will show up here for one-tap re-logging.'}
+                </ThemedText>
+              </Card>
+            )
           }
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: tabBarClearance }]}
         />
         {createEntry.isError ? (
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText type="small" themeColor="danger">
             Couldn&apos;t log that meal. Try again.
           </ThemedText>
         ) : null}
         {deleteSavedMeal.isError ? (
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText type="small" themeColor="danger">
             Couldn&apos;t delete that saved meal. Try again.
           </ThemedText>
         ) : null}
@@ -166,6 +195,7 @@ export default function LibraryScreen() {
       <LogToDaySheet
         visible={loggingDayFor !== null}
         savedMeal={loggingDayFor}
+        initialSection={chosenSection}
         onLog={(day, section) => loggingDayFor && logToDay(loggingDayFor, day, section)}
         onRequestClose={() => setLoggingDayFor(null)}
       />
@@ -197,7 +227,10 @@ const styles = StyleSheet.create({
   },
   empty: {
     paddingVertical: Spacing.four,
-    textAlign: 'center',
+  },
+  emptyCard: {
+    gap: Spacing.two,
+    marginTop: Spacing.two,
   },
   logging: {
     paddingVertical: Spacing.two,

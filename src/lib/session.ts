@@ -54,7 +54,40 @@ export async function signInOwner(email: string, password: string): Promise<void
   if (error) throw error;
 }
 
-/** Signs out of the owner's Supabase session. Used by the PIN gate's forgot-PIN recovery. */
+/**
+ * Re-proves ownership *without* ending the session — the PIN gate's forgot-PIN
+ * recovery. Signing in again as the account that is already signed in just
+ * mints a fresh token, and a wrong password fails outright rather than
+ * disturbing the session that's there, so this is a pure check.
+ *
+ * The recovery path used to sign out instead. That worked, but it threw the
+ * owner onto the sign-in screen with nothing to go back to — the session was
+ * already gone by the time they realized — and it cost a full re-auth and
+ * re-sync to recover from a mistyped tap. Password re-entry proves the same
+ * thing and is reversible: cancel at any point and the PIN is still set.
+ *
+ * `email` must be the address on the live session (the gate passes it down
+ * from the session itself). Signing in as a different account here would
+ * silently swap owners, so it is rejected before the call rather than after.
+ */
+export async function verifyOwnerPassword(email: string, password: string): Promise<void> {
+  const { data } = await supabase.auth.getSession();
+  const current = data.session?.user.email;
+  if (!current) throw new Error('No session to verify against');
+  if (email.trim().toLowerCase() !== current.toLowerCase()) {
+    throw new Error('That is not the account signed in on this device');
+  }
+  const { error } = await supabase.auth.signInWithPassword({ email: current, password });
+  if (error) throw error;
+}
+
+/**
+ * Signs out of the owner's Supabase session. The one way out of the app: used
+ * by the PIN gate when the owner wants to hand the device on, or has lost the
+ * account password as well as the PIN. Irreversible from inside the app —
+ * everything after it needs the credentials again — so it is never the default
+ * action on a screen.
+ */
 export async function signOutOwner(): Promise<void> {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;

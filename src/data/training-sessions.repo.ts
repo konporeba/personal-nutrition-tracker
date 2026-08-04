@@ -84,6 +84,36 @@ export async function listTrainingSessionsForRange(
   return (data ?? []) as TrainingSession[];
 }
 
+/**
+ * List every live session across every day, most-recent first — the Training
+ * tab's history. Same shape as `listBodyWeights`: no date filter, owner
+ * scoping enforced by RLS.
+ */
+export async function listAllTrainingSessions(): Promise<TrainingSession[]> {
+  const { data, error } = await supabase
+    .from('training_sessions')
+    .select('*')
+    .is('deleted_at', null)
+    .order('logged_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as TrainingSession[];
+}
+
+/**
+ * Every live session's `logged_at`, and nothing else — the training half of
+ * the logging streak. Mirrors `listMealEntryTimestamps`, including why it
+ * selects one column instead of `*`.
+ */
+export async function listTrainingSessionTimestamps(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('training_sessions')
+    .select('logged_at')
+    .is('deleted_at', null)
+    .order('logged_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((row) => row.logged_at as string);
+}
+
 /** Update mutable fields. `updated_at` is advanced by the server trigger, not here. */
 export async function updateTrainingSession(
   id: string,
