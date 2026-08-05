@@ -184,13 +184,22 @@ function BottomBar({ children }: { children?: ReactNode }) {
   const theme = useTheme();
   const safeArea = useSafeAreaInsets();
 
+  // The gap and the safe-area inset are two answers to the same question —
+  // "how far off the bottom edge does the pill float?" — so the bar takes the
+  // larger, not the sum. Added together they stacked: in a browser tab the
+  // inset is 0 and the bar sat `gap` off the edge, but installed on an iPhone
+  // home screen the inset is the full home-indicator band and the bar floated
+  // `gap` *above* that, leaving an empty strip the width of a thumb. Clearing
+  // the indicator is all the clearance the bar needs there.
+  const bottomInset = Math.max(MobileTabBar.gap, safeArea.bottom);
+
   return (
     // `box-none`: the anchor spans the viewport's full width so it can center
     // the bar, and its padding must not swallow taps meant for the content
     // scrolling underneath it.
     <View
       pointerEvents="box-none"
-      style={[styles.barAnchor, { paddingBottom: MobileTabBar.gap + safeArea.bottom }]}>
+      style={[styles.barAnchor, { paddingBottom: bottomInset }]}>
       <ThemedView
         type="surface"
         style={[styles.bar, { borderColor: theme.border }, floatShadow(theme.shadow)]}>
@@ -205,11 +214,7 @@ function BottomBar({ children }: { children?: ReactNode }) {
         style={[
           styles.captureAnchor,
           {
-            bottom:
-              MobileTabBar.gap +
-              safeArea.bottom +
-              (MobileTabBar.height - MobileTabBar.capture) / 2 +
-              MobileTabBar.lift,
+            bottom: bottomInset + (MobileTabBar.height - MobileTabBar.capture) / 2 + MobileTabBar.lift,
           },
         ]}>
         <CaptureButton />
