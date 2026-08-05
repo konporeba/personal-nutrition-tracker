@@ -23,7 +23,11 @@ export class EstimateFailedError extends Error {
   }
 }
 
-/** What to tell the owner. Every kind is recoverable by retrying. */
+/**
+ * What to tell the owner. Every kind is recoverable by retrying *except*
+ * `auth`, whose copy points at the one thing that does work — see
+ * `isSessionExpired`.
+ */
 export function estimateErrorMessage(error: unknown): string {
   const kind = error instanceof EstimateFailedError ? error.kind : 'server';
   switch (kind) {
@@ -31,9 +35,21 @@ export function estimateErrorMessage(error: unknown): string {
       return "Couldn't reach the estimator. Check your connection.";
     case 'quota':
       return 'Too many requests right now. Try again in a moment.';
+    case 'auth':
+      return 'Your session has expired. Unlock with your PIN to sign back in — nothing you have logged is affected.';
     default:
       return "The estimator couldn't answer. Try again.";
   }
+}
+
+/**
+ * Whether the failure was a lapsed session rather than anything to do with the
+ * estimator. The one failure kind with an action attached instead of a retry:
+ * the PIN gate can mint a fresh session from the credentials sealed under the
+ * PIN, so locking is a repair here, not a punishment.
+ */
+export function isSessionExpired(error: unknown): boolean {
+  return error instanceof EstimateFailedError && error.kind === 'auth';
 }
 
 /**

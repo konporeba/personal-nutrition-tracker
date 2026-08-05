@@ -32,11 +32,12 @@ import { Segmented } from '@/components/ui/segmented';
 import { Sheet } from '@/components/ui/sheet';
 import { Radius, Spacing } from '@/constants/theme';
 import type { Section } from '@/data/types';
-import { estimateErrorMessage, useEstimateMeal } from '@/data/use-estimate';
+import { estimateErrorMessage, isSessionExpired, useEstimateMeal } from '@/data/use-estimate';
 import { useCaptureFlow } from '@/hooks/use-capture-flow';
 import { useLayout } from '@/hooks/use-layout';
 import { useTheme } from '@/hooks/use-theme';
 import { SECTION_ORDER } from '@/lib/group-by-section';
+import { usePinGate } from '@/lib/pin-gate';
 import { sectionForTime } from '@/lib/section-for-time';
 
 const SECTION_OPTIONS = SECTION_ORDER.map((section) => ({
@@ -89,9 +90,18 @@ export function AddMealSheet({
   // one AI call" posture the review screen already established.
   const capture = useCaptureFlow();
 
+  // Locking is the repair for an expired session (see `errors` below), so the
+  // popup needs the gate as well as the estimator.
+  const { hasPinSet, lock } = usePinGate();
+
   const trimmed = text.trim();
   const busy = estimate.isPending || capture.isBusy;
   const canSubmit = trimmed.length > 0 && !busy;
+  // Either path can raise it — the text estimate and the capture flow share one
+  // session, so they fail this way together.
+  const sessionExpired =
+    (estimate.isError && !estimate.isPending && isSessionExpired(estimate.error)) ||
+    isSessionExpired(capture.error);
 
   // The caller mounts this component fresh on every open (see
   // `add-meal-provider.tsx`), so there is no state to reset for next time —
@@ -138,6 +148,14 @@ export function AddMealSheet({
         <ThemedText type="small" themeColor="danger">
           {estimateErrorMessage(capture.error)}
         </ThemedText>
+      ) : null}
+
+      {/* The one failure with a way out instead of a Retry. Locking hands the
+          app back to the PIN gate, which signs in again from the credentials
+          sealed under the PIN — so six digits is the whole repair. Offered only
+          when a PIN exists, since there is nothing to unlock otherwise. */}
+      {sessionExpired && hasPinSet ? (
+        <AppButton label="Unlock and sign back in" icon="🔓" variant="soft" full onPress={lock} />
       ) : null}
 
       {capture.captureFailed ? (
