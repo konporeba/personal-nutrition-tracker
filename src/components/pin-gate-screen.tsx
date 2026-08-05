@@ -1,7 +1,14 @@
-// PIN gate — shown once a Supabase session exists but the device isn't
-// unlocked. Setup mode (no PIN stored yet) asks for a new PIN twice; entry
-// mode asks for the existing PIN and offers forgot-PIN recovery. Swapped out
-// by the root layout as soon as usePinGate().unlocked flips to true.
+// PIN gate — the app's front door once a PIN exists. Setup mode (no PIN stored
+// yet) asks for a new PIN twice; entry mode asks for the existing PIN and
+// offers forgot-PIN recovery. Swapped out by the root layout as soon as the
+// device is unlocked *and* an account session is in hand.
+//
+// Entry mode does more than flip a flag. The Supabase session behind it is not
+// durable — a lapsed refresh token leaves the app with nothing, and the old
+// answer to that was to fall back to the sign-in form on launch. So a correct
+// PIN here also mints a session from the credentials sealed under it
+// (`credential-vault.ts`) whenever the persisted one is gone. Six digits is
+// the whole of getting back in.
 //
 // This is the app's front door — the one screen a returning owner sees every
 // time they come back — so it is built as a real screen rather than as a form
@@ -13,6 +20,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { OwnerCredentialsForm } from '@/components/owner-credentials-form';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { AppButton } from '@/components/ui/app-button';
@@ -25,13 +33,22 @@ import { GradientFill } from '@/components/ui/gradient';
 import { PinInput } from '@/components/ui/pin-input';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { openVault, rememberCredentials } from '@/lib/credential-vault';
 import { PIN_LENGTH, usePinGate } from '@/lib/pin-gate';
 import { onlyDigits, pinWeakness, pinWeaknessMessage } from '@/lib/pin-rules';
-import { signOutOwner, verifyOwnerPassword } from '@/lib/session';
+import { signInOwner, signOutOwner, verifyOwnerPassword } from '@/lib/session';
 
-export default function PinGateScreen({ ownerEmail }: { ownerEmail: string | null }) {
+export default function PinGateScreen({
+  ownerEmail,
+  hasSession,
+}: {
+  ownerEmail: string | null;
+  /** Whether an account session is already live. False means unlocking has to
+   *  restore one from the vault before the app can be shown. */
+  hasSession: boolean;
+}) {
   const { hasPinSet } = usePinGate();
-  return hasPinSet ? <PinEntry ownerEmail={ownerEmail} /> : <PinSetup />;
+  return hasPinSet ? <PinEntry ownerEmail={ownerEmail} hasSession={hasSession} /> : <PinSetup />;
 }
 
 function PinSetup() {
@@ -103,6 +120,7 @@ function PinSetup() {
 
       <AppButton
         label="Set PIN"
+        icon="🔒"
         variant="primary"
         size="large"
         full
@@ -114,13 +132,17 @@ function PinSetup() {
   );
 }
 
-function PinEntry({ ownerEmail }: { ownerEmail: string | null }) {
-  const { unlock } = usePinGate();
+/** Why the gate is asking to see the account again after a correct PIN. */
+type LinkUp = { pin: string; reason: string };
+
+function PinEntry({ ownerEmail, hasSession }: { ownerEmail: string | null; hasSession: boolean }) {
+  const { verify, markUnlocked } = usePinGate();
   const [pin, setPinValue] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [recovering, setRecovering] = useState(false);
+  const [linkUp, setLinkUp] = useState<LinkUp | null>(null);
 
   const canSubmit = pin.length === PIN_LENGTH && !submitting;
 
@@ -133,13 +155,21 @@ function PinEntry({ ownerEmail }: { ownerEmail: string | null }) {
     // shake: the tone passes back through `default` on the way.
     setError(null);
     try {
-      const ok = await unlock(candidate);
+      const ok = await verify(candidate);
       if (!ok) {
         const failed = attempts + 1;
         setAttempts(failed);
         setError(failed === 1 ? 'Wrong PIN. Try again.' : `Wrong PIN — ${failed} failed attempts`);
         setPinValue('');
+        return;
       }
+
+      // The PIN is right, but a right PIN over a lapsed session is only half of
+      // getting in. Unseal the account and sign back in *before* unlocking —
+      // flipping the flag first would hand the app a session it doesn't have.
+      if (!hasSession && !(await restoreSession(candidate, setLinkUp))) return;
+
+      await markUnlocked();
     } catch {
       setError("Couldn't unlock. Try again.");
     } finally {
@@ -147,11 +177,19 @@ function PinEntry({ ownerEmail }: { ownerEmail: string | null }) {
     }
   }
 
-  // Recovery takes over the whole gate rather than unfolding under the keypad:
-  // it is a different task with its own way out, and a Cancel buried below a
-  // PIN pad the owner has just failed to use is the wrong shape for it.
+  // Both of these take over the whole gate rather than unfolding under the
+  // keypad: each is a different task with its own way out, and a Cancel buried
+  // below a PIN pad is the wrong shape for either.
+  if (linkUp) {
+    return <PinLinkUp linkUp={linkUp} onCancel={() => setLinkUp(null)} />;
+  }
   if (recovering) {
-    return <PinRecovery ownerEmail={ownerEmail} onCancel={() => setRecovering(false)} />;
+    return (
+      <PinRecovery
+        ownerEmail={hasSession ? ownerEmail : null}
+        onCancel={() => setRecovering(false)}
+      />
+    );
   }
 
   return (
@@ -170,6 +208,7 @@ function PinEntry({ ownerEmail }: { ownerEmail: string | null }) {
 
       <AppButton
         label="Unlock"
+        icon="🔓"
         variant="primary"
         size="large"
         full
@@ -185,6 +224,63 @@ function PinEntry({ ownerEmail }: { ownerEmail: string | null }) {
         style={({ pressed }) => [styles.forgot, pressed && styles.pressed]}>
         <ThemedText type="linkPrimary">Forgot PIN?</ThemedText>
       </Pressable>
+    </GateShell>
+  );
+}
+
+/**
+ * Signs back in using the credentials sealed under `pin`. True when the app has
+ * a session again; false when it needs the owner to confirm the account by hand
+ * first, in which case `onLinkUp` has been told why.
+ *
+ * The two failure modes are genuinely different and the copy says which: a
+ * device whose PIN predates the vault has nothing sealed at all, while a device
+ * whose stored password has since been changed elsewhere has something sealed
+ * that the server no longer accepts.
+ */
+async function restoreSession(pin: string, onLinkUp: (linkUp: LinkUp) => void): Promise<boolean> {
+  const credentials = await openVault(pin);
+  if (!credentials) {
+    onLinkUp({
+      pin,
+      reason:
+        'Your PIN is right. This device set it up before it could carry your account, so confirm the account once and the PIN is all you will need from now on.',
+    });
+    return false;
+  }
+
+  try {
+    await signInOwner(credentials.email, credentials.password);
+    return true;
+  } catch {
+    onLinkUp({
+      pin,
+      reason:
+        'Your PIN is right, but the account password stored on this device no longer works — it was most likely changed elsewhere. Enter the current one and this device is back in step.',
+    });
+    return false;
+  }
+}
+
+/**
+ * One-time account confirmation behind a correct PIN. The PIN has already been
+ * verified to get here, so this is not a second lock: it is the gate collecting
+ * what it needs to make the PIN self-sufficient, and it re-seals on success so
+ * this screen is not seen twice.
+ */
+function PinLinkUp({ linkUp, onCancel }: { linkUp: LinkUp; onCancel: () => void }) {
+  const { sealCredentials, markUnlocked } = usePinGate();
+
+  async function onSubmit(email: string, password: string) {
+    await signInOwner(email, password);
+    await sealCredentials(linkUp.pin, email, password);
+    await markUnlocked();
+  }
+
+  return (
+    <GateShell status="Unlocked" title="Confirm your account" subtitle={linkUp.reason}>
+      <OwnerCredentialsForm submitLabel="Confirm account" onSubmit={onSubmit} />
+      <AppButton label="Back to PIN" variant="ghost" size="large" full onPress={onCancel} />
     </GateShell>
   );
 }
@@ -223,6 +319,11 @@ function PinRecovery({
     setError(null);
     try {
       await verifyOwnerPassword(ownerEmail, password);
+      // Park the credentials for the PIN setup that `clearPin` drops us onto,
+      // so the new PIN is sealed over the account exactly as a fresh sign-in
+      // would have left it. Without this, recovery would quietly produce a PIN
+      // that can't restore a session.
+      rememberCredentials({ email: ownerEmail, password });
       // Only now — the PIN survives a wrong password untouched, so a failed
       // attempt here leaves the device exactly as locked as it was.
       await clearPin();
@@ -242,7 +343,11 @@ function PinRecovery({
       // intact (fails closed). Clearing the PIN only after sign-out has
       // actually succeeded means a partial failure can never strand a live
       // session with no PIN to check against.
-      await signOutOwner();
+      //
+      // `ownerEmail === null` means there is no live session to end — the
+      // lapsed-session case — and signing out of nothing is not a failure that
+      // should block the reset the owner asked for.
+      if (ownerEmail !== null) await signOutOwner();
       await clearPin();
     } catch {
       setError("Couldn't sign out. Try again.");
@@ -288,6 +393,7 @@ function PinRecovery({
 
           <AppButton
             label="Confirm and set a new PIN"
+            icon="☑️"
             variant="primary"
             size="large"
             full
@@ -298,8 +404,9 @@ function PinRecovery({
         </>
       ) : (
         <ThemedText type="small" themeColor="textMuted">
-          This device has no account address on file, so the password check
-          isn&apos;t available here. Signing out and back in is the way through.
+          There is no live account session on this device to check a password against, so the
+          in-place check isn&apos;t available here. Starting over with your email and password is the
+          way through.
         </ThemedText>
       )}
 
@@ -314,12 +421,13 @@ function PinRecovery({
 
       <ThemedView type="transparent" style={styles.lastResort}>
         <ThemedText type="micro" themeColor="textMuted">
-          Forgotten the password too, or handing this device on? Signing out clears the PIN and
-          returns you to the sign-in screen. Your logged data stays in your account — signing back
-          in brings all of it back.
+          Forgotten the password too, or handing this device on? This clears the PIN and the account
+          stored behind it, and returns you to the sign-in screen. Your logged data stays in your
+          account — signing back in brings all of it back.
         </ThemedText>
         <AppButton
-          label="Sign out of this device"
+          label={ownerEmail ? 'Sign out of this device' : 'Start over with email and password'}
+          icon="🔑"
           variant="soft"
           onPress={onSignOut}
           disabled={verifying}

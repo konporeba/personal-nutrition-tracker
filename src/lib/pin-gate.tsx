@@ -8,9 +8,15 @@
 // state — the chosen UX is "stays unlocked across restarts until manually
 // locked," so an in-memory-only flag would silently re-lock on every
 // force-quit.
+//
+// The PIN also carries the owner's credentials, sealed under it — see
+// `credential-vault.ts` for why and at what cost. Everything that creates,
+// changes or clears a PIN has to move that seal in step, which is why those
+// three functions all touch the vault below.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
+import { clearVault, openVault, sealVault, takeRememberedCredentials } from '@/lib/credential-vault';
 import { generateSalt, hashPin } from '@/lib/pin-crypto';
 
 const STORAGE_KEY = '@caltracker/pin-gate';
@@ -36,8 +42,20 @@ export type PinGateState = {
   unlocked: boolean;
   /** First-run creation: hashes and persists `pin`, unlocking immediately. */
   setPin: (pin: string) => Promise<void>;
-  /** Verifies `pin` against the stored hash; unlocks and returns true on match. */
-  unlock: (pin: string) => Promise<boolean>;
+  /**
+   * Checks `pin` against the stored hash without unlocking anything.
+   *
+   * Split from `markUnlocked` because a correct PIN is no longer the last step
+   * of getting in: when the account session has lapsed, the gate has to mint a
+   * new one from the sealed credentials *before* it flips the flag. Flipping
+   * first would swap the gate out for an app with no session behind it.
+   */
+  verify: (pin: string) => Promise<boolean>;
+  /** Records the device as unlocked. Only call after `verify` has passed. */
+  markUnlocked: () => Promise<void>;
+  /** Re-seals the stored credentials under `pin`. For the one-time link-up of a
+   *  device whose PIN predates the vault — `verify` must have passed first. */
+  sealCredentials: (pin: string, email: string, password: string) => Promise<void>;
   lock: () => Promise<void>;
   /** Verifies `currentPin`, then hashes and persists `nextPin`. False on mismatch. */
   changePin: (currentPin: string, nextPin: string) => Promise<boolean>;
@@ -95,16 +113,28 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
     const next: PinRecord = { hash, salt, unlocked: true };
     await writeRecord(next);
     setRecord(next);
+    // Seal whatever credentials got us here, so this PIN can mint a session on
+    // its own next launch. Nothing parked means the owner reached this screen
+    // on an already-live session (recovery, or a PIN set long after sign-in) —
+    // the gate handles that by asking for the account once, later.
+    const credentials = takeRememberedCredentials();
+    if (credentials) await sealVault(pin, credentials);
   }
 
-  async function unlock(pin: string): Promise<boolean> {
+  async function verify(pin: string): Promise<boolean> {
     if (loading || !record || !isValidPin(pin)) return false;
-    const candidate = await hashPin(pin, record.salt);
-    if (candidate !== record.hash) return false;
+    return (await hashPin(pin, record.salt)) === record.hash;
+  }
+
+  async function markUnlocked(): Promise<void> {
+    if (loading || !record || record.unlocked) return;
     const next: PinRecord = { ...record, unlocked: true };
     await writeRecord(next);
     setRecord(next);
-    return true;
+  }
+
+  async function sealCredentials(pin: string, email: string, password: string): Promise<void> {
+    await sealVault(pin, { email, password });
   }
 
   async function lock(): Promise<void> {
@@ -119,16 +149,24 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
     if (!isValidPin(nextPin)) throw new Error(`PIN must be ${PIN_LENGTH} digits`);
     const candidate = await hashPin(currentPin, record.salt);
     if (candidate !== record.hash) return false;
+    // Move the sealed credentials across to the new PIN before the old one
+    // stops being able to open them. Skipped when there is nothing sealed —
+    // changing the PIN is not the moment to start asking for a password.
+    const credentials = await openVault(currentPin);
     const salt = await generateSalt();
     const hash = await hashPin(nextPin, salt);
     const next: PinRecord = { hash, salt, unlocked: true };
     await writeRecord(next);
     setRecord(next);
+    if (credentials) await sealVault(nextPin, credentials);
     return true;
   }
 
   async function clearPin(): Promise<void> {
     if (loading) return;
+    // The vault goes with the PIN: it is unreadable without one, and leaving it
+    // behind would let a new PIN inherit the old device's account.
+    await clearVault();
     await writeRecord(null);
     setRecord(null);
   }
@@ -138,7 +176,9 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
     hasPinSet: record !== null,
     unlocked: record?.unlocked ?? false,
     setPin,
-    unlock,
+    verify,
+    markUnlocked,
+    sealCredentials,
     lock,
     changePin,
     clearPin,

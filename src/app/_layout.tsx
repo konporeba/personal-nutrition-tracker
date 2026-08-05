@@ -4,6 +4,7 @@ import {
   ElmsSans_700Bold,
   useFonts,
 } from '@expo-google-fonts/elms-sans';
+import type { Session } from '@supabase/supabase-js';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { DarkTheme, ThemeProvider } from 'expo-router';
 import Head from 'expo-router/head';
@@ -100,7 +101,7 @@ export default function RootLayout() {
 
 function ThemedRoot() {
   // Gate the app on an authenticated owner session. While the persisted session
-  // resolves, render only the splash; then show the one-time sign-in or the app.
+  // resolves, render only the splash; then hand over to the gate below.
   const { session, loading } = useOwnerSession();
 
   return (
@@ -108,29 +109,47 @@ function ThemedRoot() {
       <StatusBar style="light" />
       <PinGateProvider>
         <AnimatedSplashOverlay />
-        {/* The gate needs the owner's address: its recovery path re-checks the
-            account password in place rather than signing out, and this is the
-            session it must check against. */}
-        {!loading &&
-          (session ? <PinGatedApp ownerEmail={session.user.email ?? null} /> : <OwnerSignIn />)}
+        {!loading && <Gate session={session} />}
       </PinGateProvider>
     </ThemeProvider>
   );
 }
 
-// Gate daily use behind the device-local PIN (S-12) on top of the owner
-// session above — same "wait for loading, then swap one component" idiom.
-function PinGatedApp({ ownerEmail }: { ownerEmail: string | null }) {
-  const { loading, unlocked } = usePinGate();
+/**
+ * Which of the three front doors to show: the PIN, the credential form, or the
+ * app itself.
+ *
+ * The PIN comes *first* once one exists, ahead of the account session. That
+ * ordering is the point: the session is not durable — a rotated or expired
+ * refresh token leaves `getSession()` with nothing — and when the sign-in
+ * screen sat in front of the PIN, every such lapse meant typing an email and a
+ * password before being asked for six digits anyway. A set PIN can mint a
+ * session by itself (see `credential-vault.ts`), so it is what the owner meets,
+ * and the credential form is reserved for the two cases that genuinely need it:
+ * a device with no PIN yet, and one whose PIN was set before it could carry an
+ * account.
+ */
+function Gate({ session }: { session: Session | null }) {
+  const { loading, hasPinSet, unlocked } = usePinGate();
   if (loading) return null;
+
+  // The gate needs the owner's address when there is a session: its recovery
+  // path re-checks the account password in place rather than signing out, and
+  // this is the session it must check against.
+  const ownerEmail = session?.user.email ?? null;
+
+  if (hasPinSet && !(unlocked && session)) {
+    return <PinGateScreen ownerEmail={ownerEmail} hasSession={session !== null} />;
+  }
+  if (!session) return <OwnerSignIn />;
+  if (!unlocked) return <PinGateScreen ownerEmail={ownerEmail} hasSession />;
+
   // The add-meal popup is provided above the tabs, not inside a screen: the
   // controls that open it (mobile web's center ＋, native's FAB) are part of
   // the shell and outlive whichever tab is showing.
-  return unlocked ? (
+  return (
     <AddMealProvider>
       <AppTabs />
     </AddMealProvider>
-  ) : (
-    <PinGateScreen ownerEmail={ownerEmail} />
   );
 }

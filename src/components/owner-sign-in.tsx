@@ -1,35 +1,26 @@
-// Minimal one-time owner sign-in. This is infrastructure UI, not feature UI:
-// the owner enters credentials once per client at setup, the resulting session
-// is persisted, and this screen is never seen again during daily use. On success
-// the auth-state listener in `useOwnerSession` swaps this out for the app.
-import { useState } from 'react';
+// Owner sign-in. This is infrastructure UI, not feature UI: the owner enters
+// credentials once per client at setup, and from then on the device PIN is the
+// front door — a correct PIN can mint a fresh session on its own, so this
+// screen is not what a lapsed session drops you back onto. On success the
+// auth-state listener in `useOwnerSession` swaps it out for the PIN setup.
 import { StyleSheet } from 'react-native';
 
+import { OwnerCredentialsForm } from '@/components/owner-credentials-form';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { AppButton } from '@/components/ui/app-button';
 import { BrandMark } from '@/components/ui/brand-mark';
 import { Card } from '@/components/ui/card';
-import { Field } from '@/components/ui/field';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { rememberCredentials } from '@/lib/credential-vault';
 import { signInOwner } from '@/lib/session';
 
 export default function OwnerSignIn() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function onSubmit() {
-    setSubmitting(true);
-    setError(null);
-    try {
-      await signInOwner(email.trim(), password);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Sign-in failed');
-    } finally {
-      setSubmitting(false);
-    }
+  async function onSubmit(email: string, password: string) {
+    await signInOwner(email, password);
+    // Held in memory only, for the PIN setup that follows to seal under the new
+    // PIN. That seal is what makes the next launch a six-digit affair rather
+    // than this screen again.
+    rememberCredentials({ email, password });
   }
 
   return (
@@ -45,47 +36,20 @@ export default function OwnerSignIn() {
           </ThemedView>
         </ThemedView>
 
-        <Field
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          textContentType="emailAddress"
-          editable={!submitting}
+        <OwnerCredentialsForm
+          submitLabel="Sign in"
+          onSubmit={onSubmit}
+          footer={
+            // This screen is also where a signed-out owner lands, and from
+            // there it looks like a dead end. It isn't — nothing lives on the
+            // device that signing in doesn't bring straight back.
+            <ThemedText type="micro" themeColor="textMuted">
+              Everything you log lives in your account, not on this device. Signing in restores all
+              of it, and you&apos;ll choose a PIN for this device next — after that the PIN is all
+              you need to get back in.
+            </ThemedText>
+          }
         />
-        <Field
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          textContentType="password"
-          editable={!submitting}
-        />
-
-        {error ? (
-          <ThemedText type="small" themeColor="danger">
-            {error}
-          </ThemedText>
-        ) : null}
-
-        <AppButton
-          label="Sign in"
-          variant="primary"
-          size="large"
-          full
-          onPress={onSubmit}
-          pending={submitting}
-        />
-
-        {/* This screen is also where a signed-out owner lands, and from there
-            it looks like a dead end. It isn't — nothing lives on the device
-            that signing in doesn't bring straight back. */}
-        <ThemedText type="micro" themeColor="textMuted">
-          Everything you log lives in your account, not on this device. Signing in restores all of
-          it, and you&apos;ll be asked to choose a PIN for this device afterwards.
-        </ThemedText>
       </Card>
     </ThemedView>
   );
