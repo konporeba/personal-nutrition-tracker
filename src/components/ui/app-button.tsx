@@ -87,7 +87,16 @@ export function AppButton({
   // `soft` and `ghost` are the outlined pair. Disabled drops the tint back to
   // the neutral hairline, so "live" and "inert" differ by the edge as well as
   // by the label — the fill alone is nearly the same grey either way.
-  const outlined = variant === 'soft' || variant === 'ghost';
+  //
+  // An *inert* button is outlined whatever its variant, which is the fix for a
+  // disabled `primary` (or `danger`) reading as an unstyled panel rather than a
+  // button: it loses its gradient, its fill drops to `surfaceSoft` and its label
+  // greys out, and with no edge left there was nothing on a dark card to say it
+  // was a control at all. That is the state a form's submit sits in until the
+  // fields are filled — the first thing the owner sees on the sign-in and
+  // account-confirmation screens — so it has to look like a button that isn't
+  // ready yet, not like a mistake.
+  const outlined = variant === 'soft' || variant === 'ghost' || inert;
   const borderColor = inert ? theme.border : variant === 'soft' ? theme.accentBorder : theme.border;
 
   return (

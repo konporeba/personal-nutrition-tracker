@@ -20,7 +20,6 @@
 import { TabList, TabSlot, TabTrigger, Tabs, type TabTriggerSlotProps } from 'expo-router/ui';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAddMeal } from '@/components/add-meal-provider';
 import { PlusButton } from '@/components/plus-button';
@@ -182,16 +181,22 @@ function MobileShell() {
 
 function BottomBar({ children }: { children?: ReactNode }) {
   const theme = useTheme();
-  const safeArea = useSafeAreaInsets();
 
-  // The gap and the safe-area inset are two answers to the same question —
-  // "how far off the bottom edge does the pill float?" — so the bar takes the
-  // larger, not the sum. Added together they stacked: in a browser tab the
-  // inset is 0 and the bar sat `gap` off the edge, but installed on an iPhone
-  // home screen the inset is the full home-indicator band and the bar floated
-  // `gap` *above* that, leaving an empty strip the width of a thumb. Clearing
-  // the indicator is all the clearance the bar needs there.
-  const bottomInset = Math.max(MobileTabBar.gap, safeArea.bottom);
+  // One offset on every surface: `gap`, and nothing else.
+  //
+  // The safe-area inset used to be added on top (and then, briefly, `max`ed
+  // with it). Both are the textbook answer and both are wrong here, because
+  // the inset is only zero in a browser tab — Safari's own toolbar occupies
+  // that band — while installed on the home screen it is the full ~34pt
+  // home-indicator band. Honouring it therefore made the *same layout* sit
+  // visibly higher off the edge in the installed app than in the browser,
+  // which is exactly the difference that reads as a bug.
+  //
+  // The pill is 60pt tall and floats `gap` up, so its icons land around 46pt
+  // from the edge — clear of the indicator band even though the pill's own
+  // bottom corner overlaps it. The system draws the indicator over the pill;
+  // nothing tappable hides underneath it.
+  const bottomInset = MobileTabBar.gap;
 
   return (
     // `box-none`: the anchor spans the viewport's full width so it can center
