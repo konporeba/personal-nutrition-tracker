@@ -38,7 +38,12 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="CalTracker" />
+        {/* The mark, on our own dark ground: iOS composites a home-screen icon
+            onto black, so a transparent PNG here would lose the apple's edges.
+            The tab icon is the same artwork with its transparency intact —
+            declared as a PNG so browsers pick it over the generated .ico. */}
         <link rel="apple-touch-icon" href="/icon-512.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png" />
 
         {/* Single-owner app: there is nothing here to index. */}
         <meta name="robots" content="noindex, nofollow" />
