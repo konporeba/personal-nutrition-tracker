@@ -12,14 +12,19 @@ import { FontWeight, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 /**
- * `primary` is the filled accent: the commit action inside a form or a dialog,
- * where it should be the brightest thing in the frame.
+ * `soft` is the app's commit action, near enough everywhere: an accent-washed
+ * fill with a tinted edge instead of a solid one. "Log a meal", "Save profile",
+ * "Estimate", "Save changes", "Set PIN", "Sign in" — all of them. A filled
+ * button out-shouts the content it belongs to, and keeping the brightest fill
+ * rare is what lets it mean something.
  *
- * `soft` is the same weight of intent on a *page*: an accent-washed fill with a
- * tinted edge instead of a solid one. A header sits on the open canvas next to
- * a title and a week rail, and a filled button there out-shouts the content it
- * introduces — it is a door, not a decision. It also keeps the app's brightest
- * fill meaning exactly one thing.
+ * `primary` is the filled accent, and it is now the exception rather than the
+ * rule: navigation out of a dead end ("Back to today", "Go back", "Set up your
+ * profile"), where there is nothing else on screen to compete with. It used to
+ * be documented as *the* commit action inside a form or dialog, which is why
+ * the sign-in and PIN screens were built with it — and that made the front
+ * door the one part of the app whose buttons looked like a different product.
+ * If you are adding a submit button, you almost certainly want `soft`.
  */
 export type ButtonVariant = 'primary' | 'soft' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'small' | 'medium' | 'large';

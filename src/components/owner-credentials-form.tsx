@@ -85,7 +85,10 @@ export function OwnerCredentialsForm({
         // "locked", and reusing it here would say the two screens do the same
         // job. This one hands over a credential.
         icon="🔑"
-        variant="primary"
+        // `soft`, not `primary` — see the variant note in `ui/app-button.tsx`.
+        // Every commit action the owner meets is tinted; the front door should
+        // not be the one place that looks like a different app.
+        variant="soft"
         size="large"
         full
         onPress={submit}

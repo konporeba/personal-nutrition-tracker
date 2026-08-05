@@ -121,7 +121,7 @@ function PinSetup() {
       <AppButton
         label="Set PIN"
         icon="🔒"
-        variant="primary"
+        variant="soft"
         size="large"
         full
         onPress={onSubmit}
@@ -209,7 +209,7 @@ function PinEntry({ ownerEmail, hasSession }: { ownerEmail: string | null; hasSe
       <AppButton
         label="Unlock"
         icon="🔓"
-        variant="primary"
+        variant="soft"
         size="large"
         full
         onPress={() => onSubmit(pin)}
@@ -394,7 +394,7 @@ function PinRecovery({
           <AppButton
             label="Confirm and set a new PIN"
             icon="☑️"
-            variant="primary"
+            variant="soft"
             size="large"
             full
             onPress={onVerify}
