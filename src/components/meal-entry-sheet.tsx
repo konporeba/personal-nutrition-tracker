@@ -26,6 +26,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import type { EntrySource, MealEntry, Section } from '@/data/types';
 import { useDeleteMealEntry, useUpdateMealEntry } from '@/data/use-meal-entries';
 import { useTheme } from '@/hooks/use-theme';
+import { onlyDecimal, toNumberOrNull } from '@/lib/decimal-input';
 import { iconForEntry } from '@/lib/food-emoji';
 import { SECTION_ORDER } from '@/lib/group-by-section';
 
@@ -232,7 +233,7 @@ function NumericField({
       <TextInput
         style={[styles.input, { color: theme.text, backgroundColor: theme.surfaceSoft }]}
         value={value}
-        onChangeText={(next) => onChangeText(onlyNumeric(next))}
+        onChangeText={(next) => onChangeText(onlyDecimal(next))}
         keyboardType="decimal-pad"
         inputMode="decimal"
         placeholder="—"
@@ -245,24 +246,6 @@ function NumericField({
 /** Seed a field from a saved value. Null becomes empty, never a fabricated `0`. */
 function seedField(value: number | null): string {
   return value === null ? '' : String(value);
-}
-
-/** Keep digits and a single decimal point; drop everything else. */
-function onlyNumeric(raw: string): string {
-  const cleaned = raw.replace(/[^0-9.]/g, '');
-  const [head, ...rest] = cleaned.split('.');
-  return rest.length > 0 ? `${head}.${rest.join('')}` : head;
-}
-
-/**
- * An empty field means "unknown", which is `null` — not `0`. Zero is a real
- * measurement and must only be stored when the owner actually typed it.
- */
-function toNumberOrNull(value: string): number | null {
-  const trimmed = value.trim();
-  if (trimmed === '' || trimmed === '.') return null;
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
 const styles = StyleSheet.create({

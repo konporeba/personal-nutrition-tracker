@@ -2,22 +2,25 @@
 // label + TextInput + theme colors; the numeric variant additionally repeated
 // the "strip anything that isn't a number as it is typed" rule five times.
 //
-// That sanitizing is not cosmetic: it is what guarantees an empty field can
-// only ever mean "unknown" (null) and never a value the parser had to guess
-// at — see `toNumberOrNull` in the screens that consume this.
+// The rule itself now lives in `lib/decimal-input.ts` — including which
+// characters count as a decimal separator, which is a question about the
+// owner's keyboard rather than about this component. Screens read the value
+// back with `toNumberOrNull` from that same module.
 import { StyleSheet, TextInput, type TextInputProps } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { onlyDecimal } from '@/lib/decimal-input';
 
 export function Field({
   label,
   unit,
   value,
   onChangeText,
-  /** Digits and a single decimal point only, enforced keystroke by keystroke. */
+  /** Digits and a single decimal separator — comma or dot — enforced
+   *  keystroke by keystroke. See `lib/decimal-input.ts`. */
   numeric = false,
   placeholder,
   hint,
@@ -75,7 +78,7 @@ export function Field({
             !editable && { color: theme.textMuted },
           ]}
           value={value}
-          onChangeText={(next) => onChangeText(numeric ? onlyNumeric(next) : next)}
+          onChangeText={(next) => onChangeText(numeric ? onlyDecimal(next) : next)}
           placeholder={placeholder ?? (numeric ? '—' : undefined)}
           placeholderTextColor={theme.textMuted}
           keyboardType={numeric ? 'decimal-pad' : undefined}
@@ -94,24 +97,6 @@ export function Field({
       ) : null}
     </ThemedView>
   );
-}
-
-/** Keep digits and a single decimal point; drop everything else. */
-export function onlyNumeric(raw: string): string {
-  const cleaned = raw.replace(/[^0-9.]/g, '');
-  const [head, ...rest] = cleaned.split('.');
-  return rest.length > 0 ? `${head}.${rest.join('')}` : head;
-}
-
-/**
- * An empty field means "unknown", which is `null` — not `0`. Zero is a real
- * measurement and must only be stored when the owner actually typed it.
- */
-export function toNumberOrNull(value: string): number | null {
-  const trimmed = value.trim();
-  if (trimmed === '' || trimmed === '.') return null;
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
 /** Seed a form field from a stored value. Null/undefined becomes empty. */

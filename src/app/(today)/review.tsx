@@ -26,7 +26,8 @@ import { ThemedView } from '@/components/themed-view';
 import { AppButton } from '@/components/ui/app-button';
 import { Card } from '@/components/ui/card';
 import { Chip } from '@/components/ui/chip';
-import { Field, seedField, toNumberOrNull } from '@/components/ui/field';
+import { Field, seedField } from '@/components/ui/field';
+import { toNumberOrNull, toPositiveOrNull } from '@/lib/decimal-input';
 import { useTabBarClearance } from '@/components/ui/screen';
 import { SECTION_LABELS } from '@/components/section-subtotal';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
@@ -471,8 +472,7 @@ function backToToday(router: ReturnType<typeof useRouter>) {
 
 /** An invalid or non-positive servings count falls back to 1 (the seeded default). */
 function parseServings(value: string): number {
-  const parsed = Number(value.trim());
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+  return toPositiveOrNull(value) ?? 1;
 }
 
 /**
@@ -482,10 +482,8 @@ function parseServings(value: string): number {
  * default, computed differently.
  */
 function parseWeightMultiplier(value: string, impliedWeightG: number): number {
-  const trimmed = value.trim();
-  if (trimmed === '') return 1;
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) && parsed > 0 && impliedWeightG > 0 ? parsed / impliedWeightG : 1;
+  const entered = toPositiveOrNull(value);
+  return entered !== null && impliedWeightG > 0 ? entered / impliedWeightG : 1;
 }
 
 const styles = StyleSheet.create({

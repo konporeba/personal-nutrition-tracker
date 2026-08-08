@@ -30,6 +30,7 @@ import {
   useUpdateTrainingSession,
 } from '@/data/use-training-sessions';
 import { useTheme } from '@/hooks/use-theme';
+import { onlyDecimal, onlyInteger, toIntOrNull, toPositiveOrNull } from '@/lib/decimal-input';
 import { emojiForTraining } from '@/lib/training-emoji';
 
 const INTENSITY_OPTIONS: { value: TrainingIntensity; label: string }[] = [
@@ -102,7 +103,9 @@ export function TrainingSessionSheet({
   const anyPending = create.isPending || update.isPending || remove.isPending;
 
   const durationMinutes = toIntOrNull(duration);
-  const burnKcal = toNumberOrNull(burn);
+  // Positive, not just non-negative: a session that burned nothing is a session
+  // that wasn't worth logging, and `canSubmit` below is what says so.
+  const burnKcal = toPositiveOrNull(burn);
   // `Other` is only a type once it has been named — the picker alone doesn't
   // make "Other" a meaningful thing to have logged.
   const resolvedType = typeChoice === OTHER ? customType.trim() : typeChoice;
@@ -305,34 +308,6 @@ function NumericField({
       />
     </ThemedView>
   );
-}
-
-/** Keep digits only — duration is a whole number of minutes. */
-function onlyInteger(raw: string): string {
-  return raw.replace(/[^0-9]/g, '');
-}
-
-/** Keep digits and a single decimal point; drop everything else. */
-function onlyDecimal(raw: string): string {
-  const cleaned = raw.replace(/[^0-9.]/g, '');
-  const [head, ...rest] = cleaned.split('.');
-  return rest.length > 0 ? `${head}.${rest.join('')}` : head;
-}
-
-/** An empty field means "not entered" — `null`, never a fabricated `0`. */
-function toIntOrNull(value: string): number | null {
-  const trimmed = value.trim();
-  if (trimmed === '') return null;
-  const parsed = Number(trimmed);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-/** An empty field means "not entered" — `null`, never a fabricated `0`. */
-function toNumberOrNull(value: string): number | null {
-  const trimmed = value.trim();
-  if (trimmed === '' || trimmed === '.') return null;
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
 const styles = StyleSheet.create({
