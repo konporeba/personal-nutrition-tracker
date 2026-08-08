@@ -10,6 +10,7 @@ import { DateStrip, type DayProgress } from '@/components/ui/date-strip';
 import { localDayKey } from '@/data/query-keys';
 import { useAnalyticsRange } from '@/data/use-analytics';
 import { classifyDayAdherence } from '@/lib/adherence';
+import { budgetFraction } from '@/lib/day-ledger';
 
 export function WeekRail({
   selected,
@@ -31,7 +32,9 @@ export function WeekRail({
     // rail draws a bare track for it (see `DateStrip`).
     const logged = day.consumed > 0 || day.burned > 0;
     byDay.set(localDayKey(day.day), {
-      fraction: day.target && day.target > 0 ? day.net / day.target : 0,
+      // `budgetFraction`, never a local ratio: this ring and the hero's have to
+      // be the same length on the same day, and they were not — see its note.
+      fraction: budgetFraction(day),
       status: logged ? classifyDayAdherence(day.net, day.target) : null,
     });
   }

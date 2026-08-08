@@ -51,7 +51,11 @@ const fullDateFormat = new Intl.DateTimeFormat(undefined, {
  * as a bare track, visibly "no answer" rather than a fabricated zero.
  */
 export type DayProgress = {
-  /** Net against the day's budget, 0..1 (clamped by the caller or here). */
+  /**
+   * Intake against the day's budget (`target + burned`), 0..1 — `budgetFraction`
+   * in `lib/day-ledger.ts`, the same value the hero ring fills to. Clamped by
+   * the caller or here.
+   */
   fraction: number;
   status: DayAdherence | null;
 };

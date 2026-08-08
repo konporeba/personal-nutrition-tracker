@@ -21,12 +21,13 @@
 // the arc's length carries it in shape.
 import { StyleSheet } from 'react-native';
 
-import { clampFraction, ProgressRing } from '@/components/progress-ring';
+import { ProgressRing } from '@/components/progress-ring';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ADHERENCE_COLOR } from '@/components/ui/adherence-color';
 import { Spacing } from '@/constants/theme';
 import { classifyDayAdherence } from '@/lib/adherence';
+import { budgetFraction } from '@/lib/day-ledger';
 import { useTheme } from '@/hooks/use-theme';
 
 const SIZE = 216;
@@ -50,7 +51,9 @@ export function CalorieRing({
   const budget = target + burned;
   const remaining = budget - consumed;
   const over = remaining < 0;
-  const fraction = clampFraction(consumed / budget);
+  // Shared with the week rail — see `budgetFraction`'s note on why the fill has
+  // exactly one formula.
+  const fraction = budgetFraction({ consumed, burned, target });
 
   // `consumed − burned` against the plain resting target: the same two numbers
   // the week rail classifies, so the two can't disagree. (Algebraically
