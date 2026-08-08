@@ -4,11 +4,18 @@
 //
 // Two steps, deliberately. Step one asks the two questions every path shares:
 // *which meal* (the section picker) and *how* — describe it, photograph a
-// plate, scan a label, or take one from the library. Step two is only the
-// describe path's text field; photo and label go straight to the picker, and
-// saved meals go to the library. It used to be one screenful with the text
-// field always open and three buttons under it, which made typing look like the
-// only real option and left the popup taller than a phone viewport.
+// plate, scan a label, or take one from the library. Step two is the describe
+// path's text field, or — for the two photo paths — the staged shot with an
+// optional note under it; saved meals go to the library. It used to be one
+// screenful with the text field always open and three buttons under it, which
+// made typing look like the only real option and left the popup taller than a
+// phone viewport.
+//
+// The photo step is the newer of the two, and it is not a form the way the
+// describe step is: its default answer is "nothing", and Estimate is live the
+// moment it appears. A picture is worst at portion size, quantity and what is
+// actually in a dish, so the owner gets one chance to say those in words — but
+// a plate photo still estimates with no typing at all (FR-003).
 //
 // The picker is what fixes "I tapped ＋ under Breakfast and it landed in
 // Supper": every path out of here carries the chosen section — through the
@@ -19,6 +26,7 @@
 // Not extracted into a shared hook with the review screen: two call sites with
 // different wrapping, an extra picker, and different post-success side effects
 // made the duplication clearer than a forced abstraction.
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput } from 'react-native';
@@ -79,6 +87,10 @@ export function AddMealSheet({
   const { width } = useLayout();
   const short = width < SHORT_LABEL_WIDTH;
   const [text, setText] = useState('');
+  // The optional context for a staged photo. Lives here rather than in the
+  // capture flow because it is only ever this popup's draft — the hook is handed
+  // the finished string when the owner commits to the estimate.
+  const [note, setNote] = useState('');
   const [section, setSection] = useState<Section>(
     () => initialSection ?? sectionForTime(new Date())
   );
@@ -104,9 +116,12 @@ export function AddMealSheet({
     isSessionExpired(capture.error);
 
   // The caller mounts this component fresh on every open (see
-  // `add-meal-provider.tsx`), so there is no state to reset for next time —
-  // closing is just closing.
+  // `add-meal-provider.tsx`), so closing is mostly just closing. Dropping the
+  // staged photo is still done explicitly rather than left to that unmount:
+  // "close the popup" means the shot you were holding is gone, and this file
+  // shouldn't have to know how another one mounts it to be right about that.
   function close() {
+    capture.discard();
     onRequestClose();
   }
 
@@ -170,7 +185,16 @@ export function AddMealSheet({
     <Sheet
       visible={visible}
       title="Log a meal"
-      subtitle={`To ${SECTION_LABELS[section].toLowerCase()}, today`}
+      // The staged step names itself: three of the four ways in look identical
+      // at this point otherwise, and "which photo am I looking at" is the one
+      // thing the picture can't answer on its own.
+      subtitle={
+        capture.staged
+          ? `${capture.staged.kind === 'label' ? 'Label scan' : 'Plate photo'} · to ${SECTION_LABELS[
+              section
+            ].toLowerCase()}, today`
+          : `To ${SECTION_LABELS[section].toLowerCase()}, today`
+      }
       // A centered dialog on every size, not a bottom sheet on the phone. This
       // popup carries a picker, a form and four choices; anchored to the bottom
       // edge it grew past the top of the viewport with its own header out of
@@ -184,16 +208,79 @@ export function AddMealSheet({
           for the same reason: the row's width is the dialog's, not the words'.
           Below `SHORT_LABEL_WIDTH` the labels shorten instead of the row
           breaking; the spoken label stays the full word either way. */}
-      <Segmented
-        options={short ? SHORT_SECTION_OPTIONS : SECTION_OPTIONS}
-        value={section}
-        onSelect={setSection}
-        accessibilityLabelFor={(option) => SECTION_LABELS[option.value]}
-        full
-        compact={short}
-      />
+      {/* Gone once a photo is staged: the capture took the section with it when
+          it started (see `StagedCapture`), so a picker still sitting there would
+          move a highlight and nothing else. The subtitle carries the answer from
+          that point on, and the step gets the height back for the photo. */}
+      {capture.staged ? null : (
+        <Segmented
+          options={short ? SHORT_SECTION_OPTIONS : SECTION_OPTIONS}
+          value={section}
+          onSelect={setSection}
+          accessibilityLabelFor={(option) => SECTION_LABELS[option.value]}
+          full
+          compact={short}
+        />
+      )}
 
-      {method === 'text' ? (
+      {capture.staged ? (
+        <>
+          {/* The shot itself, first and biggest. Until this step existed the
+              owner never saw what they had actually sent, and a blurry frame
+              was only discovered on the far side of a spent AI call. */}
+          <Image
+            source={{
+              uri: `data:${capture.staged.photo.mediaType};base64,${capture.staged.photo.data}`,
+            }}
+            style={styles.photo}
+            contentFit="cover"
+            accessibilityLabel="The photo you just took"
+          />
+
+          <ThemedText type="micro" themeColor="textMuted">
+            {capture.staged.kind === 'label'
+              ? 'Add context (optional) — which product, or anything the label makes hard to read.'
+              : 'Add context (optional) — portion size, what’s in it, how it was cooked.'}
+          </ThemedText>
+          {/* Not `autoFocus`, unlike the describe-it field: the keyboard would
+              cover the photo the owner opened this step to look at, and the
+              common answer here is no answer at all. */}
+          <TextInput
+            style={[styles.input, styles.note, { color: theme.text, backgroundColor: theme.surfaceSoft }]}
+            placeholder={
+              capture.staged.kind === 'label'
+                ? 'e.g. the 500 g tub, not the single pot'
+                : 'e.g. about 200 g of rice, chicken breast, no oil'
+            }
+            placeholderTextColor={theme.textMuted}
+            multiline
+            value={note}
+            onChangeText={setNote}
+            editable={!busy}
+            accessibilityLabel="Extra context for this photo, optional"
+          />
+          {/* Live with an empty note — that is the one-tap path, and the note
+              is an offer, not a question to be answered. */}
+          <AppButton
+            label={capture.error ? 'Retry' : 'Estimate'}
+            icon="✨"
+            variant="soft"
+            strong
+            full
+            onPress={() => capture.confirm(note)}
+            disabled={busy}
+            pending={capture.isEstimating}
+          />
+          <AppButton
+            label="Retake"
+            variant="ghost"
+            full
+            onPress={capture.retake}
+            disabled={busy}
+          />
+          {errors}
+        </>
+      ) : method === 'text' ? (
         <>
           <TextInput
             style={[styles.input, { color: theme.text, backgroundColor: theme.surfaceSoft }]}
@@ -351,6 +438,20 @@ const styles = StyleSheet.create({
   },
   rowPressed: {
     opacity: 0.65,
+  },
+  photo: {
+    width: '100%',
+    // Shorter than the review screen's 220: this sheet has a picker above the
+    // photo and three controls below it, and the whole step has to stay inside
+    // a phone viewport with the keyboard up.
+    height: 180,
+    borderRadius: Radius.control,
+  },
+  note: {
+    // Half the describe-it field's height. That one is the entry itself and
+    // invites a sentence or two; this one annotates a photo that has already
+    // said most of it, and a tall empty box reads as an obligation.
+    minHeight: 64,
   },
   input: {
     borderRadius: Radius.control,

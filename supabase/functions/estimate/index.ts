@@ -24,6 +24,12 @@ const corsHeaders: Record<string, string> = {
 // a downscaled label photo actually produces.
 const MAX_IMAGE_DATA_LENGTH = 6 * 1024 * 1024;
 
+// The owner's optional note on a photo capture. Long enough for a real
+// description of a plate ("chicken breast ~180g, half a cup of rice, spoon of
+// olive oil, side salad no dressing"), short enough that it can't be used to
+// push a wall of text into the prompt.
+const MAX_NOTE_LENGTH = 500;
+
 // Anthropic's accepted image media types (messages API image content block).
 const ACCEPTED_IMAGE_MEDIA_TYPES = new Set([
   'image/jpeg',
@@ -87,18 +93,38 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return json({ error: 'invalid_input' }, 400);
     }
 
+    // The owner's optional context. Absent and blank mean the same thing — no
+    // note — so normalize to `undefined` and let one branch handle both below.
+    let note: string | undefined;
+    if (input.note !== undefined) {
+      if (typeof input.note !== 'string') return json({ error: 'invalid_input' }, 400);
+      if (input.note.length > MAX_NOTE_LENGTH) return json({ error: 'invalid_input' }, 400);
+      note = input.note.trim() || undefined;
+    }
+
     try {
-      result = await estimateFromImage(input.mediaType, input.data, input.imageKind);
+      result = await estimateFromImage(input.mediaType, input.data, input.imageKind, note);
     } catch (err) {
       console.error('[estimate] estimation failed:', err);
       return json({ error: 'estimation_failed' }, 502);
     }
 
-    // No source text for an image run; fall back to a fixed marker when the
-    // model didn't produce a usable name (e.g. an unrecognized label or plate).
-    const name = result.estimate.name.trim();
-    inputSummary =
-      name !== '' ? name.slice(0, 200) : input.imageKind === 'label' ? 'label scan' : 'plate photo';
+    // The owner's own words when they wrote any — the same thing the text path
+    // records below, and a far better audit trail than the model's output.
+    // Without a note there is no source text for an image run, so fall back to
+    // the model's name, and to a fixed marker when it didn't produce a usable
+    // one (e.g. an unrecognized label or plate).
+    if (note !== undefined) {
+      inputSummary = note.slice(0, 200);
+    } else {
+      const name = result.estimate.name.trim();
+      inputSummary =
+        name !== ''
+          ? name.slice(0, 200)
+          : input.imageKind === 'label'
+            ? 'label scan'
+            : 'plate photo';
+    }
   } else if (input.kind === 'text') {
     if (typeof input.text !== 'string' || input.text.trim() === '') {
       return json({ error: 'invalid_input' }, 400);

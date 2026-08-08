@@ -74,6 +74,16 @@ export type ImageInput = {
   imageKind: 'label' | 'plate';
   mediaType?: string;
   data?: string;
+  /**
+   * Optional context the owner typed against the photo before spending the AI
+   * call — portion size, what is on the plate, how it was cooked. A picture is
+   * worst at exactly the things that move the number most, and this is how the
+   * photo paths reach the rule free text has always had: what the owner states
+   * wins over what the model guesses (see the note rules in the vision system
+   * prompts). Absent on the fast path, which is the point — a plate photo still
+   * estimates with no typing at all (FR-003).
+   */
+  note?: string;
 };
 
 /** Discriminated union of every capture path. Extend, don't replace. */

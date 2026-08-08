@@ -11,6 +11,12 @@
 // a value either. Also asserts the recorded run is owner-scoped and invisible
 // to an anonymous client (RLS).
 //
+// The owner's optional note on a photo capture is covered here too: that it
+// reaches the model and is recorded as the run's input_summary, that it is
+// length-capped at the boundary, and — the one that matters — that it can never
+// turn an unreadable photo into a recognized estimate. A note is context for a
+// photo the model can read, never a substitute for one it cannot.
+//
 // Plate-photo (S-04) vision correctness is verified manually only — no
 // fixture image is checked in for it yet, unlike the label-scan fixtures
 // (scripts/fixtures/label.jpg, not-a-label.jpg). See
@@ -39,6 +45,10 @@ const ownerPassword = process.env.OWNER_PASSWORD;
 
 const REAL_MEAL = 'two scrambled eggs with a slice of buttered toast';
 const GIBBERISH = 'zxqw plnk vvbb';
+/** The owner's optional context on a photo capture (S-13). */
+const NOTE = 'the 500 g tub, not the single pot';
+/** Must match `MAX_NOTE_LENGTH` in supabase/functions/estimate/index.ts. */
+const MAX_NOTE_LENGTH = 500;
 
 /** Fixtures for the label-scan (S-03) vision path, resolved from the repo root. */
 function readFixtureBase64(name: string): string {
@@ -176,6 +186,69 @@ async function main() {
     assert(notLabel.estimate.calories === null, 'non-label image returned a calorie number (fabricated!)');
     assert(notLabel.estimate.serving_size === null, 'non-label image returned a serving_size (fabricated!)');
     console.log('✓ non-label image: recognized=false, null macros, null serving_size');
+
+    // 8. The owner's note on a photo capture. One call proves the whole new
+    //    path end to end: the field survives the client type, clears the
+    //    function's validation, reaches the prompt, and lands in the run's
+    //    input_summary — which for a noted capture holds the owner's own words
+    //    instead of the model's output name.
+    const noted = await estimateMeal({
+      kind: 'image',
+      imageKind: 'label',
+      mediaType: 'image/jpeg',
+      data: labelData,
+      note: NOTE,
+    });
+    assert(noted.ok, `noted label estimate failed: ${noted.ok ? '' : noted.error}`);
+    runIds.push(noted.runId);
+    assert(noted.estimate.recognized === true, 'a legible label with a note came back as unrecognized');
+    const notedRun = await supabase
+      .from('estimation_runs')
+      .select('input_summary')
+      .eq('id', noted.runId)
+      .single();
+    assert(!notedRun.error && notedRun.data, `estimation_runs row ${noted.runId} not found`);
+    assert(
+      notedRun.data.input_summary === NOTE,
+      `run input_summary is ${JSON.stringify(notedRun.data.input_summary)}, want the note`,
+    );
+    console.log(`✓ note reached the model and was recorded: "${notedRun.data.input_summary}"`);
+
+    // 9. A note must never manufacture a recognized estimate out of a photo the
+    //    model can't read (FR-008). This is the failure mode the whole feature
+    //    risks: describe a real meal, attach an unreadable image, and a model
+    //    that trusted the note would happily log a number for it.
+    const notedJunk = await estimateMeal({
+      kind: 'image',
+      imageKind: 'label',
+      mediaType: 'image/jpeg',
+      data: notLabelData,
+      note: 'Greek yogurt, 150 g pot, 10 g protein and 120 kcal per pot',
+    });
+    assert(notedJunk.ok, `noted non-label returned an error: ${notedJunk.ok ? '' : notedJunk.error}`);
+    runIds.push(notedJunk.runId);
+    assert(
+      notedJunk.estimate.recognized === false,
+      'a note made an unreadable image come back as recognized (fabricated!)',
+    );
+    assert(
+      notedJunk.estimate.calories === null,
+      'a note produced calories for an unreadable image (fabricated!)',
+    );
+    console.log('✓ note on an unreadable image: still recognized=false, still null macros');
+
+    // 10. An over-long note is rejected at the boundary, before any AI call.
+    //     The function answers 400, which `estimateMeal` classifies as 'server'.
+    const tooLong = await estimateMeal({
+      kind: 'image',
+      imageKind: 'label',
+      mediaType: 'image/jpeg',
+      data: labelData,
+      note: 'x'.repeat(MAX_NOTE_LENGTH + 1),
+    });
+    assert(!tooLong.ok, 'an over-long note was accepted');
+    assert(tooLong.error === 'server', `over-long note errored as ${tooLong.error}, want server`);
+    console.log(`✓ note over ${MAX_NOTE_LENGTH} chars rejected without spending an AI call`);
 
     console.log('\nESTIMATE SMOKE PASSED ✅');
   } finally {
