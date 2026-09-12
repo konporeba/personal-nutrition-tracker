@@ -1,10 +1,10 @@
 ---
 change_id: past-day-logging
 title: Past day logging
-status: impl_reviewed
+status: archived
 created: 2026-09-12
 updated: 2026-09-12
-archived_at: null
+archived_at: 2026-09-12T10:01:00Z
 ---
 
 ## Notes
