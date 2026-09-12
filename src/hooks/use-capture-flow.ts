@@ -27,20 +27,23 @@ import { queryKeys } from '@/data/query-keys';
 import type { Section } from '@/data/types';
 import { useEstimateMeal } from '@/data/use-estimate';
 import { capturePhoto, type CapturedPhoto } from '@/lib/capture-photo';
+import { localDayKey } from '@/lib/local-day';
 
 export type CaptureKind = 'label' | 'plate';
 
 /**
- * A photo taken and waiting on the owner: what it is, the bytes, and the two
+ * A photo taken and waiting on the owner: what it is, the bytes, and the three
  * things the estimate leg needs to finish the job it was started with. The
- * section and the completion callback are captured *here* rather than passed to
- * `confirm`, so the caller can't accidentally finish a capture into a different
- * meal than the one it began in.
+ * section, the day and the completion callback are captured *here* rather than
+ * passed to `confirm`, so the caller can't accidentally finish a capture into a
+ * different meal — or a different day — than the one it began in.
  */
 export type StagedCapture = {
   kind: CaptureKind;
   photo: CapturedPhoto;
   section?: Section;
+  /** The day this capture is aimed at; absent means today. */
+  day?: Date;
   onSuccess?: () => void;
 };
 
@@ -67,15 +70,16 @@ export function useCaptureFlow() {
 
   const capture = useCallback(
     /**
-     * Take (or pick) a photo and stage it. `section`, when given, travels
-     * through to the review screen so it lands the entry in the meal the owner
-     * picked (the add-meal popup's section selector) rather than the
-     * time-of-day guess. `onSuccess` fires right after the push — the one hook
-     * into "capture actually completed" a caller gets, since navigation happens
-     * inside `confirm` rather than being left to the caller. Both are held on
-     * the staged capture until then.
+     * Take (or pick) a photo and stage it. `section` and `day`, when given,
+     * travel through to the review screen so it lands the entry in the meal and
+     * on the day the owner picked (the add-meal popup's section selector, and
+     * whichever day the surface that opened it was showing) rather than the
+     * time-of-day guess and today. `onSuccess` fires right after the push — the
+     * one hook into "capture actually completed" a caller gets, since navigation
+     * happens inside `confirm` rather than being left to the caller. All three
+     * are held on the staged capture until then.
      */
-    async (kind: CaptureKind, section?: Section, onSuccess?: () => void) => {
+    async (kind: CaptureKind, section?: Section, day?: Date, onSuccess?: () => void) => {
       if (isCapturing || estimate.isPending) return;
       setCaptureFailed(false);
       setPendingKind(kind);
@@ -103,7 +107,7 @@ export function useCaptureFlow() {
 
       // Staged, not estimated. `pendingKind` stays set — this path is still in
       // flight, it is just waiting on the owner rather than on the network.
-      setStaged({ kind, photo: captured, section, onSuccess });
+      setStaged({ kind, photo: captured, section, day, onSuccess });
     },
     [estimate, isCapturing]
   );
@@ -117,7 +121,7 @@ export function useCaptureFlow() {
      */
     (note?: string) => {
       if (!staged || estimate.isPending) return;
-      const { kind, photo, section, onSuccess } = staged;
+      const { kind, photo, section, day, onSuccess } = staged;
       const trimmed = note?.trim();
 
       estimate.mutate(
@@ -137,6 +141,10 @@ export function useCaptureFlow() {
                 runId,
                 source: kind === 'label' ? 'label_scan' : 'plate_photo',
                 ...(section ? { section } : null),
+                // As a local day key, never an ISO instant — the review screen
+                // re-reads it in the device's own tz, and an instant would
+                // resolve to the wrong day west of Greenwich.
+                ...(day ? { day: localDayKey(day) } : null),
               },
             });
             // Cleared on success only. A failed estimate keeps the photo and
@@ -155,13 +163,13 @@ export function useCaptureFlow() {
   );
 
   /**
-   * Shoot the staged capture again, keeping the meal it was started for. Goes
-   * back through `capture`, so canceling the picker leaves the current photo
-   * staged rather than emptying the step.
+   * Shoot the staged capture again, keeping the meal and the day it was started
+   * for. Goes back through `capture`, so canceling the picker leaves the current
+   * photo staged rather than emptying the step.
    */
   const retake = useCallback(() => {
     if (!staged) return;
-    void capture(staged.kind, staged.section, staged.onSuccess);
+    void capture(staged.kind, staged.section, staged.day, staged.onSuccess);
   }, [capture, staged]);
 
   /** Throw the staged photo away and go back to a clean slate. */

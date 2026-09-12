@@ -494,26 +494,26 @@ Rollback is per-phase: each phase is an independent commit, and Phases 1 and 2 h
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npx tsc --noEmit`
-- [x] 2.2 Linting passes: `npm run lint`
-- [x] 2.3 Existing data paths still green: `npm run smoke:meal-detail` and `npm run smoke:training`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit` — 8dc56ef
+- [x] 2.2 Linting passes: `npm run lint` — 8dc56ef
+- [x] 2.3 Existing data paths still green: `npm run smoke:meal-detail` and `npm run smoke:training` — 8dc56ef
 
 #### Manual
 
-- [x] 2.4 A post-midnight meal moves to the previous day and both days update without a refresh
-- [x] 2.5 Both affected days' week-rail rings repaint after the move
-- [x] 2.6 The moved entry keeps its original time-of-day
-- [x] 2.7 Streak responds correctly to a move off a day and into a gap
-- [x] 2.8 A training session can be moved, and its date subtitle tracks the stepper
-- [x] 2.9 Editing a meal without touching the day behaves exactly as before
+- [x] 2.4 A post-midnight meal moves to the previous day and both days update without a refresh — 8dc56ef
+- [x] 2.5 Both affected days' week-rail rings repaint after the move — 8dc56ef
+- [x] 2.6 The moved entry keeps its original time-of-day — 8dc56ef
+- [x] 2.7 Streak responds correctly to a move off a day and into a gap — 8dc56ef
+- [x] 2.8 A training session can be moved, and its date subtitle tracks the stepper — 8dc56ef
+- [x] 2.9 Editing a meal without touching the day behaves exactly as before — 8dc56ef
 
 ### Phase 3: Compose Meals Into a Past Day
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 3.2 Linting passes: `npm run lint`
-- [ ] 3.3 Log path still green: `npm run smoke:log` and `npm run smoke:saved-meals`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit`
+- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.3 Log path still green: `npm run smoke:log` and `npm run smoke:saved-meals`
 
 #### Manual
 

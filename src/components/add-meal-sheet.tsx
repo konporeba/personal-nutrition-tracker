@@ -45,6 +45,7 @@ import { useCaptureFlow } from '@/hooks/use-capture-flow';
 import { useLayout } from '@/hooks/use-layout';
 import { useTheme } from '@/hooks/use-theme';
 import { SECTION_ORDER } from '@/lib/group-by-section';
+import { isSameLocalDay, localDayKey } from '@/lib/local-day';
 import { usePinGate } from '@/lib/pin-gate';
 import { sectionForTime } from '@/lib/section-for-time';
 
@@ -67,6 +68,13 @@ const SHORT_SECTION_OPTIONS = SECTION_ORDER.map((section) => ({
  */
 const SHORT_LABEL_WIDTH = 600;
 
+/** Short, because it is the tail of a sentence that already carries a section. */
+const dayFormat = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+});
+
 export function AddMealSheet({
   visible,
   onRequestClose,
@@ -77,10 +85,19 @@ export function AddMealSheet({
    * in the picker either way — the tile sets the default, it doesn't lock it.
    */
   initialSection,
+  /**
+   * Which day the meal is being composed into. Absent means today, which is
+   * every app-level entry point (the web bar's ＋, the native FAB). The day
+   * surfaces pass the day they are showing, and it rides through to the write
+   * on all four paths below — it is not offered as a choice here, because the
+   * screen behind this popup already made it.
+   */
+  day,
 }: {
   visible: boolean;
   onRequestClose: () => void;
   initialSection?: Section;
+  day?: Date;
 }) {
   const theme = useTheme();
   const router = useRouter();
@@ -105,6 +122,13 @@ export function AddMealSheet({
   // Locking is the repair for an expired session (see `errors` below), so the
   // popup needs the gate as well as the estimator.
   const { hasPinSet, lock } = usePinGate();
+
+  // The day param every path below attaches, or nothing when the target is
+  // today — an absent param and today's key mean the same thing downstream, and
+  // the shorter URL is the one worth having on the common path.
+  const targetsToday = !day || isSameLocalDay(day, new Date());
+  const dayParam = targetsToday ? null : { day: localDayKey(day) };
+  const dayLabel = targetsToday ? 'today' : dayFormat.format(day);
 
   const trimmed = text.trim();
   const busy = estimate.isPending || capture.isBusy;
@@ -136,7 +160,7 @@ export function AddMealSheet({
           close();
           router.push({
             pathname: '/review',
-            params: { runId, text: trimmed, section: loggedSection },
+            params: { runId, text: trimmed, section: loggedSection, ...dayParam },
           });
         },
       }
@@ -146,9 +170,13 @@ export function AddMealSheet({
   function openLibrary() {
     const loggedSection = section;
     close();
-    // The section rides along: a saved meal re-logged from here belongs to the
-    // meal the owner picked, not to whatever the clock says when they tap it.
-    router.push({ pathname: '/(today)/library', params: { section: loggedSection } });
+    // The section and the day ride along: a saved meal re-logged from here
+    // belongs to the meal the owner picked and the day they were looking at,
+    // not to whatever the clock says when they tap it.
+    router.push({
+      pathname: '/(today)/library',
+      params: { section: loggedSection, ...dayParam },
+    });
   }
 
   const errors = (
@@ -188,12 +216,17 @@ export function AddMealSheet({
       // The staged step names itself: three of the four ways in look identical
       // at this point otherwise, and "which photo am I looking at" is the one
       // thing the picture can't answer on its own.
+      // The trailing word is the day, and it stops being "today" the moment
+      // this popup is opened from a past day's surface. Naming it here is the
+      // first of the three places the target day is stated out loud, because a
+      // meal composed into the wrong day without warning is the one way this
+      // feature can bite.
       subtitle={
         capture.staged
           ? `${capture.staged.kind === 'label' ? 'Label scan' : 'Plate photo'} · to ${SECTION_LABELS[
               section
-            ].toLowerCase()}, today`
-          : `To ${SECTION_LABELS[section].toLowerCase()}, today`
+            ].toLowerCase()}, ${dayLabel}`
+          : `To ${SECTION_LABELS[section].toLowerCase()}, ${dayLabel}`
       }
       // A centered dialog on every size, not a bottom sheet on the phone. This
       // popup carries a picker, a form and four choices; anchored to the bottom
@@ -337,7 +370,7 @@ export function AddMealSheet({
             // `isBusy` would spin whichever one the owner didn't tap too.
             pending={capture.pendingKind === 'plate'}
             disabled={busy && capture.pendingKind !== 'plate'}
-            onPress={() => capture.capture('plate', section, close)}
+            onPress={() => capture.capture('plate', section, day, close)}
           />
           <MethodRow
             icon="🏷️"
@@ -345,7 +378,7 @@ export function AddMealSheet({
             detail="Read the nutrition panel off the packaging"
             pending={capture.pendingKind === 'label'}
             disabled={busy && capture.pendingKind !== 'label'}
-            onPress={() => capture.capture('label', section, close)}
+            onPress={() => capture.capture('label', section, day, close)}
           />
           <MethodRow
             icon="🔖"

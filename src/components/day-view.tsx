@@ -18,9 +18,10 @@
 //
 // Each of the five sections is a *container*, not just a heading: an empty one
 // renders a dashed add tile (`section-add-tile.tsx`) that composes straight
-// into that section. That is what `onAddToSection` is for; a caller that
-// doesn't pass it (the past-day route) gets headings only, matching the plan's
-// scope — a past day supports editing what is logged, not composing into it.
+// into that section. That is what `onAddToSection` is for. Both embedding
+// screens pass it now — a past day composes exactly like today, aimed at the
+// day being viewed — so the prop is really about *whether a caller has a day to
+// compose into* rather than about today-versus-past.
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, SectionList, StyleSheet } from 'react-native';
@@ -62,11 +63,11 @@ type DaySection = {
  * puts its greeting, week rail and streak there); the past-day route passes
  * nothing.
  *
- * `onAddToSection` opens the caller's composer pre-set to one section. Absent,
- * the per-section add tiles are not rendered at all — which is the past-day
- * route's whole configuration, per the plan's explicit scope: a past day
- * supports edit/re-section/delete of what is already logged, not composing new
- * entries into it.
+ * `onAddToSection` opens the caller's composer pre-set to one section — and,
+ * at the call site, aimed at the day this view is showing. Absent, the
+ * per-section add tiles are not rendered at all; no screen configures it that
+ * way today, but the prop stays optional so a read-only embedding stays
+ * possible without a second component.
  *
  * There used to be a `showComposer` flag too, gating an always-open compose
  * card between the stats and the meal list. It is gone: composing now starts
@@ -236,8 +237,9 @@ export function DayView({
                     key={section.id}
                     type="transparent"
                     // Only sections that actually have a tile in them stretch.
-                    // On a past day there are none, and spreading five bare
-                    // headings down the pane would read as a rendering fault.
+                    // With no `onAddToSection` there are none, and spreading
+                    // five bare headings down the pane would read as a
+                    // rendering fault.
                     style={
                       section.data.length === 0 && onAddToSection
                         ? styles.sectionBlockGrow

@@ -9,27 +9,35 @@
 // mounted once here, above the tabs, and everything that wants it calls
 // `useAddMeal().open()`.
 //
-// `open(section)` is the whole API. The per-section add tiles on Today pass
+// `open(section, day)` is the whole API. The per-section add tiles on Today pass
 // their section so the picker lands on it; the ＋ passes nothing and the picker
 // falls back to the time-of-day guess.
+//
+// `day` is what lets a past day be composed into. It is the *viewed* day of
+// whichever surface opened the popup — Today's week rail, or the Analytics day
+// screen — and it travels from here all the way to the write. Omitted means
+// today, which is why the app-level ＋ in the web tab bar and the native FAB
+// need no change: an app-level control has no day context, and "today" is the
+// right answer for it.
 import { createContext, use, useCallback, useMemo, useState, type ReactNode } from 'react';
 
 import { AddMealSheet } from '@/components/add-meal-sheet';
 import type { Section } from '@/data/types';
 
 type AddMealContextValue = {
-  /** Open the popup, optionally pre-set to a section. */
-  open: (section?: Section) => void;
+  /** Open the popup, optionally pre-set to a section and aimed at a day. */
+  open: (section?: Section, day?: Date) => void;
 };
 
 const AddMealContext = createContext<AddMealContextValue | null>(null);
 
 export function AddMealProvider({ children }: { children: ReactNode }) {
   // `null` is closed. A non-null value is one open session, carrying the
-  // section it was opened for (`undefined` = "let the clock decide").
-  const [session, setSession] = useState<{ section?: Section } | null>(null);
+  // section it was opened for (`undefined` = "let the clock decide") and the
+  // day it is aimed at (`undefined` = today).
+  const [session, setSession] = useState<{ section?: Section; day?: Date } | null>(null);
 
-  const open = useCallback((section?: Section) => setSession({ section }), []);
+  const open = useCallback((section?: Section, day?: Date) => setSession({ section, day }), []);
   const value = useMemo(() => ({ open }), [open]);
 
   return (
@@ -43,6 +51,7 @@ export function AddMealProvider({ children }: { children: ReactNode }) {
         <AddMealSheet
           visible
           initialSection={session.section}
+          day={session.day}
           onRequestClose={() => setSession(null)}
         />
       ) : null}

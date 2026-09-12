@@ -57,7 +57,6 @@ export default function TodayScreen() {
   // over at midnight, and storing "today" here would pin it to yesterday.
   const [pastDay, setPastDay] = useState<Date | null>(null);
   const viewedDay = pastDay ?? day;
-  const viewingToday = pastDay === null;
 
   const greetingBlock = (
     <ThemedView type="transparent" style={styles.greetingText}>
@@ -79,9 +78,11 @@ export default function TodayScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <DayView
           date={viewedDay}
-          // A past day supports editing what is already logged, not composing
-          // new entries into it — so every add affordance is off there.
-          onAddToSection={viewingToday ? (section) => addMeal.open(section) : undefined}
+          // Every add affordance is live on a past day too, and carries the day
+          // being viewed rather than silently meaning today. `viewedDay` is
+          // re-derived per render (see `pastDay` above), so this can't freeze on
+          // the instant of the tap.
+          onAddToSection={(section) => addMeal.open(section, viewedDay)}
           header={
             <ThemedView
               type="transparent"
@@ -115,8 +116,9 @@ export default function TodayScreen() {
                   <StreakPill days={streak.days} />
                   {/* `small` so it matches the streak pill above it — the two
                       read as one stacked pair, and the header shouldn't carry
-                      a control taller than the greeting's own line. Disabled
-                      on a past day: nothing new gets logged into one. */}
+                      a control taller than the greeting's own line. Live on a
+                      past day, composing into whichever day the rail has
+                      selected; the popup names that day in its subtitle. */}
                   <AppButton
                     label="Log a meal"
                     icon="☑️"
@@ -124,8 +126,7 @@ export default function TodayScreen() {
                     variant="soft"
                     full
                     strong
-                    disabled={!viewingToday}
-                    onPress={() => addMeal.open()}
+                    onPress={() => addMeal.open(undefined, viewedDay)}
                   />
                 </ThemedView>
               ) : null}
@@ -135,12 +136,12 @@ export default function TodayScreen() {
       </KeyboardAvoidingView>
 
       {/* Native only: on web the bottom bar carries the ＋ in its center, and a
-          FAB on top of it would be a second, competing primary action. Gone on
-          a past day for the same reason the header button is disabled there —
-          a new entry always lands in today, which would be a silent surprise
-          while a different day is on screen. */}
-      {Platform.OS === 'web' || !viewingToday ? null : (
-        <CaptureFab onPress={() => addMeal.open()} />
+          FAB on top of it would be a second, competing primary action. It stays
+          on a past day now and composes into the day being viewed — what used
+          to make that a silent surprise (the entry always landing in today) is
+          exactly what `viewedDay` fixes. */}
+      {Platform.OS === 'web' ? null : (
+        <CaptureFab onPress={() => addMeal.open(undefined, viewedDay)} />
       )}
     </Screen>
   );

@@ -26,7 +26,10 @@ import type { SavedMeal, Section } from '@/data/types';
 import { useCreateMealEntry } from '@/data/use-meal-entries';
 import { useDeleteSavedMeal, useSavedMeals } from '@/data/use-saved-meals';
 import { useTargets } from '@/data/use-profile';
+import { isSameLocalDay, parseLocalDayKey } from '@/lib/local-day';
+import { loggedAtForDay } from '@/lib/logged-at-for-day';
 import { sectionForTime } from '@/lib/section-for-time';
+import { timeForSection } from '@/lib/time-for-section';
 
 /** `section` only ever arrives from our own add-meal popup, but it comes in as
  *  an untyped route param — validate membership rather than trusting the cast.
@@ -35,12 +38,25 @@ function parseSection(value: string | undefined): Section | undefined {
   return value !== undefined && value in SECTION_LABELS ? (value as Section) : undefined;
 }
 
+/** Short, because it is appended to a header title that already has a noun. */
+const dayFormat = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+});
+
 export default function LibraryScreen() {
   const router = useRouter();
-  const { section: sectionParam } = useLocalSearchParams<{ section?: string }>();
+  const { section: sectionParam, day: dayParam } = useLocalSearchParams<{
+    section?: string;
+    day?: string;
+  }>();
   // Absent (reached any other way), every write below falls back to the
   // time-of-day guess exactly as it always did.
   const chosenSection = parseSection(sectionParam);
+  // The day the add-meal popup was opened from. Absent — or malformed, or in
+  // the future — means today, per `parseLocalDayKey`'s clamp.
+  const chosenDay = parseLocalDayKey(dayParam);
   // The tab bar floats over this list; the last saved meal has to stay tappable.
   const tabBarClearance = useTabBarClearance();
   const { data, isPending, isError } = useSavedMeals();
@@ -60,13 +76,16 @@ export default function LibraryScreen() {
     // row would otherwise be tappable again, and a second tap would commit a
     // duplicate entry — same reasoning as `review.tsx`'s `canSave` guard.
     if (createEntry.isPending || createEntry.isSuccess) return;
-    const loggedAt = new Date();
+    // Same section-then-timestamp ordering as `review.tsx`, and the same
+    // reason: a past day's time is derived from the section, not the reverse.
+    const resolvedSection = chosenSection ?? sectionForTime(new Date());
+    const loggedAt = loggedAtForDay(chosenDay ?? new Date(), timeForSection(resolvedSection));
 
     createEntry.mutate(
       {
         input: {
-          logged_at: loggedAt.toISOString(),
-          section: chosenSection ?? sectionForTime(loggedAt),
+          logged_at: loggedAt,
+          section: resolvedSection,
           source: 'saved_meal',
           name: savedMeal.name,
           calories: savedMeal.calories,
@@ -88,27 +107,24 @@ export default function LibraryScreen() {
   }
 
   // Same write path as `relog`, except the day comes from the picker rather
-  // than "now" — the picked calendar day combined with the current
-  // clock-time, so `logged_at` lands in the picked day's local bucket and
-  // still carries a sensible time-of-day for the chosen section.
+  // than from the route.
+  //
+  // This used to build its own timestamp — the picked calendar day at the
+  // *current* clock time — which is exactly the construction that puts a supper
+  // logged at 00:05 first in yesterday's ledger. It now goes through the shared
+  // `loggedAtForDay`, so both of this screen's write paths agree and a
+  // backdated saved meal gets a time that matches its section.
   function logToDay(savedMeal: SavedMeal, day: Date, section: Section) {
     // Same double-submit guard as `relog` — `createEntry` is one shared
     // mutation instance for the whole screen, so this closes the window for
     // both write paths.
     if (createEntry.isPending || createEntry.isSuccess) return;
-    const now = new Date();
-    const loggedAt = new Date(
-      day.getFullYear(),
-      day.getMonth(),
-      day.getDate(),
-      now.getHours(),
-      now.getMinutes()
-    );
+    const loggedAt = loggedAtForDay(day, timeForSection(section));
 
     createEntry.mutate(
       {
         input: {
-          logged_at: loggedAt.toISOString(),
+          logged_at: loggedAt,
           section,
           source: 'saved_meal',
           name: savedMeal.name,
@@ -132,7 +148,17 @@ export default function LibraryScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <Stack.Screen options={{ title: 'Saved meals' }} />
+      {/* The header names the day when it isn't today: tapping a row here logs
+          instantly, with no review step in between, so this title is the last
+          thing the owner sees before the write happens. */}
+      <Stack.Screen
+        options={{
+          title:
+            chosenDay && !isSameLocalDay(chosenDay, new Date())
+              ? `Saved meals · ${dayFormat.format(chosenDay)}`
+              : 'Saved meals',
+        }}
+      />
       <ThemedView style={styles.inner}>
         <FlatList
           data={savedMeals}

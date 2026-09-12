@@ -40,7 +40,10 @@ import { useTargets } from '@/data/use-profile';
 import { useCreateSavedMeal } from '@/data/use-saved-meals';
 import { useTheme } from '@/hooks/use-theme';
 import type { CapturedPhoto } from '@/lib/capture-photo';
+import { parseLocalDayKey } from '@/lib/local-day';
+import { loggedAtForDay } from '@/lib/logged-at-for-day';
 import { sectionForTime } from '@/lib/section-for-time';
+import { timeForSection } from '@/lib/time-for-section';
 
 /** `section` only ever arrives from our own add-meal popup (`add-meal-sheet.tsx`)
  *  or capture flow, but it comes in as an untyped route param — validate
@@ -56,11 +59,12 @@ const CONFIDENCE_COPY: Record<Confidence, string> = {
 };
 
 export default function ReviewScreen() {
-  const { runId, text, source, section } = useLocalSearchParams<{
+  const { runId, text, source, section, day } = useLocalSearchParams<{
     runId?: string;
     text?: string;
     source?: string;
     section?: string;
+    day?: string;
   }>();
   const queryClient = useQueryClient();
   // "Log it" is the last thing on this page and the point of the whole screen —
@@ -89,6 +93,10 @@ export default function ReviewScreen() {
               isPlatePhoto={source === 'plate_photo'}
               photo={photo}
               section={parseSection(section)}
+              // `parseLocalDayKey` is the trust boundary: a malformed or
+              // future key comes back as today rather than as an entry the
+              // owner can't have eaten yet.
+              day={parseLocalDayKey(day)}
             />
           ) : (
             <MissingEstimate />
@@ -107,6 +115,7 @@ function ReviewForm({
   isPlatePhoto,
   photo,
   section,
+  day,
 }: {
   estimate: Estimate;
   runId: string;
@@ -118,6 +127,8 @@ function ReviewForm({
    *  guess for every other capture path (native FAB, mobile composer, mobile
    *  web's quick-capture button), which never sets this. */
   section: Section | undefined;
+  /** The day this entry is being composed into; absent means today. */
+  day: Date | undefined;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -165,13 +176,20 @@ function ReviewForm({
 
   function save() {
     if (!canSave) return;
-    const loggedAt = new Date();
+    // Section first, *then* the timestamp from it. The dependency runs the
+    // other way for a past day: today's entry infers its section from the
+    // clock, but a backdated one has no real instant to infer from, so the
+    // section the owner picked is what supplies a plausible time of day
+    // (`timeForSection`). Resolving these in the old order would have fed
+    // `sectionForTime` a timestamp that didn't exist yet.
+    const resolvedSection = section ?? sectionForTime(new Date());
+    const loggedAt = loggedAtForDay(day ?? new Date(), timeForSection(resolvedSection));
 
     create.mutate(
       {
         input: {
-          logged_at: loggedAt.toISOString(),
-          section: section ?? sectionForTime(loggedAt),
+          logged_at: loggedAt,
+          section: resolvedSection,
           // A photo capture that came back unrecognized is filled in by hand, same
           // as any other unrecognized input — the capture path alone doesn't make
           // it a label_scan/plate_photo entry (FR-006).
