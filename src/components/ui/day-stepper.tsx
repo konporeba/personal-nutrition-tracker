@@ -106,11 +106,11 @@ export function DayPill({
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const isToday = isSameLocalDay(day, today);
-  // "Today" rather than today's own date — the word is what the owner is
-  // actually checking for, and it is the only value in the pill that means
-  // "nothing unusual here". The full stepper says the same thing with its own
-  // marker line.
-  const label = isToday ? 'Today' : shortDateFormat.format(day);
+  // Always the date, never "Today". The word is four characters where a date is
+  // eleven, so the pill visibly shrank on the most common value of all and read
+  // as a different, half-empty control. A fixed-width label (see `pillLabel`)
+  // keeps it steady; the date itself is unambiguous enough without the word.
+  const label = shortDateFormat.format(day);
 
   const pill = (
     <ThemedView type="transparent" style={[styles.pill, { borderColor: theme.border }]}>
@@ -121,7 +121,7 @@ export function DayPill({
           onPress={() => onChange(addLocalDays(day, -1))}
         />
       ) : null}
-      <ThemedText type="micro" themeColor="textMuted">
+      <ThemedText type="micro" themeColor="textMuted" style={styles.pillLabel}>
         {label}
       </ThemedText>
       {open ? (
@@ -135,20 +135,32 @@ export function DayPill({
     </ThemedView>
   );
 
-  // Once open the pill is a container of two buttons, not a button itself —
-  // wrapping it in a Pressable then would swallow taps meant for the arrows.
-  if (open) return pill;
-
+  // A row wrapper so the pill hugs its content wherever it is mounted. Without
+  // it the pill stretches to fill a *column* parent — which is exactly what the
+  // sheet header's subtitle slot is — and the date ends up centered in its own
+  // 78pt box inside a pill spanning the whole dialog. Owned here rather than
+  // left to each call site, because "don't stretch" is a fact about this
+  // control, not about the two places that happen to use it.
   return (
-    <Pressable
-      onPress={() => setOpen(true)}
-      accessibilityRole="button"
-      // The visible label is the *value*; the spoken one has to be the action,
-      // or a screen reader announces a date with no hint that it can be moved.
-      accessibilityLabel={`Change day, currently ${label}`}
-      style={({ pressed }) => pressed && styles.pressed}>
-      {pill}
-    </Pressable>
+    <ThemedView type="transparent" style={styles.pillWrap}>
+      {/* Once open the pill is a container of two buttons, not a button itself
+          — wrapping it in a Pressable then would swallow taps meant for the
+          arrows. */}
+      {open ? (
+        pill
+      ) : (
+        <Pressable
+          onPress={() => setOpen(true)}
+          accessibilityRole="button"
+          // The visible label is the *value*; the spoken one has to be the
+          // action, or a screen reader announces a date with no hint that it
+          // can be moved.
+          accessibilityLabel={`Change day, currently ${label}`}
+          style={({ pressed }) => pressed && styles.pressed}>
+          {pill}
+        </Pressable>
+      )}
+    </ThemedView>
   );
 }
 
@@ -174,7 +186,10 @@ function PillArrow({
       accessibilityState={{ disabled }}
       hitSlop={10}
       style={({ pressed }) => pressed && !disabled && styles.pressed}>
-      <ThemedText type="smallBold" themeColor={disabled ? 'textMuted' : 'accentText'}>
+      <ThemedText
+        type="smallBold"
+        themeColor={disabled ? 'textMuted' : 'accentText'}
+        style={styles.pillArrow}>
         {glyph}
       </ThemedText>
     </Pressable>
@@ -232,16 +247,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: Radius.pill,
   },
+  pillWrap: {
+    // A row, so whatever it contains sizes to its content instead of to the
+    // parent's cross axis. `alignSelf: 'flex-start'` on the pill would do the
+    // same in a column parent but top-align it in a row one, which is the meal
+    // popup's subtitle line — this works in both.
+    flexDirection: 'row',
+  },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
     // Matches `Chip`'s outline tone, so the day reads as one of the app's
     // existing small pills rather than as a new kind of control.
-    gap: Spacing.two,
-    paddingHorizontal: Spacing.two + 2,
+    gap: Spacing.one + 2,
+    paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one + 1,
     borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  pillLabel: {
+    // Centered inside a floor width, which is what actually keeps the date
+    // still. Without it the pill resized on every step — "Sep 9" is narrower
+    // than "Sep 10" — so the text drifted under the cursor while stepping, and
+    // the two arrows appeared to move apart and back together.
+    minWidth: 78,
+    textAlign: 'center',
+  },
+  pillArrow: {
+    // A fixed box per arrow, so the label sits in the true middle of the pill.
+    // Left to themselves, `‹` and `›` carry different side bearings and the
+    // date ended up a pixel or two off-center — visible precisely because the
+    // pill is small.
+    width: 12,
+    textAlign: 'center',
+    // The arrows are `smallBold` (14/19) beside a `micro` label (12/16).
+    // Matching the label's line height is what makes `alignItems: 'center'`
+    // center the glyphs rather than the two differently-tall boxes they sit in.
+    lineHeight: 16,
   },
   pressed: {
     opacity: 0.7,

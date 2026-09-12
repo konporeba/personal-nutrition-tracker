@@ -546,10 +546,10 @@ Rollback is per-phase: each phase is an independent commit, and Phases 1 and 2 h
 
 #### Automated
 
-- [x] 5.1 Type checking passes: `npx tsc --noEmit`
-- [x] 5.2 Linting passes: `npm run lint`
-- [x] 5.3 Full smoke suite green: `npm run smoke` plus the per-slice scripts touched
-- [x] 5.4 New slice smoke passes: `npm run smoke:past-day`
+- [x] 5.1 Type checking passes: `npx tsc --noEmit` — 59055bb
+- [x] 5.2 Linting passes: `npm run lint` — 59055bb
+- [x] 5.3 Full smoke suite green: `npm run smoke` plus the per-slice scripts touched — 59055bb
+- [x] 5.4 New slice smoke passes: `npm run smoke:past-day` — 59055bb
 
 #### Manual
 
