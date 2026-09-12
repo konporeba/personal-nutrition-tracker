@@ -517,14 +517,14 @@ Rollback is per-phase: each phase is an independent commit, and Phases 1 and 2 h
 
 #### Manual
 
-- [ ] 3.4 Describe-it path logs into a past day, in the tapped section
-- [ ] 3.5 Plate photo and label scan paths do the same, surviving a retake
-- [ ] 3.6 Saved-meal path logs into the past day, not today
-- [ ] 3.7 All four paths work from the Analytics day screen
-- [ ] 3.8 Web ＋ and native FAB still log to today when Today shows today
-- [ ] 3.9 Week rail and Analytics charts repaint after a backdated log
-- [ ] 3.10 A future `day` param falls back to today
-- [ ] 3.11 Backdated entry's time matches its section and sorts correctly
+- [x] 3.4 Describe-it path logs into a past day, in the tapped section — cc0be8d
+- [x] 3.5 Plate photo and label scan paths do the same, surviving a retake — cc0be8d
+- [x] 3.6 Saved-meal path logs into the past day, not today — cc0be8d
+- [x] 3.7 All four paths work from the Analytics day screen — cc0be8d
+- [x] 3.8 Web ＋ and native FAB still log to today when Today shows today — cc0be8d
+- [x] 3.9 Week rail and Analytics charts repaint after a backdated log — cc0be8d
+- [x] 3.10 A future `day` param falls back to today — cc0be8d
+- [x] 3.11 Backdated entry's time matches its section and sorts correctly — cc0be8d
 
 ### Phase 4: Log Training Into a Past Day
 
@@ -536,11 +536,11 @@ Rollback is per-phase: each phase is an independent commit, and Phases 1 and 2 h
 
 #### Manual
 
-- [ ] 4.4 A session logged for yesterday adds its burn to yesterday's budget only
-- [ ] 4.5 Yesterday's rail ring and the Analytics net line both move
-- [ ] 4.6 "Log training" starts on today every time it is opened
-- [ ] 4.7 Editing an existing session still opens on that session's own day
-- [ ] 4.8 Logging with the stepper left on today behaves exactly as before
+- [x] 4.4 A session logged for yesterday adds its burn to yesterday's budget only — 8ca8b44
+- [x] 4.5 Yesterday's rail ring and the Analytics net line both move — 8ca8b44
+- [x] 4.6 "Log training" starts on today every time it is opened — 8ca8b44
+- [x] 4.7 Editing an existing session still opens on that session's own day — 8ca8b44
+- [x] 4.8 Logging with the stepper left on today behaves exactly as before — 8ca8b44
 
 ### Phase 5: Say Which Day, Loudly
 
@@ -553,8 +553,8 @@ Rollback is per-phase: each phase is an independent commit, and Phases 1 and 2 h
 
 #### Manual
 
-- [ ] 5.5 The target day is named in the popup subtitle before any method is chosen
-- [ ] 5.6 The day name survives subtitle → staged photo step → review chip
-- [ ] 5.7 Both recognized and unrecognized review paths show the day
-- [ ] 5.8 Wording is unchanged when the target is today
-- [ ] 5.9 No overflow at ~400px with the longer subtitles and added chip
+- [x] 5.5 The target day is named in the popup subtitle before any method is chosen — 59055bb
+- [x] 5.6 The day name survives subtitle → staged photo step → review chip — 59055bb
+- [x] 5.7 Both recognized and unrecognized review paths show the day — 59055bb
+- [x] 5.8 Wording is unchanged when the target is today — 59055bb
+- [x] 5.9 No overflow at ~400px with the longer subtitles and added chip — 59055bb
