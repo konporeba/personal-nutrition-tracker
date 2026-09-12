@@ -2,17 +2,13 @@
 // each call site drift, and a drifted key is the classic cause of a day total
 // that doesn't move after a write — the invalidation targets a key nothing reads.
 // Every hook in `src/data/use-*.ts` builds its keys from here.
+import { localDayKey } from '@/lib/local-day';
 
-/**
- * A day is a *local calendar day*, matching `listMealEntriesForDay`'s bucketing.
- * Keying on `YYYY-MM-DD` in the device tz (never an ISO instant) means every
- * render during the same day resolves to one cache entry.
- */
-export function localDayKey(date: Date): string {
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
-}
+// `localDayKey` lives in `lib/local-day.ts` now, so the pure timestamp helpers
+// there can use it without a data-layer import. Re-exported from its original
+// home because this is where the rest of the app already imports it from, and
+// the day key is as much a cache-key concern as a calendar one.
+export { localDayKey };
 
 export const queryKeys = {
   mealEntries: {
