@@ -33,7 +33,7 @@ import {
 import { useTheme } from '@/hooks/use-theme';
 import { onlyDecimal, onlyInteger, toIntOrNull, toPositiveOrNull } from '@/lib/decimal-input';
 import { isSameLocalDay, startOfLocalDay } from '@/lib/local-day';
-import { moveToDay } from '@/lib/logged-at-for-day';
+import { loggedAtForDay, moveToDay } from '@/lib/logged-at-for-day';
 import { emojiForTraining } from '@/lib/training-emoji';
 
 const INTENSITY_OPTIONS: { value: TrainingIntensity; label: string }[] = [
@@ -93,8 +93,11 @@ export function TrainingSessionSheet({
   // Which day the session counts toward. Seeded from the session being edited;
   // a new session's day picker arrives in Phase 4, so `null` here means "this
   // sheet has no day to offer yet" rather than "today".
+  // Which day the session counts toward: the edited session's own, or today for
+  // a new one. Never null now — logging a session into a past day is the same
+  // control as moving one, so both branches carry the pill.
   const [day, setDay] = useState(() =>
-    session ? startOfLocalDay(new Date(session.logged_at)) : null
+    startOfLocalDay(session ? new Date(session.logged_at) : new Date())
   );
   const [duration, setDuration] = useState(
     session ? String(session.duration_minutes) : ''
@@ -129,10 +132,9 @@ export function TrainingSessionSheet({
       // Same rule as the meal sheet: `logged_at` joins the patch only when the
       // day actually moved, and `moveToDay` keeps the session's original time
       // of day rather than inventing one.
-      const movedDay =
-        day && !isSameLocalDay(day, new Date(session.logged_at))
-          ? moveToDay(session.logged_at, day)
-          : null;
+      const movedDay = isSameLocalDay(day, new Date(session.logged_at))
+        ? null
+        : moveToDay(session.logged_at, day);
 
       update.mutate(
         {
@@ -145,10 +147,22 @@ export function TrainingSessionSheet({
       return;
     }
 
+    // Today is the submission instant, matching the rest of the app's "log now"
+    // convention; a past day carries the current wall clock onto that day.
+    //
+    // Unlike a meal, there is no section to derive a time from — and nothing
+    // downstream reads a session's time of day, since training is bucketed by
+    // day and listed by it. So the clock is both the honest answer and a
+    // harmless one.
+    const now = new Date();
     create.mutate(
-      // `logged_at` is the submission instant, matching the rest of the app's
-      // "log now" convention.
-      { input: { logged_at: new Date().toISOString(), ...fields }, targets },
+      {
+        input: {
+          logged_at: loggedAtForDay(day, { hours: now.getHours(), minutes: now.getMinutes() }, now),
+          ...fields,
+        },
+        targets,
+      },
       { onSuccess: onRequestClose }
     );
   }
@@ -173,16 +187,10 @@ export function TrainingSessionSheet({
       // moving a session costs no extra height at all. Tracks the stepper
       // rather than the stored value, the same live-tracking the `leading` chip
       // already does for the type picker.
-      // Editing: the date this line already carried, now as the pill that moves
-      // it — so the repair costs no extra height at all. Logging a new one: no
-      // day to show yet (Phase 4 gives it a picker of its own).
-      subtitle={
-        day ? (
-          <DayPill day={day} today={startOfLocalDay(new Date())} onChange={setDay} />
-        ) : (
-          'Add to today'
-        )
-      }
+      // The same pill in both branches: the date this line already carried when
+      // editing, and "Today" — steppable backwards — when logging a new one.
+      // So neither picking a past day nor repairing one costs extra height.
+      subtitle={<DayPill day={day} today={startOfLocalDay(new Date())} onChange={setDay} />}
       // Editing wears the row's own mark, matching the meal popup. Tracks the
       // picker live, so switching type changes the icon on the spot.
       leading={

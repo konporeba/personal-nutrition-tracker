@@ -93,15 +93,22 @@ export default function TrainingScreen() {
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Remounted per session: the sheet seeds its fields from `session` in
-          `useState` initializers, which only run on mount — the same reason
-          `AddMealSheet` is keyed on its section. */}
-      <TrainingSessionSheet
-        key={editing?.id ?? 'new'}
-        visible={sheetOpen}
-        session={editing}
-        onRequestClose={() => setSheetOpen(false)}
-      />
+      {/* Mounted only while open, so every field is re-seeded from scratch on
+          each open. It used to stay mounted under `key={editing?.id ?? 'new'}`,
+          which looks like it remounts but doesn't: the `'new'` half is the same
+          key every time, so "log a new session" reused one mount and its
+          `useState` initializers ran exactly once per app session. Harmless
+          while every field started empty; not harmless now that one of them is
+          a day, which would have opened on whatever day the last session was
+          logged into. Same fix, and the same reasoning, as
+          `add-meal-provider.tsx`. */}
+      {sheetOpen ? (
+        <TrainingSessionSheet
+          visible
+          session={editing}
+          onRequestClose={() => setSheetOpen(false)}
+        />
+      ) : null}
     </Screen>
   );
 }

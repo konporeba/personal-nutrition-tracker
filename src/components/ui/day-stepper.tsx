@@ -105,8 +105,12 @@ export function DayPill({
 }) {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
-  const label = shortDateFormat.format(day);
   const isToday = isSameLocalDay(day, today);
+  // "Today" rather than today's own date — the word is what the owner is
+  // actually checking for, and it is the only value in the pill that means
+  // "nothing unusual here". The full stepper says the same thing with its own
+  // marker line.
+  const label = isToday ? 'Today' : shortDateFormat.format(day);
 
   const pill = (
     <ThemedView type="transparent" style={[styles.pill, { borderColor: theme.border }]}>

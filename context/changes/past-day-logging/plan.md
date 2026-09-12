@@ -511,9 +511,9 @@ Rollback is per-phase: each phase is an independent commit, and Phases 1 and 2 h
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npx tsc --noEmit`
-- [x] 3.2 Linting passes: `npm run lint`
-- [x] 3.3 Log path still green: `npm run smoke:log` and `npm run smoke:saved-meals`
+- [x] 3.1 Type checking passes: `npx tsc --noEmit` — cc0be8d
+- [x] 3.2 Linting passes: `npm run lint` — cc0be8d
+- [x] 3.3 Log path still green: `npm run smoke:log` and `npm run smoke:saved-meals` — cc0be8d
 
 #### Manual
 
@@ -530,9 +530,9 @@ Rollback is per-phase: each phase is an independent commit, and Phases 1 and 2 h
 
 #### Automated
 
-- [ ] 4.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 4.2 Linting passes: `npm run lint`
-- [ ] 4.3 Training path still green: `npm run smoke:training`
+- [x] 4.1 Type checking passes: `npx tsc --noEmit`
+- [x] 4.2 Linting passes: `npm run lint`
+- [x] 4.3 Training path still green: `npm run smoke:training`
 
 #### Manual
 
