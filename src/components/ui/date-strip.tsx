@@ -26,6 +26,7 @@ import { ThemedView } from '@/components/themed-view';
 import { ADHERENCE_COLOR, ADHERENCE_LABEL } from '@/components/ui/adherence-color';
 import { Radius, Spacing } from '@/constants/theme';
 import { useLayout } from '@/hooks/use-layout';
+import { addLocalDays, isSameLocalDay, startOfLocalDay } from '@/lib/local-day';
 import type { DayAdherence } from '@/lib/adherence';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -77,15 +78,15 @@ export function DateStrip({
   // that still scrolls; everywhere else the week fits by construction.
   const { isDashboard } = useLayout();
   const days = Array.from({ length: DAYS_SHOWN }, (_, index) =>
-    addDays(startOfDay(today), index - (DAYS_SHOWN - 1))
+    addLocalDays(startOfLocalDay(today), index - (DAYS_SHOWN - 1))
   );
 
   const cells = days.map((day, index) => (
     <DayCell
       key={day.toISOString()}
       date={day}
-      isSelected={isSameDay(day, selected)}
-      isToday={isSameDay(day, today)}
+      isSelected={isSameLocalDay(day, selected)}
+      isToday={isSameLocalDay(day, today)}
       progress={progressFor?.(day) ?? null}
       delayMs={index * STAGGER_MS}
       fitted={!isDashboard}
@@ -178,22 +179,6 @@ function DayCell({
         </ThemedText>
       </ThemedView>
     </Pressable>
-  );
-}
-
-function startOfDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function addDays(date: Date, delta: number): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + delta);
-}
-
-export function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
   );
 }
 

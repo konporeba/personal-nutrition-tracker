@@ -1,23 +1,14 @@
 // The logging streak: how many days in a row the owner has recorded *something*
-// — a meal or a training session. Kept dependency-free, in one place, so the
-// smoke script asserts against the same code the UI runs — the
-// `adherence.ts` / `day-ledger.ts` pattern.
+// — a meal or a training session. Kept in one place, with no dependency beyond
+// the shared day module, so the smoke script asserts against the same code the
+// UI runs — the `adherence.ts` / `day-ledger.ts` pattern.
 //
 // "Something", not "a complete day": the streak rewards the habit of opening
 // the app and logging, which is the behaviour the tracker actually needs. It
 // deliberately says nothing about whether the day hit its budget — that is the
 // week rail's job (see `classifyDayAdherence`).
 
-/** `YYYY-MM-DD` in the device's local timezone, matching the app's day bucketing. */
-function localDayKey(date: Date): string {
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
-function addDays(date: Date, delta: number): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + delta);
-}
+import { addLocalDays, localDayKey } from '@/lib/local-day';
 
 /**
  * Count the unbroken run of logged days ending at `today`.
@@ -42,12 +33,12 @@ export function computeLoggingStreak(timestamps: string[], today: Date = new Dat
 
   // Anchor: today if it counts, else yesterday. Anywhere else and a gap of one
   // day would be counted as a streak of its own.
-  let cursor = logged.has(localDayKey(today)) ? today : addDays(today, -1);
+  let cursor = logged.has(localDayKey(today)) ? today : addLocalDays(today, -1);
 
   let streak = 0;
   while (logged.has(localDayKey(cursor))) {
     streak += 1;
-    cursor = addDays(cursor, -1);
+    cursor = addLocalDays(cursor, -1);
   }
   return streak;
 }

@@ -7,24 +7,21 @@ import { useQuery } from '@tanstack/react-query';
 
 import { ensureDailyTarget, getDailyTargetsForRange } from '@/data/daily-targets.repo';
 import { listMealEntriesForRange } from '@/data/meal-entries.repo';
-import { localDayKey, queryKeys } from '@/data/query-keys';
+import { queryKeys } from '@/data/query-keys';
 import { listTrainingSessionsForRange } from '@/data/training-sessions.repo';
 import type { DailyTarget } from '@/data/types';
 import { useTargets } from '@/data/use-profile';
 import { computeDayLedger, type DayLedger } from '@/lib/day-ledger';
 import { groupByLocalDay } from '@/lib/group-by-local-day';
+import { addLocalDays, localDayKey } from '@/lib/local-day';
 
 /** One day's ledger, plus the calendar day it answers for. */
 export type AnalyticsDay = DayLedger & { day: Date };
 
-function addDays(date: Date, delta: number): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + delta);
-}
-
 /** Every local calendar day from `startDay` to `endDay`, inclusive. */
 function daysInRange(startDay: Date, endDay: Date): Date[] {
   const days: Date[] = [];
-  for (let day = startDay; day <= endDay; day = addDays(day, 1)) {
+  for (let day = startDay; day <= endDay; day = addLocalDays(day, 1)) {
     days.push(day);
   }
   return days;
@@ -49,7 +46,7 @@ function daysInRange(startDay: Date, endDay: Date): Date[] {
  */
 export function useAnalyticsRange(windowDays: 7 | 30) {
   const endDay = new Date();
-  const startDay = addDays(endDay, -(windowDays - 1));
+  const startDay = addLocalDays(endDay, -(windowDays - 1));
   const days = daysInRange(startDay, endDay);
 
   const { targets: currentTargets } = useTargets();

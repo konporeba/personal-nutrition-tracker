@@ -23,6 +23,7 @@ import { useBodyWeights } from '@/data/use-body-weights';
 import { useProfile } from '@/data/use-profile';
 import { useLayout } from '@/hooks/use-layout';
 import { ADHERENCE_TOLERANCE, classifyDayAdherence } from '@/lib/adherence';
+import { addLocalDays, localDayKey } from '@/lib/local-day';
 import { movingAverage } from '@/lib/moving-average';
 
 const WINDOW_OPTIONS = [
@@ -57,7 +58,7 @@ export default function AnalyticsScreen() {
   const latestTarget = range.length > 0 ? range[range.length - 1].target : null;
 
   const rangeStart = range[0]?.day;
-  const rangeEndExclusive = range.length > 0 ? addDays(range[range.length - 1].day, 1) : undefined;
+  const rangeEndExclusive = range.length > 0 ? addLocalDays(range[range.length - 1].day, 1) : undefined;
   const weightPoints: TrendPoint[] = (weights ?? [])
     .filter((w) => {
       if (!rangeStart || !rangeEndExclusive) return false;
@@ -119,7 +120,11 @@ export default function AnalyticsScreen() {
               onPointPress={(point) =>
                 router.push({
                   pathname: '/analytics/day',
-                  params: { date: point.x.toISOString() },
+                  // A local day key, never an ISO instant. An instant
+                  // re-parses against whatever offset is in force when the
+                  // route is read, which across a DST boundary resolves to the
+                  // previous local day — and that day screen composes entries.
+                  params: { date: localDayKey(point.x) },
                 })
               }
             />
@@ -174,10 +179,6 @@ function Panel({
       {children}
     </Card>
   );
-}
-
-function addDays(date: Date, delta: number): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + delta);
 }
 
 const styles = StyleSheet.create({

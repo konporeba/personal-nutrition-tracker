@@ -1,6 +1,7 @@
-// Pick a day, one step at a time. Extracted from `log-to-day-sheet.tsx`, which
-// was its only home until composing into and moving between past days gave it
-// several callers.
+// Pick a day, one step at a time. Extracted from `log-to-day-sheet.tsx` when
+// composing into and moving between past days needed the same control in
+// several places — though in the end those places wanted the `DayPill` shape
+// below, and `log-to-day-sheet.tsx` remains `DayStepper`'s only caller.
 //
 // A stepper, not a calendar, for the reason the original file gave: the days
 // that matter are the last few, and a month grid is a lot of chrome to pick

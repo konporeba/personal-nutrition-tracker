@@ -23,7 +23,6 @@ import { DayView } from '@/components/day-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { AppButton } from '@/components/ui/app-button';
-import { isSameDay } from '@/components/ui/date-strip';
 import { Screen } from '@/components/ui/screen';
 import { StreakPill } from '@/components/ui/streak-pill';
 import { WeekRail } from '@/components/week-rail';
@@ -31,6 +30,7 @@ import { Spacing } from '@/constants/theme';
 import { useDayEntries } from '@/data/use-meal-entries';
 import { useLoggingStreak } from '@/data/use-streak';
 import { useLayout } from '@/hooks/use-layout';
+import { isSameLocalDay } from '@/lib/local-day';
 
 const dayFormat = new Intl.DateTimeFormat(undefined, {
   weekday: 'long',
@@ -79,10 +79,15 @@ export default function TodayScreen() {
         <DayView
           date={viewedDay}
           // Every add affordance is live on a past day too, and carries the day
-          // being viewed rather than silently meaning today. `viewedDay` is
-          // re-derived per render (see `pastDay` above), so this can't freeze on
-          // the instant of the tap.
-          onAddToSection={(section) => addMeal.open(section, viewedDay)}
+          // being viewed rather than silently meaning today.
+          //
+          // `pastDay ?? undefined`, never `viewedDay`: the popup holds whatever
+          // it is given in state, so handing it today's resolved instant would
+          // pin it — a popup opened at 23:58 and confirmed at 00:01 would
+          // backdate to yesterday. `undefined` is the provider's documented
+          // "let the clock decide", and `pastDay` is already exactly "a day
+          // deliberately chosen, or nothing".
+          onAddToSection={(section) => addMeal.open(section, pastDay ?? undefined)}
           header={
             <ThemedView
               type="transparent"
@@ -107,7 +112,7 @@ export default function TodayScreen() {
                   today={day}
                   // Back to `null` on today, so the screen keeps following the
                   // clock instead of freezing on the instant of the tap.
-                  onSelect={(date) => setPastDay(isSameDay(date, day) ? null : date)}
+                  onSelect={(date) => setPastDay(isSameLocalDay(date, day) ? null : date)}
                 />
               </ThemedView>
 
@@ -126,7 +131,7 @@ export default function TodayScreen() {
                     variant="soft"
                     full
                     strong
-                    onPress={() => addMeal.open(undefined, viewedDay)}
+                    onPress={() => addMeal.open(undefined, pastDay ?? undefined)}
                   />
                 </ThemedView>
               ) : null}
@@ -139,9 +144,9 @@ export default function TodayScreen() {
           FAB on top of it would be a second, competing primary action. It stays
           on a past day now and composes into the day being viewed — what used
           to make that a silent surprise (the entry always landing in today) is
-          exactly what `viewedDay` fixes. */}
+          exactly what passing the day fixes. */}
       {Platform.OS === 'web' ? null : (
-        <CaptureFab onPress={() => addMeal.open(undefined, viewedDay)} />
+        <CaptureFab onPress={() => addMeal.open(undefined, pastDay ?? undefined)} />
       )}
     </Screen>
   );

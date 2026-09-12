@@ -218,13 +218,24 @@ export default function LibraryScreen() {
         }}
         onRequestClose={() => setActionsFor(null)}
       />
-      <LogToDaySheet
-        visible={loggingDayFor !== null}
-        savedMeal={loggingDayFor}
-        initialSection={chosenSection}
-        onLog={(day, section) => loggingDayFor && logToDay(loggingDayFor, day, section)}
-        onRequestClose={() => setLoggingDayFor(null)}
-      />
+      {/* Mounted only while open, so the day picker re-seeds on every open —
+          the same fix `add-meal-provider.tsx` and `training/index.tsx` carry,
+          and the one sheet whose whole purpose is picking a day had been left
+          out of it. Kept mounted, its `useState` initializers ran once per
+          *screen* mount: the success path closes via `setLoggingDayFor(null)`
+          and leans on `router.back()` to unmount, so when `canGoBack()` is
+          false (a direct link, or a web reload) the screen stayed put and the
+          next open was pre-set to the previously picked past day — one tap from
+          writing there. */}
+      {loggingDayFor ? (
+        <LogToDaySheet
+          visible
+          savedMeal={loggingDayFor}
+          initialSection={chosenSection}
+          onLog={(day, section) => logToDay(loggingDayFor, day, section)}
+          onRequestClose={() => setLoggingDayFor(null)}
+        />
+      ) : null}
     </ThemedView>
   );
 }

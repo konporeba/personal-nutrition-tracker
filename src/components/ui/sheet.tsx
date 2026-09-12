@@ -96,7 +96,11 @@ export function Sheet({
                     <ThemedText type="subtitle" numberOfLines={1}>
                       {title}
                     </ThemedText>
-                    {typeof subtitle === 'string' ? (
+                    {/* `&& subtitle` as well as the typeof, so an empty string
+                        still renders nothing — it did before this prop was
+                        widened, and an empty `ThemedText` would contribute the
+                        head's `gap` for no visible content. */}
+                    {typeof subtitle === 'string' && subtitle ? (
                       <ThemedText type="small" themeColor="textMuted">
                         {subtitle}
                       </ThemedText>

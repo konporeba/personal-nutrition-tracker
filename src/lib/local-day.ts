@@ -5,8 +5,16 @@
 // `localDayKey` moved here from `data/query-keys.ts` so `lib/` can own the whole
 // notion of a local day without reaching up into the data layer — the timestamp
 // helpers in `logged-at-for-day.ts` are pure and have no business importing a
-// query-key module. The old home re-exports it, so every existing import site
-// (`week-rail.tsx`, `daily-targets.repo.ts`, `use-analytics.ts`) is untouched.
+// query-key module. `query-keys.ts` re-exports it, so the `data/` and component
+// call sites that already imported it from there are untouched; `lib/` files
+// import it from here directly.
+//
+// "The one place" is meant literally. `date-strip.tsx`, `streak.ts`,
+// `use-analytics.ts` and `analytics/index.tsx` each carried their own copy of
+// some subset of these four functions until an implementation review found
+// them; they now all route through this module. Resist adding a fifth — a
+// private `addDays` looks harmless right up until one of them is
+// time-preserving across a DST boundary and another is not.
 
 /**
  * A day is a *local calendar day*, matching `listMealEntriesForDay`'s bucketing.

@@ -1,7 +1,7 @@
 ---
 change_id: past-day-logging
 title: Past day logging
-status: implemented
+status: impl_reviewed
 created: 2026-09-12
 updated: 2026-09-12
 archived_at: null

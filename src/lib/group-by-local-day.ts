@@ -2,7 +2,7 @@
 // dependency-free place so the smoke script asserts against the same code the
 // UI runs — the `group-by-section.ts` pattern, one axis over: there every
 // bucket is a section, here every bucket is a day.
-import { localDayKey } from '@/data/query-keys';
+import { localDayKey } from '@/lib/local-day';
 
 /**
  * Group `rows` into one array per entry in `days`, in the same order. A day

@@ -8,9 +8,12 @@
 // composed into a past day lands in that day and not today, an entry moved
 // across days leaves the one it came from, and a session does the same.
 //
-// The pure half is deliberately not tz-dependent on the runner: every date is
-// constructed locally and compared through `localDayKey`, which is the app's
-// own definition of "which day is this".
+// The pure half pins TZ to Europe/Warsaw for the length of its assertions and
+// restores it afterwards. Most of them are tz-independent by construction —
+// every date is built locally and compared through `localDayKey` — but the DST
+// case is not, and a boundary test that passes or fails by accident of the
+// machine's clock is worse than no boundary test. The live half below runs on
+// the machine's own tz, since "today" there has to mean the runner's today.
 //
 // Authenticates as the owner (creds from the git-ignored .env.local) and drives
 // the same repo seam the sheets and the review screen drive — the
@@ -48,6 +51,21 @@ const ownerPassword = process.env.OWNER_PASSWORD;
 
 /** The pure seam. No network, no auth — runs before we bother signing in. */
 function checkDaySeam() {
+  // Pinned for the length of this function and restored on the way out: the DST
+  // case below is only meaningful against a known transition, and Warsaw's is
+  // the owner's own (02:00 on the last Sunday of October). Node applies a
+  // runtime `TZ` change to every `Date` constructed after it.
+  const originalTz = process.env.TZ;
+  process.env.TZ = 'Europe/Warsaw';
+  try {
+    runDaySeamChecks();
+  } finally {
+    if (originalTz === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTz;
+  }
+}
+
+function runDaySeamChecks() {
   const now = new Date(2026, 8, 12, 14, 30);
   const today = startOfLocalDay(now);
 
@@ -100,11 +118,41 @@ function checkDaySeam() {
   );
   assert(localDayKey(moved) === '2026-09-11', 'moveToDay landed on the wrong day');
 
-  // Across a DST boundary a time-preserving shift lands 23h earlier and reads
-  // as the same day; `addLocalDays` is midnight-anchored precisely to avoid it.
-  const dstStep = addLocalDays(new Date(2026, 9, 26), -1);
-  assert(localDayKey(dstStep) === '2026-10-25', `addLocalDays across DST gave ${localDayKey(dstStep)}`);
-  console.log('✓ moveToDay preserves h/m/s/ms; addLocalDays is stable across a DST boundary');
+  // The DST case, with a fixed tz so it means something (see the pin above).
+  //
+  // Asserting only that `addLocalDays` returns the right day proves nothing: it
+  // is midnight-anchored, so it returns the same answer in every timezone and
+  // the check cannot fail. What the test has to show is the naive
+  // implementation *actually breaking* where this one holds.
+  //
+  // The naive form is epoch arithmetic — "a day is 86400000 ms". Warsaw falls
+  // back at 03:00 on 2026-10-25, so that day is 25 hours long: adding 24h to its
+  // midnight lands at 23:00 the *same* day, and a day-stepper built that way
+  // silently refuses to advance. `addLocalDays` rebuilds from the calendar
+  // fields instead, so it reaches Oct 26 midnight.
+  const epochShift = (date: Date, deltaDays: number) =>
+    new Date(date.getTime() + deltaDays * 86_400_000);
+
+  const fallBackDay = new Date(2026, 9, 25);
+  const naiveForward = epochShift(fallBackDay, 1);
+  const anchoredForward = addLocalDays(fallBackDay, 1);
+  assert(
+    localDayKey(naiveForward) === '2026-10-25',
+    `the DST fixture no longer bites — epoch-add gave ${localDayKey(naiveForward)}, so the tz pin is not in force`,
+  );
+  assert(
+    localDayKey(anchoredForward) === '2026-10-26',
+    `addLocalDays across the fall-back boundary gave ${localDayKey(anchoredForward)}`,
+  );
+  assert(anchoredForward.getHours() === 0, 'addLocalDays did not anchor to midnight');
+
+  // And backwards over the same boundary, which is the direction the day
+  // steppers actually travel.
+  const anchoredBack = addLocalDays(new Date(2026, 9, 26), -1);
+  assert(localDayKey(anchoredBack) === '2026-10-25', `stepping back across DST gave ${localDayKey(anchoredBack)}`);
+  assert(anchoredBack.getHours() === 0, 'stepping back did not anchor to midnight');
+
+  console.log('✓ moveToDay preserves h/m/s/ms; addLocalDays beats a naive shift across a DST boundary');
 }
 
 async function main() {

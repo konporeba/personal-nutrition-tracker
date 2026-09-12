@@ -474,6 +474,81 @@ Rollback is per-phase: each phase is an independent commit, and Phases 1 and 2 h
 - Route-param hand-off pattern to mirror: `src/app/(today)/review.tsx:48-50` (`parseSection`)
 - Smoke-script pattern: `scripts/run-meal-detail-smoke.mjs`
 
+## Addendum — what actually shipped (2026-09-12)
+
+Added after implementation, following the review in `reviews/impl-review.md`. The
+Phase blocks above are left as written: they record what was agreed *before*
+implementation, and this section records where the shipped code deliberately
+diverges. Where the two disagree, this section is correct.
+
+### The day control is a pill, not a stepper row
+
+Contracts **2.3**, **2.4** and **4.1** each specify "a `DayStepper` … placed
+above the section/type picker" — a labelled, full-width stepper row inside the
+form. That is what was built first, and it was rejected in review as taking too
+much vertical space in sheets that are already dense (~80pt in a six-field form
+on a phone viewport).
+
+What shipped is **`DayPill`** (`src/components/ui/day-stepper.tsx`): the day's
+own *value*, rendered as a small outlined pill on the sheet's subtitle line,
+which grows `‹ ›` arrows **inside itself** when tapped. Zero added height in
+either state, and nothing on the page moves when it opens. It replaced the
+stepper in `meal-entry-sheet.tsx` and `training-session-sheet.tsx` (both
+branches). `DayStepper` itself survives unchanged and is still the control in
+`log-to-day-sheet.tsx`, which is *about* picking a day and has the room.
+
+Two follow-on design decisions, both made in review:
+
+- The pill **always shows a date**, never the word "Today". "Today" is four
+  characters where a date is eleven, so the pill visibly shrank on its most
+  common value and read as a different, half-empty control.
+- The label has a `minWidth` and the arrows fixed-width boxes, so the date stays
+  centered and the pill does not resize while stepping.
+
+### Consequences for the Phase 5 contracts
+
+- **5.3** says the training subtitle must read `'Add to today'` when the target
+  is today. That literal no longer exists; the subtitle is the pill in both
+  branches, showing today's date for a new session.
+- **5.4** says the meal sheet should carry the date "when the entry's day is not
+  today". The pill renders unconditionally, so today's entries carry it too.
+- **Success criterion 5.8** — "Nothing in the wording changes when the target is
+  today" — therefore **does not hold for the two detail sheets**, by design. It
+  does still hold for the compose path (5.1, 5.2): the add-meal popup says
+  "today" when it means today, and the review screen's day chip appears only on
+  a backdated write.
+
+### `Sheet.subtitle` accepts a `ReactNode`
+
+`src/components/ui/sheet.tsx` is not named anywhere in the plan. Hosting the pill
+on the subtitle line required widening `subtitle` from `string` to `ReactNode`.
+Strings still get the muted-caption treatment, so the four other callers are
+untouched. An empty string still renders nothing.
+
+### Fixes applied after the implementation review
+
+See `reviews/impl-review.md` for the findings in full.
+
+- **F1 (critical)** `analytics/day.tsx` parsed its route param with raw
+  `new Date()` while being a write surface. Now `parseLocalDayKey`, with
+  `analytics/index.tsx` pushing a `localDayKey` rather than an ISO instant.
+- **F2** `LogToDaySheet` is mounted only while open, so its day picker re-seeds
+  per open rather than per screen mount.
+- **F3** The training sheet's submit guard now includes `create.isSuccess`,
+  matching the other two write paths.
+- **F4** Today passes `pastDay ?? undefined` to the add-meal popup rather than a
+  resolved `viewedDay`, so viewing today keeps following the clock.
+- **F7** `Sheet`'s subtitle guard preserves the old empty-string behavior.
+- **F8** The four duplicate day-helper sets (`date-strip.tsx`, `streak.ts`,
+  `use-analytics.ts`, `analytics/index.tsx`) were deleted in favour of
+  `@/lib/local-day`, and `group-by-local-day.ts` now imports it from `lib/`
+  rather than up through `data/query-keys.ts`.
+- **F9** The smoke script's DST assertion was vacuous — it compared against a
+  wall-clock-preserving shift, which agrees with `addLocalDays` on a
+  midnight-anchored input. It now pins `TZ`, compares against *epoch*
+  arithmetic (the form that actually breaks), and self-checks that the fixture
+  still bites.
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles.

@@ -15,6 +15,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { AppButton } from '@/components/ui/app-button';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { parseLocalDayKey } from '@/lib/local-day';
 
 const dayFormat = new Intl.DateTimeFormat(undefined, {
   weekday: 'long',
@@ -29,7 +30,15 @@ export default function AnalyticsDayScreen() {
   // no second copy mounted over this route.
   const addMeal = useAddMeal();
   const { date } = useLocalSearchParams<{ date?: string }>();
-  const parsedDate = date ? new Date(date) : null;
+  // Through the parser, never `new Date(date)` — this screen composes entries
+  // (see `onAddToSection` below), so it is a write surface and needs the same
+  // trust boundary `review.tsx` and `library.tsx` use. Raw parsing failed three
+  // ways here: an unparseable param yields an `Invalid Date`, which is *truthy*,
+  // so `MissingDay` never fired and the formatter threw; an ISO instant resolved
+  // to the previous local day across a DST boundary; and nothing clamped a
+  // hand-edited future day, which would have shown one day in the composer while
+  // the entry landed in another.
+  const parsedDate = parseLocalDayKey(date) ?? null;
 
   return (
     <ThemedView style={styles.container}>

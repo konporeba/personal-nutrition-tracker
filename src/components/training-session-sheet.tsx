@@ -90,9 +90,6 @@ export function TrainingSessionSheet({
     presetFor(session?.session_type) === OTHER ? (session?.session_type ?? '') : ''
   );
   const [intensity, setIntensity] = useState<TrainingIntensity>(session?.intensity ?? 'moderate');
-  // Which day the session counts toward. Seeded from the session being edited;
-  // a new session's day picker arrives in Phase 4, so `null` here means "this
-  // sheet has no day to offer yet" rather than "today".
   // Which day the session counts toward: the edited session's own, or today for
   // a new one. Never null now — logging a session into a past day is the same
   // control as moving one, so both branches carry the pill.
@@ -106,7 +103,13 @@ export function TrainingSessionSheet({
 
   // Save, log and delete aren't mutually exclusive by construction — guard on
   // the combined state so a second action can't fire while another is in flight.
-  const anyPending = create.isPending || update.isPending || remove.isPending;
+  // `create.isSuccess` matters as much as `isPending`, the same reasoning
+  // `review.tsx` and `library.tsx` spell out: `isPending` flips false inside
+  // `onSuccess`, and the close only unmounts on a later render, so without this
+  // there is a frame in which a second tap commits a duplicate session — into a
+  // past day now, where a duplicate is far less likely to be noticed.
+  const anyPending =
+    create.isPending || create.isSuccess || update.isPending || remove.isPending;
 
   const durationMinutes = toIntOrNull(duration);
   // Positive, not just non-negative: a session that burned nothing is a session
@@ -183,13 +186,9 @@ export function TrainingSessionSheet({
     <Sheet
       visible={visible}
       title={session ? 'Edit training' : 'Log training'}
-      // The date this line already carried becomes the tappable day chip, so
-      // moving a session costs no extra height at all. Tracks the stepper
-      // rather than the stored value, the same live-tracking the `leading` chip
-      // already does for the type picker.
       // The same pill in both branches: the date this line already carried when
-      // editing, and "Today" — steppable backwards — when logging a new one.
-      // So neither picking a past day nor repairing one costs extra height.
+      // editing, and today's date — steppable backwards — when logging a new
+      // one. So neither picking a past day nor repairing one costs extra height.
       subtitle={<DayPill day={day} today={startOfLocalDay(new Date())} onChange={setDay} />}
       // Editing wears the row's own mark, matching the meal popup. Tracks the
       // picker live, so switching type changes the icon on the spot.

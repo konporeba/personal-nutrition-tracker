@@ -45,19 +45,17 @@ export function LogToDaySheet({
     () => initialSection ?? sectionForTime(new Date())
   );
 
-  // Reset for the next time the sheet opens, so a prior pick doesn't linger.
-  function close() {
-    setDay(today);
-    setSection(initialSection ?? sectionForTime(new Date()));
-    onRequestClose();
-  }
-
+  // No reset on close: the caller mounts this sheet only while it is open
+  // (`library.tsx`), so every open runs these initializers fresh. It used to
+  // reset by hand here, which covered the cancel path but not the success one —
+  // that closes through `setLoggingDayFor(null)` and relies on an unmount that
+  // doesn't happen when `router.canGoBack()` is false.
   return (
     <Sheet
       visible={visible}
       title={savedMeal?.name ?? 'This meal'}
       subtitle="Log to another day"
-      onRequestClose={close}>
+      onRequestClose={onRequestClose}>
       <DayStepper day={day} today={today} onChange={setDay} />
 
       <Segmented options={SECTION_OPTIONS} value={section} onSelect={setSection} />
