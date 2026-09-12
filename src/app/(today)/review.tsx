@@ -40,7 +40,7 @@ import { useTargets } from '@/data/use-profile';
 import { useCreateSavedMeal } from '@/data/use-saved-meals';
 import { useTheme } from '@/hooks/use-theme';
 import type { CapturedPhoto } from '@/lib/capture-photo';
-import { parseLocalDayKey } from '@/lib/local-day';
+import { isSameLocalDay, parseLocalDayKey } from '@/lib/local-day';
 import { loggedAtForDay } from '@/lib/logged-at-for-day';
 import { sectionForTime } from '@/lib/section-for-time';
 import { timeForSection } from '@/lib/time-for-section';
@@ -51,6 +51,14 @@ import { timeForSection } from '@/lib/time-for-section';
 function parseSection(value: string | undefined): Section | undefined {
   return value !== undefined && value in SECTION_LABELS ? (value as Section) : undefined;
 }
+
+/** Full weekday and month: this is the one place the day is stated before a
+ *  write that cannot be undone by tapping again, so it is worth the room. */
+const dayFormat = new Intl.DateTimeFormat(undefined, {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric',
+});
 
 const CONFIDENCE_COPY: Record<Confidence, string> = {
   high: 'High confidence — still worth a glance.',
@@ -156,6 +164,12 @@ function ReviewForm({
   // owner hasn't measured, unlike servings' default of '1'.
   const [weight, setWeight] = useState('');
   const [saveToLibrary, setSaveToLibrary] = useState(false);
+
+  // The last gate before the write (FR-005), so this is the last chance to say
+  // which day it lands in. Silent on the common path — a chip reading "today"
+  // on every single log would be noise that trains the eye to skip the row the
+  // one time it matters.
+  const backdatedTo = day && !isSameLocalDay(day, new Date()) ? dayFormat.format(day) : null;
 
   // `isSuccess` matters as much as `isPending`: between onSuccess firing and the
   // navigation unmounting this screen there is a frame in which the button would
@@ -266,6 +280,16 @@ function ReviewForm({
           contentFit="cover"
           accessibilityLabel="The photo you captured"
         />
+      ) : null}
+
+      {/* Above the estimate card, not inside it, and on both paths: this is a
+          statement about *where the entry lands*, not another tag on the
+          model's numbers — and an unrecognized input, which has no chip row at
+          all, is still a real write that needs it said. */}
+      {backdatedTo ? (
+        <ThemedView type="transparent" style={styles.chipRow}>
+          <Chip label={`Logging to ${backdatedTo}`} tone="accent" />
+        </ThemedView>
       ) : null}
 
       {recognized ? (

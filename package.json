@@ -62,6 +62,7 @@
     "smoke:meal-detail": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-meal-detail-smoke.mjs",
     "smoke:training": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-training-smoke.mjs",
     "smoke:analytics": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-analytics-smoke.mjs",
+    "smoke:past-day": "node --env-file=.env --env-file-if-exists=.env.local scripts/run-past-day-smoke.mjs",
     "parity": "node --env-file=.env --env-file-if-exists=.env.local scripts/parity-check.mjs"
   },
   "private": true
