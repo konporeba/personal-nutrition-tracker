@@ -71,7 +71,13 @@ export function useCreateTrainingSession() {
   });
 }
 
-/** Edit a committed session's fields. Same broad-invalidate pattern. */
+/**
+ * Edit a committed session's fields. Same broad-invalidate pattern — and that
+ * breadth is what spares this hook the day-key pairing `useUpdateMealEntry`
+ * needs for a cross-day move: every `.day(...)` key is nested under `.all()`,
+ * so invalidating the prefix already covers both the day the session left and
+ * the one it landed in.
+ */
 export function useUpdateTrainingSession() {
   const queryClient = useQueryClient();
 
@@ -80,6 +86,10 @@ export function useUpdateTrainingSession() {
       updateTrainingSession(input.id, input.patch),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.trainingSessions.all() });
+      // Moving the only session off a day can shorten the streak, and moving
+      // one into a gap can lengthen it — possible only since `logged_at`
+      // became editable.
+      queryClient.invalidateQueries({ queryKey: queryKeys.streak() });
       // An edited burn moves the day's net, so the rail and the charts are as
       // stale as the session list is.
       queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all() });

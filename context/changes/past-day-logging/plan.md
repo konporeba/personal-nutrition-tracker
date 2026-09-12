@@ -482,30 +482,30 @@ Rollback is per-phase: each phase is an independent commit, and Phases 1 and 2 h
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npx tsc --noEmit`
-- [x] 1.2 Linting passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npx tsc --noEmit` — df631c5
+- [x] 1.2 Linting passes: `npm run lint` — df631c5
 
 #### Manual
 
-- [x] 1.3 "Log to another day…" sheet looks and behaves exactly as before
-- [x] 1.4 Logging a saved meal to a past day through that sheet still lands on the right day
+- [x] 1.3 "Log to another day…" sheet looks and behaves exactly as before — df631c5
+- [x] 1.4 Logging a saved meal to a past day through that sheet still lands on the right day — df631c5
 
 ### Phase 2: Move What's Already Logged
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.2 Linting passes: `npm run lint`
-- [ ] 2.3 Existing data paths still green: `npm run smoke:meal-detail` and `npm run smoke:training`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit`
+- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.3 Existing data paths still green: `npm run smoke:meal-detail` and `npm run smoke:training`
 
 #### Manual
 
-- [ ] 2.4 A post-midnight meal moves to the previous day and both days update without a refresh
-- [ ] 2.5 Both affected days' week-rail rings repaint after the move
-- [ ] 2.6 The moved entry keeps its original time-of-day
-- [ ] 2.7 Streak responds correctly to a move off a day and into a gap
-- [ ] 2.8 A training session can be moved, and its date subtitle tracks the stepper
-- [ ] 2.9 Editing a meal without touching the day behaves exactly as before
+- [x] 2.4 A post-midnight meal moves to the previous day and both days update without a refresh
+- [x] 2.5 Both affected days' week-rail rings repaint after the move
+- [x] 2.6 The moved entry keeps its original time-of-day
+- [x] 2.7 Streak responds correctly to a move off a day and into a gap
+- [x] 2.8 A training session can be moved, and its date subtitle tracks the stepper
+- [x] 2.9 Editing a meal without touching the day behaves exactly as before
 
 ### Phase 3: Compose Meals Into a Past Day
 

@@ -49,7 +49,10 @@ export function Sheet({
 }: {
   visible: boolean;
   title: string;
-  subtitle?: string;
+  /** A plain string gets the muted caption treatment. A node is rendered as
+   *  given — which is how the meal and training popups fit a tappable day chip
+   *  onto this line instead of spending a whole form row on a day picker. */
+  subtitle?: ReactNode;
   onRequestClose: () => void;
   placement?: SheetPlacement;
   leading?: ReactNode;
@@ -93,11 +96,13 @@ export function Sheet({
                     <ThemedText type="subtitle" numberOfLines={1}>
                       {title}
                     </ThemedText>
-                    {subtitle ? (
+                    {typeof subtitle === 'string' ? (
                       <ThemedText type="small" themeColor="textMuted">
                         {subtitle}
                       </ThemedText>
-                    ) : null}
+                    ) : (
+                      (subtitle ?? null)
+                    )}
                   </ThemedView>
                 </ThemedView>
                 {/* The body scrolls, the head and the Cancel row don't. A tall

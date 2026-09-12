@@ -20,6 +20,7 @@ import { SECTION_LABELS } from '@/components/section-subtotal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { AppButton } from '@/components/ui/app-button';
+import { DayPill } from '@/components/ui/day-stepper';
 import { Segmented } from '@/components/ui/segmented';
 import { Sheet } from '@/components/ui/sheet';
 import { Radius, Spacing } from '@/constants/theme';
@@ -29,6 +30,8 @@ import { useTheme } from '@/hooks/use-theme';
 import { onlyDecimal, toNumberOrNull } from '@/lib/decimal-input';
 import { iconForEntry } from '@/lib/food-emoji';
 import { SECTION_ORDER } from '@/lib/group-by-section';
+import { isSameLocalDay, startOfLocalDay } from '@/lib/local-day';
+import { moveToDay } from '@/lib/logged-at-for-day';
 
 /** Display label per source (FR-062) — how the entry was originally captured. */
 const SOURCE_LABELS: Record<EntrySource, string> = {
@@ -58,6 +61,10 @@ export function MealEntrySheet({
   const remove = useDeleteMealEntry();
 
   const [name, setName] = useState(entry.name);
+  // Which day this entry counts toward. Seeded from the entry itself, and the
+  // whole point of the stepper below: a meal eaten at 23:50 and logged at 00:05
+  // landed on the wrong day, and until now nothing could move it.
+  const [day, setDay] = useState(() => startOfLocalDay(new Date(entry.logged_at)));
   const [section, setSection] = useState<Section>(entry.section);
   const [calories, setCalories] = useState(() => seedField(entry.calories));
   const [protein, setProtein] = useState(() => seedField(entry.protein_g));
@@ -72,11 +79,21 @@ export function MealEntrySheet({
 
   function save() {
     if (!canSave) return;
+    // Only when it actually moved. An unchanged day contributes no `logged_at`
+    // to the patch at all, so a routine macro edit can't rewrite the entry's
+    // timestamp as a side effect — and `moveToDay` keeps the time of day, so a
+    // moved entry carries the clock time the owner originally logged it at.
+    const movedDay = isSameLocalDay(day, new Date(entry.logged_at))
+      ? null
+      : moveToDay(entry.logged_at, day);
+
     // `source` is deliberately absent from this patch — editing a value never
     // erases how the entry was originally captured.
     update.mutate(
       {
         id: entry.id,
+        // The day the entry is moving *from*. `useUpdateMealEntry` invalidates
+        // this alongside the day it lands in, so both lists repaint.
         logged_at: entry.logged_at,
         patch: {
           name: name.trim(),
@@ -86,6 +103,7 @@ export function MealEntrySheet({
           carbs_g: toNumberOrNull(carbs),
           fat_g: toNumberOrNull(fat),
           food_category: foodCategory.trim() || null,
+          ...(movedDay ? { logged_at: movedDay } : null),
         },
       },
       { onSuccess: onRequestClose }
@@ -103,7 +121,19 @@ export function MealEntrySheet({
     <Sheet
       visible
       title={entry.name}
-      subtitle={`${timeFormat.format(new Date(entry.logged_at))} · ${SOURCE_LABELS[entry.source]}`}
+      // The day rides this line as a pill rather than taking a form row of its
+      // own, and grows its own arrows when tapped — so the whole control costs
+      // nothing but the date it was already worth showing. The subtitle never
+      // carried a date before, which an entry inspected from a past day's
+      // screen genuinely needed.
+      subtitle={
+        <ThemedView type="transparent" style={styles.subtitle}>
+          <ThemedText type="small" themeColor="textMuted">
+            {timeFormat.format(new Date(entry.logged_at))} · {SOURCE_LABELS[entry.source]}
+          </ThemedText>
+          <DayPill day={day} today={startOfLocalDay(new Date())} onChange={setDay} />
+        </ThemedView>
+      }
       // Tracks the fields as they're edited, so re-categorizing an entry shows
       // its new mark immediately rather than after a save and a reopen.
       leading={<IconChip icon={iconForEntry({ food_category: foodCategory, name })} />}
@@ -249,6 +279,14 @@ function seedField(value: number | null): string {
 }
 
 const styles = StyleSheet.create({
+  subtitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    // Wraps rather than squeezing: on a narrow phone the time, the source and
+    // the day chip can outgrow the head's width beside the icon.
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
   field: {
     gap: Spacing.one,
   },

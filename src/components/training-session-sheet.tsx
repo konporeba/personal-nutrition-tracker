@@ -19,6 +19,7 @@ import { IconChip } from '@/components/icon-chip';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { AppButton } from '@/components/ui/app-button';
+import { DayPill } from '@/components/ui/day-stepper';
 import { Segmented } from '@/components/ui/segmented';
 import { Sheet } from '@/components/ui/sheet';
 import { Radius, Spacing } from '@/constants/theme';
@@ -31,6 +32,8 @@ import {
 } from '@/data/use-training-sessions';
 import { useTheme } from '@/hooks/use-theme';
 import { onlyDecimal, onlyInteger, toIntOrNull, toPositiveOrNull } from '@/lib/decimal-input';
+import { isSameLocalDay, startOfLocalDay } from '@/lib/local-day';
+import { moveToDay } from '@/lib/logged-at-for-day';
 import { emojiForTraining } from '@/lib/training-emoji';
 
 const INTENSITY_OPTIONS: { value: TrainingIntensity; label: string }[] = [
@@ -56,12 +59,6 @@ function presetFor(sessionType: string | undefined): string {
   if (!sessionType) return '';
   return TYPE_PRESETS.some((preset) => preset === sessionType) ? sessionType : OTHER;
 }
-
-const dateFormat = new Intl.DateTimeFormat(undefined, {
-  weekday: 'long',
-  month: 'long',
-  day: 'numeric',
-});
 
 export function TrainingSessionSheet({
   visible,
@@ -93,6 +90,12 @@ export function TrainingSessionSheet({
     presetFor(session?.session_type) === OTHER ? (session?.session_type ?? '') : ''
   );
   const [intensity, setIntensity] = useState<TrainingIntensity>(session?.intensity ?? 'moderate');
+  // Which day the session counts toward. Seeded from the session being edited;
+  // a new session's day picker arrives in Phase 4, so `null` here means "this
+  // sheet has no day to offer yet" rather than "today".
+  const [day, setDay] = useState(() =>
+    session ? startOfLocalDay(new Date(session.logged_at)) : null
+  );
   const [duration, setDuration] = useState(
     session ? String(session.duration_minutes) : ''
   );
@@ -123,8 +126,20 @@ export function TrainingSessionSheet({
     };
 
     if (session) {
+      // Same rule as the meal sheet: `logged_at` joins the patch only when the
+      // day actually moved, and `moveToDay` keeps the session's original time
+      // of day rather than inventing one.
+      const movedDay =
+        day && !isSameLocalDay(day, new Date(session.logged_at))
+          ? moveToDay(session.logged_at, day)
+          : null;
+
       update.mutate(
-        { id: session.id, logged_at: session.logged_at, patch: fields },
+        {
+          id: session.id,
+          logged_at: session.logged_at,
+          patch: { ...fields, ...(movedDay ? { logged_at: movedDay } : null) },
+        },
         { onSuccess: onRequestClose }
       );
       return;
@@ -154,8 +169,19 @@ export function TrainingSessionSheet({
     <Sheet
       visible={visible}
       title={session ? 'Edit training' : 'Log training'}
+      // The date this line already carried becomes the tappable day chip, so
+      // moving a session costs no extra height at all. Tracks the stepper
+      // rather than the stored value, the same live-tracking the `leading` chip
+      // already does for the type picker.
+      // Editing: the date this line already carried, now as the pill that moves
+      // it — so the repair costs no extra height at all. Logging a new one: no
+      // day to show yet (Phase 4 gives it a picker of its own).
       subtitle={
-        session ? dateFormat.format(new Date(session.logged_at)) : 'Add to today'
+        day ? (
+          <DayPill day={day} today={startOfLocalDay(new Date())} onChange={setDay} />
+        ) : (
+          'Add to today'
+        )
       }
       // Editing wears the row's own mark, matching the meal popup. Tracks the
       // picker live, so switching type changes the icon on the spot.

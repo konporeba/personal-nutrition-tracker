@@ -101,9 +101,9 @@ export function useDeleteMealEntry() {
 }
 
 /**
- * Edit a committed entry's fields (S-07) — name, macros, `section`, or any
- * other `MealEntryPatch` field. Re-sectioning used to have its own hook; it
- * folded into this one when the detail popup started saving the section
+ * Edit a committed entry's fields (S-07) — name, macros, `section`, `logged_at`,
+ * or any other `MealEntryPatch` field. Re-sectioning used to have its own hook;
+ * it folded into this one when the detail popup started saving the section
  * alongside everything else, since the patch always carried it.
  *
  * Callers must never include `source` in the patch: editing a value never
@@ -115,10 +115,23 @@ export function useUpdateMealEntry() {
   return useMutation({
     mutationFn: (input: Pick<MealEntry, 'id' | 'logged_at'> & { patch: MealEntryPatch }) =>
       updateMealEntry(input.id, input.patch),
-    onSuccess: (entry) => {
+    onSuccess: (entry, input) => {
+      // *Both* days, because the patch may carry a `logged_at` that moves the
+      // entry across a day boundary (the midnight repair). Invalidating only
+      // the response row's day — which is all this did while an entry could
+      // never change days — leaves the day it *left* holding a cached copy, so
+      // the entry reads as existing on both days until the next refocus.
+      // Same key twice when the day didn't change; TanStack dedupes that.
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.mealEntries.day(new Date(input.logged_at)),
+      });
       queryClient.invalidateQueries({
         queryKey: queryKeys.mealEntries.day(new Date(entry.logged_at)),
       });
+      // Moving the only entry off a day shortens the streak; moving one into a
+      // gap lengthens it. Neither was possible before `logged_at` became
+      // editable, which is why this hook alone used not to invalidate it.
+      queryClient.invalidateQueries({ queryKey: queryKeys.streak() });
       // An edited calorie figure moves the day's totals, so the week rail's
       // rings and the Analytics charts are as stale as the day list is.
       queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all() });
