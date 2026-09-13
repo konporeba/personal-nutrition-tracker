@@ -63,9 +63,9 @@ export function SectionSubtotal({
       {empty ? null : (
         <ThemedView type="transparent" style={styles.chips}>
           <Chip label={`${Math.round(calories).toLocaleString()} kcal`} />
-          <Chip label={`${Math.round(macros.protein_g)}g`} dotColor="protein" />
-          <Chip label={`${Math.round(macros.carbs_g)}g`} dotColor="carbs" />
-          <Chip label={`${Math.round(macros.fat_g)}g`} dotColor="fat" />
+          <Chip label={`${Math.round(macros.protein_g)}g`} macro="protein" />
+          <Chip label={`${Math.round(macros.carbs_g)}g`} macro="carbs" />
+          <Chip label={`${Math.round(macros.fat_g)}g`} macro="fat" />
         </ThemedView>
       )}
     </ThemedView>

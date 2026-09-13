@@ -8,7 +8,8 @@ import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Radius, Spacing, type ThemeColor } from '@/constants/theme';
+import { MacroIcon, type Macro } from '@/components/ui/macro-icon';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ChipTone = 'soft' | 'accent' | 'outline';
@@ -16,13 +17,13 @@ export type ChipTone = 'soft' | 'accent' | 'outline';
 export function Chip({
   label,
   tone = 'soft',
-  /** A leading dot in this color — used to key a chip to a macro's identity hue. */
-  dotColor,
+  /** A leading icon keying this chip to a macro's identity hue. */
+  macro,
   style,
 }: {
   label: string;
   tone?: ChipTone;
-  dotColor?: ThemeColor;
+  macro?: Macro;
   style?: StyleProp<ViewStyle>;
 }) {
   const theme = useTheme();
@@ -36,9 +37,7 @@ export function Chip({
         tone === 'outline' && { borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border },
         style,
       ]}>
-      {dotColor ? (
-        <ThemedView style={[styles.dot, { backgroundColor: theme[dotColor] }]} />
-      ) : null}
+      {macro ? <MacroIcon macro={macro} size={12} /> : null}
       <ThemedText type="micro" themeColor={tone === 'accent' ? 'accentText' : 'textMuted'}>
         {label}
       </ThemedText>
@@ -53,11 +52,6 @@ const styles = StyleSheet.create({
     gap: Spacing.one + 2,
     paddingHorizontal: Spacing.two + 2,
     paddingVertical: Spacing.one + 1,
-    borderRadius: Radius.pill,
-  },
-  dot: {
-    width: 6,
-    height: 6,
     borderRadius: Radius.pill,
   },
 });
