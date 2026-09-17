@@ -237,7 +237,72 @@ async function main() {
     );
     console.log('✓ note on an unreadable image: still recognized=false, still null macros');
 
-    // 10. An over-long note is rejected at the boundary, before any AI call.
+    // 10. A note describing food eaten alongside the label product — not on
+    //     the label at all — must move the totals up from the bare label
+    //     estimate, and the addition must be visible in `assumptions` (S-13).
+    const withAddition = await estimateMeal({
+      kind: 'image',
+      imageKind: 'label',
+      mediaType: 'image/jpeg',
+      data: labelData,
+      note: 'ate it with a whole banana on the side',
+    });
+    assert(withAddition.ok, `label+addition estimate failed: ${withAddition.ok ? '' : withAddition.error}`);
+    runIds.push(withAddition.runId);
+    assert(withAddition.estimate.recognized === true, 'label+addition came back unrecognized');
+    assert(
+      typeof withAddition.estimate.calories === 'number' &&
+        withAddition.estimate.calories > labelEst.calories!,
+      `label+addition calories (${withAddition.estimate.calories}) did not exceed the bare label ` +
+        `estimate (${labelEst.calories}) — the banana wasn't folded in`,
+    );
+    assert(
+      withAddition.estimate.assumptions.length > 0,
+      'label+addition estimate surfaced no assumptions — the addition is untraceable at review',
+    );
+    console.log(
+      `✓ note-stated addition folded in: ${labelEst.calories} kcal -> ${withAddition.estimate.calories} kcal, ` +
+        `${withAddition.estimate.assumptions.length} assumption(s)`,
+    );
+
+    // 11. A note stating how much of the product was eaten must resolve to
+    //     `implied_servings`, pre-filling review's Servings field, while the
+    //     reported per-serving macros stay exactly the bare label figures.
+    const withQuantity = await estimateMeal({
+      kind: 'image',
+      imageKind: 'label',
+      mediaType: 'image/jpeg',
+      data: labelData,
+      note: 'I ate the whole bag, which has 2 servings in it',
+    });
+    assert(withQuantity.ok, `label+quantity estimate failed: ${withQuantity.ok ? '' : withQuantity.error}`);
+    runIds.push(withQuantity.runId);
+    assert(withQuantity.estimate.recognized === true, 'label+quantity came back unrecognized');
+    assert(
+      typeof withQuantity.estimate.implied_servings === 'number' &&
+        withQuantity.estimate.implied_servings > 1,
+      `implied_servings is ${withQuantity.estimate.implied_servings}, want a number > 1 for "the whole ` +
+        `bag, 2 servings"`,
+    );
+    assert(
+      withQuantity.estimate.calories === labelEst.calories,
+      `label+quantity calories (${withQuantity.estimate.calories}) drifted from the bare per-serving ` +
+        `figure (${labelEst.calories}) — implied_servings must stay a multiplier, never get baked in`,
+    );
+    console.log(
+      `✓ note-stated quantity resolved to implied_servings=${withQuantity.estimate.implied_servings}, ` +
+        `per-serving calories unchanged at ${withQuantity.estimate.calories}`,
+    );
+
+    // 12. Text and plate paths never populate implied_servings — it is a
+    //     label-only field.
+    assert(
+      real.estimate.implied_servings === null,
+      `free-text estimate returned implied_servings=${real.estimate.implied_servings}, want null`,
+    );
+    console.log('✓ implied_servings stays null on the free-text path');
+
+    // 13. An over-long note is rejected at the boundary, before any AI call.
     //     The function answers 400, which `estimateMeal` classifies as 'server'.
     const tooLong = await estimateMeal({
       kind: 'image',

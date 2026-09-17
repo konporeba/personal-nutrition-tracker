@@ -159,7 +159,15 @@ function ReviewForm({
   const [protein, setProtein] = useState(() => seedField(estimate.protein_g));
   const [carbs, setCarbs] = useState(() => seedField(estimate.carbs_g));
   const [fat, setFat] = useState(() => seedField(estimate.fat_g));
-  const [servings, setServings] = useState('1');
+  // Pre-filled from the note when the model read a quantity out of it (S-13)
+  // — "ate half the bar" arrives as `implied_servings: 0.5` rather than
+  // making the owner retype what they already said. Still just a starting
+  // value: every field on this screen stays editable before anything saves.
+  const impliedServings =
+    showServings && estimate.implied_servings !== null ? estimate.implied_servings : null;
+  const [servings, setServings] = useState(() =>
+    impliedServings !== null ? String(impliedServings) : '1'
+  );
   // Empty by default — there's no neutral non-empty value for a weight the
   // owner hasn't measured, unlike servings' default of '1'.
   const [weight, setWeight] = useState('');
@@ -363,7 +371,12 @@ function ReviewForm({
             numeric
             value={servings}
             onChangeText={setServings}
-            hint="Values above are per serving; totals are multiplied by this before saving."
+            badge={impliedServings !== null ? <AiBadge /> : undefined}
+            hint={
+              impliedServings !== null
+                ? 'Read from your note — values above are per serving; totals are multiplied by this before saving.'
+                : 'Values above are per serving; totals are multiplied by this before saving.'
+            }
           />
         ) : null}
 

@@ -54,6 +54,18 @@ export type Estimate = {
    * `serving_size`.
    */
   implied_weight_g: number | null;
+  /**
+   * Label-scan only (S-03/S-13): when the owner's note states how much of
+   * the product they're logging (a count, a fraction, "the whole box"), the
+   * model resolves it to a multiple of one printed serving here — e.g. "ate
+   * half" → `0.5`, "the whole box (3 servings)" → `3`. Pre-fills review's
+   * **Servings** field instead of leaving it at the default `1` when the
+   * owner already said the answer in their note. `calories`/`protein_g`/
+   * `carbs_g`/`fat_g` still report exactly ONE printed serving regardless —
+   * this never gets baked into them, only offered as the multiplier. `null`
+   * for text/plate estimates and whenever the note doesn't state a quantity.
+   */
+  implied_servings: number | null;
 };
 
 /** Free-text capture path (S-01). */
