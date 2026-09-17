@@ -280,13 +280,17 @@ export type NewBodyWeight = {
   measured_at: string;
 };
 
-// Daily-target snapshot rows (S-11). Immutable per-day snapshot of the
-// effective target — written once via an insert-if-absent primitive, never
-// updated after.
+// Daily-target snapshot rows (S-11). Per-day snapshot of the effective
+// target. Frozen for any past day — written once via an insert-if-absent
+// primitive (`ensureDailyTarget`) and never updated after. Today's row is the
+// one exception: it is kept live-synced to the profile's effective target via
+// a true upsert (`upsertDailyTarget`) until the day is over, so an edit made
+// today is reflected today, not just from tomorrow.
 
 /**
- * A row of `public.daily_targets` — the target snapshot in effect the first
- * time a given local day was touched by a write or an analytics read.
+ * A row of `public.daily_targets` — the target snapshot in effect for a given
+ * local day: frozen the first time a past day was touched, or, for today,
+ * whatever the profile's live effective target currently is.
  */
 export type DailyTarget = {
   id: string;

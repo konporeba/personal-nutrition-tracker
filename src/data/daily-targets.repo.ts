@@ -44,6 +44,10 @@ export async function getDailyTargetsForRange(
  * `(owner_id, day)` unique index being a plain (non-partial) index — see the
  * migration's comment for why a partial index would break `ON CONFLICT`
  * inference here.
+ *
+ * This is the freezing primitive for any day that is no longer "today" —
+ * past-day logging and the analytics backfill both call this, and both rely
+ * on the write never clobbering a value a past day already froze.
  */
 export async function ensureDailyTarget(day: Date, targets: Targets): Promise<DailyTarget> {
   const owner_id = await requireOwnerId();
@@ -70,4 +74,49 @@ export async function ensureDailyTarget(day: Date, targets: Targets): Promise<Da
     .single();
   if (error) throw error;
   return data as DailyTarget;
+}
+
+/**
+ * True upsert — insert-or-update, unlike `ensureDailyTarget` above. This is
+ * the one deliberate exception to the table's immutability contract, and it
+ * is only ever called with `day = today`: while a day is still in progress
+ * its snapshot has to track the profile's live effective target (so an
+ * edit made this morning is visible this afternoon), and it only becomes a
+ * frozen historical fact once the day is over and nothing calls this for it
+ * again. Callers must never pass a past day here — that would silently
+ * rewrite a historical record `ensureDailyTarget` promises never to touch.
+ */
+export async function upsertDailyTarget(day: Date, targets: Targets): Promise<DailyTarget> {
+  const owner_id = await requireOwnerId();
+  const dayKey = localDayKey(day);
+
+  const { data, error } = await supabase
+    .from('daily_targets')
+    .upsert(
+      {
+        owner_id,
+        day: dayKey,
+        calories: targets.calories,
+        protein_g: targets.protein_g,
+        carbs_g: targets.carbs_g,
+        fat_g: targets.fat_g,
+      },
+      { onConflict: 'owner_id,day' },
+    )
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DailyTarget;
+}
+
+/** The single snapshot for one local day, or `null` when it hasn't been captured yet. */
+export async function getDailyTargetForDay(day: Date): Promise<DailyTarget | null> {
+  const { data, error } = await supabase
+    .from('daily_targets')
+    .select('*')
+    .eq('day', localDayKey(day))
+    .is('deleted_at', null)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as DailyTarget | null) ?? null;
 }

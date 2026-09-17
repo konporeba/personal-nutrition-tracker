@@ -13,7 +13,7 @@ import type { DailyTarget } from '@/data/types';
 import { useTargets } from '@/data/use-profile';
 import { computeDayLedger, type DayLedger } from '@/lib/day-ledger';
 import { groupByLocalDay } from '@/lib/group-by-local-day';
-import { addLocalDays, localDayKey } from '@/lib/local-day';
+import { addLocalDays, isSameLocalDay, localDayKey } from '@/lib/local-day';
 
 /** One day's ledger, plus the calendar day it answers for. */
 export type AnalyticsDay = DayLedger & { day: Date };
@@ -43,6 +43,10 @@ function daysInRange(startDay: Date, endDay: Date): Date[] {
  * the only data available, since there's no profile version history. This is
  * the second of `ensureDailyTarget`'s two write paths; the first is the
  * forward-path capture in `useCreateMealEntry`/`useCreateTrainingSession`.
+ * Today is excluded from this backfill — its row is kept live-synced by
+ * `useTargets`'s upsert side effect instead, and is read straight from
+ * `currentTargets` below rather than through its (possibly stale, if this is
+ * the very first render since a Profile edit) snapshot row.
  */
 export function useAnalyticsRange(windowDays: 7 | 30) {
   const endDay = new Date();
@@ -77,7 +81,9 @@ export function useAnalyticsRange(windowDays: 7 | 30) {
     (query.data?.snapshots ?? []).map((snapshot) => [snapshot.day, snapshot]),
   );
 
-  const missingDays = days.filter((day) => !snapshotByDay.has(localDayKey(day)));
+  const missingDays = days.filter(
+    (day) => !isSameLocalDay(day, endDay) && !snapshotByDay.has(localDayKey(day)),
+  );
   const missingDaysKey = missingDays.map((day) => localDayKey(day)).join(',');
   const targetsKey = currentTargets ? JSON.stringify(currentTargets) : '';
 
@@ -98,7 +104,9 @@ export function useAnalyticsRange(windowDays: 7 | 30) {
   }, [missingDaysKey, targetsKey, query.isSuccess]);
 
   const analyticsDays: AnalyticsDay[] = days.map((day, index) => {
-    const snapshot = snapshotByDay.get(localDayKey(day));
+    // Today always reads the live target, never its snapshot — see the note
+    // above. Every earlier day trusts its frozen snapshot once it has one.
+    const snapshot = isSameLocalDay(day, endDay) ? undefined : snapshotByDay.get(localDayKey(day));
     const target = snapshot ? snapshot.calories : (currentTargets?.calories ?? null);
     return { day, ...computeDayLedger(entryBuckets[index], sessionBuckets[index], target) };
   });

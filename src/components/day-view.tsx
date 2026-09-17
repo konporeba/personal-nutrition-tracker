@@ -40,8 +40,8 @@ import { useScreenContentInsets } from '@/components/ui/screen';
 import { SectionHeader } from '@/components/ui/section-header';
 import { Spacing } from '@/constants/theme';
 import type { MealEntry, Section } from '@/data/types';
+import { useDayTargets } from '@/data/use-day-targets';
 import { useDayEntries } from '@/data/use-meal-entries';
-import { useTargets } from '@/data/use-profile';
 import { useDaySessions } from '@/data/use-training-sessions';
 import { useLayout } from '@/hooks/use-layout';
 import { groupEntriesBySection } from '@/lib/group-by-section';
@@ -95,10 +95,12 @@ export function DayView({
   const { data, isPending, isError } = query;
   const entries = data ?? [];
 
-  // Effective (resting) targets for the hero's budget; null until a profile and
-  // a first weight exist, in which case DayTotal falls back to the bare total
-  // and the macro cards — which have no denominator without it — stay off.
-  const { targets } = useTargets();
+  // The target in force for *this* day — today's live effective target, or a
+  // past day's frozen snapshot (`useDayTargets`), never blindly today's
+  // current profile value. Null until a profile and a first weight exist, in
+  // which case DayTotal falls back to the bare total and the macro cards —
+  // which have no denominator without it — stay off.
+  const { targets } = useDayTargets(date);
 
   const { query: sessionsQuery } = useDaySessions(date);
   const sessions = sessionsQuery.data ?? [];

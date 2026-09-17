@@ -55,6 +55,10 @@ export const queryKeys = {
     range: (windowDays: number, startDay: Date, endDay: Date) =>
       ['analytics', 'range', windowDays, localDayKey(startDay), localDayKey(endDay)] as const,
   },
+  dailyTargets: {
+    /** One past day's frozen target snapshot — see `use-day-targets.ts`. */
+    day: (date: Date) => ['daily-targets', 'day', localDayKey(date)] as const,
+  },
   /**
    * A staged estimate, seeded by the composer and read by the review screen.
    * Keyed by the recorded `runId`, so the review route is only reachable with a
