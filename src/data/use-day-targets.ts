@@ -8,7 +8,7 @@
 // side effect), while a past day is judged against whatever was frozen for
 // it, never against whatever the profile says now.
 import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { ensureDailyTarget, getDailyTargetForDay } from '@/data/daily-targets.repo';
 import { queryKeys } from '@/data/query-keys';
@@ -38,24 +38,36 @@ export type DayTargetsView = {
  * doesn't flash a "no target" state.
  */
 export function useDayTargets(date: Date): DayTargetsView {
+  const queryClient = useQueryClient();
   const { targets: currentTargets, isPending: currentPending } = useTargets();
   const isToday = isSameLocalDay(date, new Date());
 
+  const dayKey = queryKeys.dailyTargets.day(date);
   const snapshotQuery = useQuery({
-    queryKey: queryKeys.dailyTargets.day(date),
+    queryKey: dayKey,
     queryFn: () => getDailyTargetForDay(date),
     enabled: !isToday,
   });
 
   const snapshot = isToday ? null : (snapshotQuery.data ?? null);
-  const dateKey = queryKeys.dailyTargets.day(date).join(',');
+  const dateKey = dayKey.join(',');
   const targetsKey = currentTargets ? JSON.stringify(currentTargets) : '';
 
   useEffect(() => {
     if (isToday || !currentTargets || !snapshotQuery.isSuccess || snapshotQuery.data) return;
-    ensureDailyTarget(date, currentTargets).catch((err) => {
-      console.error('[use-day-targets] ensureDailyTarget backfill failed:', err);
-    });
+    // `setQueryData`, not just the write: without it this query's own cache
+    // entry stays the stale "no snapshot yet" result it started with (up to
+    // the 5-minute default staleTime), so re-opening this same day right
+    // after backfilling it would fall through to `currentTargets` again —
+    // which, if the owner edited Profile in between, is now a *newer* value
+    // than what actually got frozen. That's the historical-recalculation bug
+    // this hook exists to close, reopened through the cache instead of the
+    // read logic.
+    ensureDailyTarget(date, currentTargets)
+      .then((frozen) => queryClient.setQueryData(dayKey, frozen))
+      .catch((err) => {
+        console.error('[use-day-targets] ensureDailyTarget backfill failed:', err);
+      });
     // Re-derived primitives, not the `date`/`currentTargets` object identities,
     // are the real dependencies — both get a new identity every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps

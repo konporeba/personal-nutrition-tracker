@@ -3,7 +3,7 @@
 // Screens read from here and never touch the range repos or `ensureDailyTarget`
 // directly, mirroring every other `use-*.ts` seam in this codebase.
 import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { ensureDailyTarget, getDailyTargetsForRange } from '@/data/daily-targets.repo';
 import { listMealEntriesForRange } from '@/data/meal-entries.repo';
@@ -49,6 +49,7 @@ function daysInRange(startDay: Date, endDay: Date): Date[] {
  * the very first render since a Profile edit) snapshot row.
  */
 export function useAnalyticsRange(windowDays: 7 | 30) {
+  const queryClient = useQueryClient();
   const endDay = new Date();
   const startDay = addLocalDays(endDay, -(windowDays - 1));
   const days = daysInRange(startDay, endDay);
@@ -93,9 +94,15 @@ export function useAnalyticsRange(windowDays: 7 | 30) {
   useEffect(() => {
     if (!currentTargets || missingDays.length === 0 || !query.isSuccess) return;
     for (const day of missingDays) {
-      ensureDailyTarget(day, currentTargets).catch((err) => {
-        console.error('[use-analytics] ensureDailyTarget backfill failed:', err);
-      });
+      // `setQueryData` on that day's own single-day key too — `use-day-targets.ts`
+      // reads through `queryKeys.dailyTargets.day`, not this range query, so
+      // without this its cache would keep serving "no snapshot yet" for up to
+      // the 5-minute staleTime after this backfill actually wrote one.
+      ensureDailyTarget(day, currentTargets)
+        .then((frozen) => queryClient.setQueryData(queryKeys.dailyTargets.day(day), frozen))
+        .catch((err) => {
+          console.error('[use-analytics] ensureDailyTarget backfill failed:', err);
+        });
     }
     // Re-derived primitives, not the array/object references, are the real
     // dependencies — `missingDays`/`currentTargets` get a new identity every

@@ -69,9 +69,16 @@ export function useCreateMealEntry() {
       queryClient.invalidateQueries({ queryKey: queryKeys.streak() });
       queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all() });
       if (variables.targets) {
-        ensureDailyTarget(new Date(entry.logged_at), variables.targets).catch((err) => {
-          console.error('[use-meal-entries] ensureDailyTarget failed:', err);
-        });
+        const day = new Date(entry.logged_at);
+        // `setQueryData` too, not just the write — otherwise `useDayTargets`'
+        // own query cache for this exact day keeps serving its pre-write
+        // result (up to the 5-minute staleTime) instead of the snapshot that
+        // now actually exists server-side.
+        ensureDailyTarget(day, variables.targets)
+          .then((frozen) => queryClient.setQueryData(queryKeys.dailyTargets.day(day), frozen))
+          .catch((err) => {
+            console.error('[use-meal-entries] ensureDailyTarget failed:', err);
+          });
       }
     },
   });

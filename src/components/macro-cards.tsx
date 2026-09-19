@@ -59,7 +59,11 @@ function MacroCard({
   delayMs: number;
 }) {
   const theme = useTheme();
-  const fraction = clampFraction(consumed / target);
+  // Guarded the same way as `percent` below: a `0` target (a deliberately
+  // nonsensical override) would otherwise divide out to `Infinity`, which
+  // `clampFraction` clamps to a *full* ring while `percent` read `0%` right
+  // next to it.
+  const fraction = target > 0 ? clampFraction(consumed / target) : 0;
   // Uncapped, unlike the ring itself — the ring tops out at full but the
   // number keeps counting, so 140% still reads as 140%.
   const percent = target > 0 ? Math.round((consumed / target) * 100) : 0;

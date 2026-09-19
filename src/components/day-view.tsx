@@ -140,6 +140,7 @@ export function DayView({
         section={section.id}
         calories={section.calories}
         macros={section.macros}
+        hasEntries={section.data.length > 0}
         first={section.id === sections[0]?.id}
       />
     ),
@@ -251,6 +252,7 @@ export function DayView({
                       section={section.id}
                       calories={section.calories}
                       macros={section.macros}
+                      hasEntries={section.data.length > 0}
                       first={index === 0}
                     />
                     {section.data.length > 0 ? (

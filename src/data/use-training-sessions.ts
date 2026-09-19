@@ -63,9 +63,14 @@ export function useCreateTrainingSession() {
       queryClient.invalidateQueries({ queryKey: queryKeys.streak() });
       queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all() });
       if (variables.targets) {
-        ensureDailyTarget(new Date(session.logged_at), variables.targets).catch((err) => {
-          console.error('[use-training-sessions] ensureDailyTarget failed:', err);
-        });
+        const day = new Date(session.logged_at);
+        // `setQueryData` too — see the matching note in
+        // `use-meal-entries.ts`'s `useCreateMealEntry`.
+        ensureDailyTarget(day, variables.targets)
+          .then((frozen) => queryClient.setQueryData(queryKeys.dailyTargets.day(day), frozen))
+          .catch((err) => {
+            console.error('[use-training-sessions] ensureDailyTarget failed:', err);
+          });
       }
     },
   });

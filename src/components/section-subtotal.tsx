@@ -43,6 +43,15 @@ export function SectionSubtotal({
   section,
   calories,
   macros,
+  /**
+   * Whether this section actually has entries in it. Driving "empty" off this
+   * rather than off the totals matters because a manually-logged entry can
+   * carry every macro as `null` on purpose (Review's own "leave a field empty
+   * to log it as unknown rather than zero") — `sumCalories`/`sumMacros` treat
+   * a `null` total the same as no entries at all, which would otherwise make
+   * a section with one all-unknown entry render as if nothing were logged.
+   */
+  hasEntries,
   /** The first section in a list. Drops the top padding, which is there to
    *  separate this section from the one above it — and above the first one is
    *  the "Meals" heading, which brings its own spacing. */
@@ -51,9 +60,10 @@ export function SectionSubtotal({
   section: Section;
   calories: number;
   macros: MacroTotals;
+  hasEntries: boolean;
   first?: boolean;
 }) {
-  const empty = calories === 0 && macros.protein_g === 0 && macros.carbs_g === 0 && macros.fat_g === 0;
+  const empty = !hasEntries;
 
   return (
     <ThemedView type="transparent" style={[styles.row, first && styles.rowFirst]}>
